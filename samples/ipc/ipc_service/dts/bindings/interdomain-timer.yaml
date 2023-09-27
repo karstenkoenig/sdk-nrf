@@ -1,0 +1,37 @@
+# Copyright (c) 2023 Nordic Semiconductor ASA
+# SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
+
+description: Select IPCT channel to be used by the application
+
+compatible: "interdomain-timer"
+
+properties:
+  ipct-stop:
+    type: phandle
+    description: |
+      The IPCT instance used to stop the timer.
+      The timer that is stopped holds its last value.
+      Stopping the timer via IPCT does not clear it.
+      Optional parameter: if present - the timer can be stopped by remote domain.
+
+  ipct-ch-stop:
+    type: int
+    description: |
+      The IPCT channel used to stop the timer.
+
+  ipct-start:
+    type: phandle
+    description: |
+      The IPCT instance used to start the timer.
+      Optional parameter: if present - the timer can be started by remote domain.
+
+  ipct-ch-start:
+    type: int
+    description: |
+      The IPCT channel used to start the timer.
+
+  timer:
+    type: phandle
+    required: true
+    description: |
+      The timer used to measure the lattency.

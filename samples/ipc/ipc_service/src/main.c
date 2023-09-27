@@ -8,6 +8,8 @@
 #include <zephyr/device.h>
 #include <zephyr/drivers/gpio.h>
 #include <string.h>
+#include <zephyr/drivers/counter.h>
+#include <idtimer.h>
 
 #include <zephyr/logging/log.h>
 
@@ -23,6 +25,20 @@
 #define MAX_CALCULATIONS	(6)
 #else
 #define MAX_CALCULATIONS	(65535)
+#endif
+
+#define LATENCY_REMOTE_START_NODE DT_NODELABEL(remote_latency_start)
+#define USE_LATENCY_REMOTE_START DT_NODE_EXISTS(LATENCY_REMOTE_START_NODE)
+
+/* The interdomain timer used to measure latency */
+static const struct device *latency_timer = DEVICE_DT_GET_OR_NULL(DT_NODELABEL(latency_timer));
+
+#if USE_LATENCY_REMOTE_START
+#include <hal/nrf_ipct.h>
+/* IPCT channel used to generate remote latency timer stop event */
+static NRF_IPCT_Type *ipct_start_reg =
+	(NRF_IPCT_Type *)DT_REG_ADDR(DT_PHANDLE(LATENCY_REMOTE_START_NODE, ipct));
+static uint8_t ipct_start_ch = DT_PROP(LATENCY_REMOTE_START_NODE, ch);
 #endif
 
 static const struct gpio_dt_spec pin_send =
@@ -59,6 +75,16 @@ static void ep_recv(const void *data, size_t len, void *priv)
 
 	if (pin_recv.port) {
 		gpio_pin_set_dt(&pin_recv, 1);
+	}
+
+	if (latency_timer) {
+		uint32_t t_val = idtimer_get_value(latency_timer);
+		uint64_t t_us = counter_ticks_to_us(idtimer_get_counter(latency_timer), t_val);
+
+		idtimer_stop(latency_timer);
+		idtimer_clear(latency_timer);
+
+		printk("Message received after: %"PRIu64"us\n", t_us);
 	}
 
 	if ((received_val != expected_val) || (len != CONFIG_APP_IPC_SERVICE_MESSAGE_LEN)) {
@@ -138,17 +164,23 @@ int main(void)
 
 	k_sem_take(&bound_sem, K_FOREVER);
 
-	(void)k_thread_create(
-		&check_task_data, check_task_stack,
-		K_THREAD_STACK_SIZEOF(check_task_stack),
-		check_task,
-		NULL, NULL, NULL,
-		-1, 0, K_NO_WAIT);
+	/* Measuring throughput only if no latency timer is used */
+	if (!latency_timer) {
+		(void)k_thread_create(
+			&check_task_data, check_task_stack,
+			K_THREAD_STACK_SIZEOF(check_task_stack),
+			check_task,
+			NULL, NULL, NULL,
+			-1, 0, K_NO_WAIT);
+	}
 
 	while (run_counter < MAX_CALCULATIONS) {
 		if (pin_send.port) {
 			gpio_pin_set_dt(&pin_send, 1);
 		}
+#if USE_LATENCY_REMOTE_START
+		nrf_ipct_task_trigger(ipct_start_reg, nrf_ipct_send_task_get(ipct_start_ch));
+#endif
 		ret = ipc_service_send(&ep, p_payload, CONFIG_APP_IPC_SERVICE_MESSAGE_LEN);
 		if (pin_send.port) {
 			gpio_pin_set_dt(&pin_send, 0);

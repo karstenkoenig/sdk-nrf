@@ -1,0 +1,19 @@
+# Copyright (c) 2023 Nordic Semiconductor ASA
+# SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
+
+description: Select IPCT channel to be used by the application
+
+compatible: "ipct-channel"
+
+properties:
+  ipct:
+    type: phandle
+    required: true
+    description: |
+      The IPCT instance to be used.
+
+  ch:
+    type: int
+    required: true
+    description: |
+      The IPCT channel to be used.

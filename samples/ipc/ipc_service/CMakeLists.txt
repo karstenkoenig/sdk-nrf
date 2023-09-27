@@ -32,4 +32,7 @@ set(ZEPHYR_EXTRA_MODULES ${CMAKE_CURRENT_LIST_DIR})
 find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 project(ipc_service_host)
 
+target_include_directories(app PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_sources(app PRIVATE src/main.c)
+
+add_subdirectory(modules)

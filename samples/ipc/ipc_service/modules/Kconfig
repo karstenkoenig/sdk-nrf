@@ -1,0 +1,27 @@
+#
+# Copyright (c) 2023 Nordic Semiconductor ASA
+#
+# SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
+#
+DT_COMPAT_INTERDOMAIN_TIMER := interdomain-timer
+
+menuconfig INTERDOMAIN_TIMER
+	bool "Interdomain timer"
+	default y if $(dt_compat_enabled,$(DT_COMPAT_INTERDOMAIN_TIMER))
+	help
+	  Enable interdomain timer that allows starting or stopping the timer via IPCT channels.
+
+if INTERDOMAIN_TIMER
+
+config IDTIMER_INIT_PRIORITY
+	int "Interdomain timer init priority"
+	default 70
+	help
+	  Interdomain driver device initialization priority.
+	  It should be initialized after the counter driver.
+
+module = INTERDOMAIN_TIMER
+module-str = id timer
+source "subsys/logging/Kconfig.template.log_config"
+
+endif #INTERDOMAIN_TIMER

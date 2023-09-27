@@ -4,6 +4,8 @@
 # SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
 #
 
+rsource "modules/Kconfig"
+
 config APP_IPC_SERVICE_SEND_INTERVAL
 	int "Ipc service sending interval [us]"
 	default 30 if BOARD_NRF5340DK_NRF5340_CPUNET

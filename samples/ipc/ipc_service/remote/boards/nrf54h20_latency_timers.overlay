@@ -1,0 +1,57 @@
+/*
+ * Copyright (c) 2023 Nordic Semiconductor ASA
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * This file is used to add latency measurement using hardware timer (remote side).
+ * It defines 2 parts: the timer on this side and the IPCT to start the timer on other side.
+ * It is expected that the other side implements the similar file to match this one.
+ */
+
+/ {
+	/* This is the timer and the IPCT connection used to measure the latency */
+	latency_timer: id-timer {
+		compatible = "interdomain-timer";
+		ipct-start = < &ipct130 >;
+		ipct-ch-start = < 2 >;
+		timer = < &timer130 >;
+	};
+	
+	/* This chooses the IPCT channel used to start the timer on local side */
+	remote_latency_start: start-ipct {
+		compatible = "ipct-channel";
+		ipct = < &ipct130 >;
+		ch = < 0 >;
+	};
+};
+
+/* Remote sends timer start signal on ipct130 channel 0 */
+/* Local sends timer start signal on ipct130 channel 1 */
+/* To make it consistent assigning even channels to local and odd to remote */
+&ipct130 {
+	status = "okay";
+	owned-channels = < 0 2 >;
+	sink-channel-links = < 2 13 1 >;
+	/delete-property/ source-channel-links;
+};
+
+/* We need exactly one channel on global DPPIC */
+&dppic130 {
+	status = "okay";
+	owned-channels  = < 2 >;
+	source-channels = < 2 >;
+	sink-channels   = < 2 >;
+};
+
+/* We need one DPPIC to sink our event and provide it for timer130 (APB3A) */
+&dppic133 {
+	status = "okay";
+	owned-channels  = < 2 >;
+	/delete-property/ source-channels;
+	sink-channels   = < 2 >;
+};
+
+&timer130 {
+	status = "okay";
+	prescaler = <4>;
+};
