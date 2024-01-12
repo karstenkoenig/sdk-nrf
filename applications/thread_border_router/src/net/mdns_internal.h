@@ -160,6 +160,30 @@ struct srv_rdata {
 	uint16_t port;
 } __packed;
 
+/** Internal structure for keeping DNS-SD services */
+struct dns_sd_service {
+	/** PTR record to be matched during service browsing */
+	struct mdns_record *enumerator_ptr;
+
+	/* PTR record pointing to service's instance */
+	struct mdns_record *service_ptr;
+
+	/** SRV record describing the service */
+	struct mdns_record *service_srv;
+
+	/** TXT record */
+	struct mdns_record *service_txt;
+
+	/** PTR subtype record */
+	struct mdns_record *subtype_ptr;
+
+	/** AAAA or A record contaning with IP address */
+	struct mdns_record *target;
+
+	/** Linked list node */
+	sys_snode_t node;
+};
+
 /**
  * @brief Initialize mDNS internals
  *

@@ -13,4 +13,5 @@ zephyr_library_sources_ifdef(CONFIG_NRF_TBR_NAT
 zephyr_library_sources(
     mdns_internal.c
     mdns_server.c
+    dns_sd.c
 )

@@ -86,7 +86,7 @@ config NRF_TBR_MDNS_SERVER_NUM_LISTENERS
 
 config NRF_TBR_MDNS_SERVER_NUM_RECORDS
     int "Maximum number of mDNS records"
-    default 24
+    default 16
     help
       Defines a number of mDNS records that can be allocated.
 
@@ -105,7 +105,19 @@ config NRF_TBR_MDNS_SERVER_DATA_BUFFER_SIZE
       mDNS records. The buffer size should be chosen to match needs
       of the application.
 
+config NRF_TBR_DNS_SD_NUM_SERVICES
+    int "Maximum number of DNS-SD services"
+    default 2
+    help
+      Defines a number of DNS-SD services that can be published using
+      mDNS server.
+
 module = NRF_TBR_MDNS_SERVER
 module-dep = LOG
 module-str = mDNS server
+source "subsys/logging/Kconfig.template.log_config"
+
+module = NRF_TBR_DNS_SD
+module-dep = LOG
+module-str = DNS-SD
 source "subsys/logging/Kconfig.template.log_config"
