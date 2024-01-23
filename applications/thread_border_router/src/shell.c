@@ -9,6 +9,7 @@
  */
 
 #include "net/mdns_server.h"
+#include "net/dns_sd.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -21,6 +22,7 @@
 #define BUFFER_SIZE 256
 #define MAX_TXT_RDATA_LEN 255
 #define RECORD_ACCESS_TIMEOUT 500
+#define MAX_SUBTYPE_SIZE 64
 
 typedef int (*type_handler)(const struct shell *sh, int32_t ttl, const char *name, size_t name_len,
 			    size_t argc, char *argv[]);
@@ -555,6 +557,194 @@ static int cmd_tbr_mdns_records_remove(const struct shell *sh, size_t argc, char
 	return res;
 }
 
+static int add_dns_sd_service(const struct shell *sh, const char *subtype, size_t argc,
+			      char *argv[])
+{
+	struct dns_sd_service_info_in info;
+	struct dns_sd_service_handle *handle;
+	uint8_t txt_data[MAX_TXT_RDATA_LEN];
+	char *endptr;
+	int res;
+
+	/* syntax: [<subtype>] <ttl> <instance> <service> <proto> <priority> <weight> <port> <target> [<key>=<value>]* */
+
+	if (argc < 8) {
+		shell_warn(sh, "missing arguments");
+		return -EINVAL;
+	}
+
+	memset(&info, 0, sizeof(info));
+
+	info.ttl = strtol(argv[0], &endptr, 10);
+	if (*endptr != '\0') {
+		shell_warn(sh, "invalid TTL: %s", argv[0]);
+		return -ENOENT;
+	}
+
+	info.subtype = subtype;
+	info.instance = argv[1];
+	info.service = argv[2];
+
+	if (strcmp(argv[3], "_udp") == 0) {
+		info.proto = DNS_SD_SERVICE_PROTO_UDP;
+	} else if (strcmp(argv[3], "_tcp") == 0) {
+		info.proto = DNS_SD_SERVICE_PROTO_TCP;
+	} else {
+		shell_warn(sh, "invalid protocol, expected _tcp or _udp, got: %s", argv[3]);
+		return -EINVAL;
+	}
+
+	info.priority = strtol(argv[4], &endptr, 10);
+	if (*endptr != '\0') {
+		shell_warn(sh, "invalid priority: %s", argv[4]);
+		return -EINVAL;
+	}
+
+	info.weight = strtol(argv[5], &endptr, 10);
+	if (*endptr != '\0') {
+		shell_warn(sh, "invalid weight: %s", argv[5]);
+		return -EINVAL;
+	}
+
+	info.port = strtol(argv[6], &endptr, 10);
+	if (*endptr != '\0') {
+		shell_warn(sh, "invalid port: %s", argv[6]);
+		return -EINVAL;
+	}
+
+	info.target = (struct mdns_record_handle *)strtol(argv[7], &endptr, 16);
+	if (*endptr != '\0') {
+		shell_warn(sh, "invalid target: %s", argv[7]);
+		return -EINVAL;
+	}
+
+	if (argc > 8) {
+		info.txt_data = txt_data;
+		info.txt_data_len = parse_txt_data(argc - 8, &argv[8], txt_data, sizeof(txt_data));
+	}
+
+	res = dns_sd_service_publish(&info, K_MSEC(RECORD_ACCESS_TIMEOUT), &handle);
+
+	if (res == 0) {
+		shell_print(sh, "added service: %p", handle);
+	} else if (res == -ETIMEDOUT) {
+		shell_warn(sh, "failed to acquire the lock within %u ms", RECORD_ACCESS_TIMEOUT);
+	} else {
+		shell_warn(sh, "failed to add the service");
+	}
+
+	return res;
+}
+
+static int cmd_tbr_dns_sd_services_add(const struct shell *sh, size_t argc, char *argv[])
+{
+	if (argc < 9) {
+		shell_warn(sh, "missing arguments");
+		return -EINVAL;
+	}
+
+	return add_dns_sd_service(sh, NULL, argc - 1, &argv[1]);
+}
+
+static int cmd_tbr_dns_sd_services_add_with_subtype(const struct shell *sh, size_t argc, char *argv[])
+{
+	if (argc < 10) {
+		shell_warn(sh, "missing arguments");
+		return -EINVAL;
+	}
+
+	return add_dns_sd_service(sh, argv[1], argc - 2, &argv[2]);
+}
+
+static int cmd_tbr_dns_sd_services_remove(const struct shell *sh, size_t argc, char *argv[])
+{
+	struct dns_sd_service_handle *handle;
+	char *endptr;
+	int res;
+
+	if (argc < 2) {
+		shell_warn(sh, "missing service handle");
+		return -EINVAL;
+	}
+
+	handle = (struct dns_sd_service_handle *)strtoul(argv[1], &endptr, 16);
+
+	if (*endptr != '\0') {
+		shell_warn(sh, "invalid record handler: %s", argv[1]);
+		return -EINVAL;
+	}
+
+	res = dns_sd_service_unpublish(handle, K_MSEC(RECORD_ACCESS_TIMEOUT));
+
+	if (res == 0) {
+		shell_print(sh, "service removed");
+	} else if (res == -EBUSY) {
+		shell_warn(sh, "could not acquire the lock within: %u ms, try again",
+			   RECORD_ACCESS_TIMEOUT);
+	} else if (res == -EINVAL) {
+		shell_warn(sh, "invalid service handle: %s", argv[1]);
+	} else {
+		shell_warn(sh, "operation failed");
+	}
+
+	return res;
+}
+
+static void print_service(struct dns_sd_service_handle *handle, void *user_data)
+{
+	const struct shell *sh = (const struct shell *)user_data;
+	struct dns_sd_service_info_out info;
+	uint8_t txt_data[MAX_TXT_RDATA_LEN];
+	char subtype[MAX_SUBTYPE_SIZE];
+
+	memset(&info, 0, sizeof(info));
+
+	info.name.buf = buf;
+	info.name.len_max = sizeof(buf) - 1;
+
+	info.subtype.buf = subtype;
+	info.subtype.len_max = sizeof(subtype) - 1;
+
+	info.txt_data.buf = txt_data;
+	info.txt_data.len_max = sizeof(txt_data);
+
+	dns_sd_service_get_info(handle, &info, K_NO_WAIT);
+
+	buf[info.name.len_read] = '\0';
+	subtype[info.subtype.len_read] = '\0';
+
+	shell_print(sh, "service %p: ttl: %d", handle, info.ttl);
+	shell_print(sh, "                   name: %s", buf);
+
+	if (info.subtype.len_read) {
+		shell_print(sh, "                subtype: %s", subtype);
+	}
+
+	shell_print(sh, "                 target: %p", info.target);
+	shell_print(sh, "               priority: %u", info.priority);
+	shell_print(sh, "                 weight: %u", info.weight);
+	shell_print(sh, "                   port: %u", info.port);
+
+	if (info.txt_data.len_read) {
+		shell_print(sh, "               TXT data:");
+		shell_hexdump(sh, txt_data, info.txt_data.len_read);
+	}
+}
+
+static int cmd_tbr_dns_sd_services_show(const struct shell *sh, size_t argc, char *argv[])
+{
+	int res = dns_sd_service_for_each(print_service, (void *)sh, K_MSEC(RECORD_ACCESS_TIMEOUT));
+
+	if (res == 0) {
+		shell_info(sh, "no DNS-SD services");
+	} else if (res < 0) {
+		shell_warn(sh, "could not acquire the lock within: %u ms, try again",
+			   RECORD_ACCESS_TIMEOUT);
+	}
+
+	return 0;
+}
+
 SHELL_STATIC_SUBCMD_SET_CREATE(tbr_cmd_nd,
 			       SHELL_CMD(send_rs, NULL, "Send Router Solicitation\n"
 					 "  Usage: tbr nd send_rs <interface's index>",
@@ -578,9 +768,28 @@ SHELL_STATIC_SUBCMD_SET_CREATE(tbr_cmd_mdns,
 			       SHELL_SUBCMD_SET_END
 			       );
 
+SHELL_STATIC_SUBCMD_SET_CREATE(tbr_cmd_dns_sd_services,
+			       SHELL_CMD(show, NULL, "Show the list of services",
+					 cmd_tbr_dns_sd_services_show),
+			       SHELL_CMD(add, NULL, "Add service",
+					 cmd_tbr_dns_sd_services_add),
+			       SHELL_CMD(add_with_subtype, NULL, "Add service with subtype",
+					 cmd_tbr_dns_sd_services_add_with_subtype),
+			       SHELL_CMD(remove, NULL, "Remove services",
+					 cmd_tbr_dns_sd_services_remove),
+			       SHELL_SUBCMD_SET_END
+			       );
+
+SHELL_STATIC_SUBCMD_SET_CREATE(tbr_cmd_dns_sd,
+			       SHELL_CMD(services, &tbr_cmd_dns_sd_services,
+					 "Manage DNS-SD services", NULL),
+			       SHELL_SUBCMD_SET_END
+			       );
+
 SHELL_STATIC_SUBCMD_SET_CREATE(tbr_commands,
 			       SHELL_CMD(nd, &tbr_cmd_nd, "Neighbor Discovery commands", NULL),
 			       SHELL_CMD(mdns, &tbr_cmd_mdns, "mDNS server commands", NULL),
+			       SHELL_CMD(dns-sd, &tbr_cmd_dns_sd, "DNS-SD commands", NULL),
 			       SHELL_SUBCMD_SET_END
 			       );
 
