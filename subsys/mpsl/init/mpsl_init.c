@@ -53,7 +53,11 @@ static K_WORK_DELAYABLE_DEFINE(calibration_work, mpsl_calibration_work_handler);
 #define MPSL_RADIO_IRQn RADIO_0_IRQn
 #elif IS_ENABLED(CONFIG_SOC_PLATFORM_HALTIUM)
 #define MPSL_TIMER_IRQn TIMER020_IRQn
+#if IS_ENABLED(CONFIG_SOC_NRF54H20) && !IS_ENABLED(CONFIG_HW_REVISION_SOC1)
+#define MPSL_RTC_IRQn GRTC_2_IRQn
+#else
 #define MPSL_RTC_IRQn GRTC_0_IRQn /* non-secure GRTC IRQ. */
+#endif /* IS_ENABLED(CONFIG_SOC_NRF54H20) && !defined(CONFIG_HW_REVISION_SOC1) */
 #define MPSL_RADIO_IRQn RADIO_0_IRQn
 
 /* Basic build time sanity checking */
