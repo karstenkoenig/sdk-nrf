@@ -24,8 +24,8 @@ static const suit_uuid_t *validate_and_get_uuid(struct zcbor_string *in_uuid)
 
 int suit_plat_check_cid(suit_component_t component_handle, struct zcbor_string *cid_uuid)
 {
-	const suit_manifest_class_id_t
-		*manifest_class_ids_list[CONFIG_MAX_NUMBER_OF_MANIFEST_CLASS_IDS] = {NULL};
+	suit_manifest_class_info_t
+		manifest_class_info_list[CONFIG_MAX_NUMBER_OF_MANIFEST_CLASS_IDS] = {NULL};
 	size_t size = CONFIG_MAX_NUMBER_OF_MANIFEST_CLASS_IDS;
 	struct zcbor_string *component_id;
 	const suit_uuid_t *cid = validate_and_get_uuid(cid_uuid);
@@ -35,7 +35,7 @@ int suit_plat_check_cid(suit_component_t component_handle, struct zcbor_string *
 		return SUIT_ERR_UNSUPPORTED_COMPONENT_ID;
 	}
 
-	mci_err_t ret = suit_mci_supported_manifest_class_ids_get(manifest_class_ids_list, &size);
+	mci_err_t ret = suit_mci_supported_manifest_class_ids_get(manifest_class_info_list, &size);
 
 	if (ret != SUIT_PLAT_SUCCESS) {
 		return SUIT_ERR_CRASH;
@@ -47,9 +47,9 @@ int suit_plat_check_cid(suit_component_t component_handle, struct zcbor_string *
 	}
 
 	for (size_t i = 0; i < size; i++) {
-		if ((suit_plat_component_compatibility_check(manifest_class_ids_list[i],
+		if ((suit_plat_component_compatibility_check(manifest_class_info_list[i].class_id,
 							     component_id) == SUIT_SUCCESS) &&
-		    (suit_metadata_uuid_compare(cid, manifest_class_ids_list[i]) ==
+		    (suit_metadata_uuid_compare(cid, manifest_class_info_list[i].class_id) ==
 		     SUIT_PLAT_SUCCESS)) {
 			return SUIT_SUCCESS;
 		}
@@ -60,11 +60,11 @@ int suit_plat_check_cid(suit_component_t component_handle, struct zcbor_string *
 
 int suit_plat_check_vid(suit_component_t component_handle, struct zcbor_string *vid_uuid)
 {
-	const suit_manifest_class_id_t
-		*manifest_class_ids_list[CONFIG_MAX_NUMBER_OF_MANIFEST_CLASS_IDS] = {NULL};
+	suit_manifest_class_info_t
+		manifest_class_info_list[CONFIG_MAX_NUMBER_OF_MANIFEST_CLASS_IDS] = {NULL};
 	size_t size = CONFIG_MAX_NUMBER_OF_MANIFEST_CLASS_IDS;
 	struct zcbor_string *component_id;
-	const suit_uuid_t *vendor_id;
+	const suit_uuid_t *vendor_id = NULL;
 	const suit_uuid_t *vid = validate_and_get_uuid(vid_uuid);
 
 	if (vid == NULL) {
@@ -72,7 +72,7 @@ int suit_plat_check_vid(suit_component_t component_handle, struct zcbor_string *
 		return SUIT_ERR_UNSUPPORTED_COMPONENT_ID;
 	}
 
-	mci_err_t ret = suit_mci_supported_manifest_class_ids_get(manifest_class_ids_list, &size);
+	mci_err_t ret = suit_mci_supported_manifest_class_ids_get(manifest_class_info_list, &size);
 
 	if (ret != SUIT_PLAT_SUCCESS) {
 		return SUIT_ERR_CRASH;
@@ -84,10 +84,10 @@ int suit_plat_check_vid(suit_component_t component_handle, struct zcbor_string *
 	}
 
 	for (size_t i = 0; i < size; i++) {
-		if ((suit_plat_component_compatibility_check(manifest_class_ids_list[i],
+		if ((suit_plat_component_compatibility_check(manifest_class_info_list[i].class_id,
 							     component_id) == SUIT_SUCCESS) &&
 		    (suit_mci_vendor_id_for_manifest_class_id_get(
-			     manifest_class_ids_list[i], &vendor_id) == SUIT_PLAT_SUCCESS) &&
+			     manifest_class_info_list[i].class_id, &vendor_id) == SUIT_PLAT_SUCCESS) &&
 		    (suit_metadata_uuid_compare(vid, vendor_id) == SUIT_PLAT_SUCCESS)) {
 			return SUIT_SUCCESS;
 		}

@@ -92,10 +92,10 @@ static suit_plat_err_t load_keys(uint32_t *key_id)
 }
 #endif /* CONFIG_MBEDTLS || CONFIG_NRF_SECURITY */
 
-int suit_mci_supported_manifest_class_ids_get(const suit_manifest_class_id_t **class_id,
+int suit_mci_supported_manifest_class_ids_get(suit_manifest_class_info_t *class_info,
 					      size_t *size)
 {
-	if (NULL == class_id || NULL == size) {
+	if (NULL == class_info || NULL == size) {
 		return SUIT_PLAT_ERR_INVAL;
 	}
 
@@ -107,7 +107,7 @@ int suit_mci_supported_manifest_class_ids_get(const suit_manifest_class_id_t **c
 	}
 
 	for (int i = 0; i < output_size; ++i) {
-		class_id[i] = supported_manifests[i].manifest_class_id;
+		class_info[i].class_id = supported_manifests[i].manifest_class_id;
 	}
 
 	*size = output_size;
@@ -263,24 +263,6 @@ int suit_mci_platform_specific_component_rights_validate(const suit_manifest_cla
 	return MCI_ERR_NOACCESS;
 }
 
-int suit_mci_manifest_parent_get(const suit_manifest_class_id_t *child_class_id,
-				 const suit_manifest_class_id_t **parent_class_id)
-{
-	if (NULL == child_class_id || NULL == parent_class_id) {
-		return SUIT_PLAT_ERR_INVAL;
-	}
-
-	const manifest_config_t *child_manifest_config = find_manifest_config(child_class_id);
-
-	if (NULL == child_manifest_config) {
-		return MCI_ERR_MANIFESTCLASSID;
-	}
-
-	*parent_class_id = child_manifest_config->parent_manifest_class_id;
-
-	return SUIT_PLAT_SUCCESS;
-}
-
 int suit_mci_vendor_id_for_manifest_class_id_get(const suit_manifest_class_id_t *class_id,
 						 const suit_uuid_t **vendor_id)
 {
@@ -295,6 +277,42 @@ int suit_mci_vendor_id_for_manifest_class_id_get(const suit_manifest_class_id_t 
 	}
 
 	return suit_mci_nordic_vendor_id_get(vendor_id);
+}
+
+int suit_mci_manifest_parent_child_declaration_validate(
+						const suit_manifest_class_id_t *parent_class_id,
+						const suit_manifest_class_id_t *child_class_id)
+{
+	if (NULL == parent_class_id || NULL == child_class_id) {
+		return SUIT_PLAT_ERR_INVAL;
+	}
+
+	if ((SUIT_PLAT_SUCCESS == 
+			suit_metadata_uuid_compare(&nordic_root_manifest_class_id, parent_class_id)) &&
+		(SUIT_PLAT_SUCCESS == 
+			suit_metadata_uuid_compare(&nordic_app_manifest_class_id, child_class_id))) {
+		return SUIT_PLAT_SUCCESS;
+	}
+
+	return MCI_ERR_NOACCESS;
+}
+
+mci_err_t suit_mci_manifest_process_dependency_validate(
+						const suit_manifest_class_id_t *parent_class_id,
+						const suit_manifest_class_id_t *child_class_id)
+{
+	if (NULL == parent_class_id || NULL == child_class_id) {
+		return SUIT_PLAT_ERR_INVAL;
+	}
+
+	if ((SUIT_PLAT_SUCCESS == 
+			suit_metadata_uuid_compare(&nordic_root_manifest_class_id, parent_class_id)) &&
+		(SUIT_PLAT_SUCCESS == 
+			suit_metadata_uuid_compare(&nordic_app_manifest_class_id, child_class_id))) {
+		return SUIT_PLAT_SUCCESS;
+	}
+
+	return MCI_ERR_NOACCESS;
 }
 
 int suit_mci_init(void)

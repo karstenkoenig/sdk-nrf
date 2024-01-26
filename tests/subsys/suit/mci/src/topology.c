@@ -8,6 +8,7 @@
 
 #define OUTPUT_MAX_SIZE 32
 static const suit_uuid_t *result_uuid[OUTPUT_MAX_SIZE];
+static suit_manifest_class_info_t result_class_info[OUTPUT_MAX_SIZE];
 
 static int compare_manifest_class_id(const suit_manifest_class_id_t *manifest_class_id1,
 				     const suit_manifest_class_id_t *manifest_class_id2)
@@ -21,13 +22,13 @@ static void test_duplicate_ids_in_supported_manifest(void)
 	int rc = SUIT_PLAT_SUCCESS;
 	size_t output_size = OUTPUT_MAX_SIZE;
 
-	rc = suit_mci_supported_manifest_class_ids_get(result_uuid, &output_size);
+	rc = suit_mci_supported_manifest_class_ids_get(result_class_info, &output_size);
 	zassert_equal(rc, SUIT_PLAT_SUCCESS,
 		      "suit_mci_supported_manifest_class_ids_get returned (%d)", rc);
 
 	for (int i = 0; i < output_size; ++i) {
 		for (int j = i + 1; j < output_size; ++j) {
-			rc = compare_manifest_class_id(result_uuid[i], result_uuid[j]);
+			rc = compare_manifest_class_id(result_class_info[i].class_id, result_class_info[j].class_id);
 			zassert_true((rc != 0), "the same uuid used for two manifests");
 		}
 	}
@@ -43,7 +44,7 @@ static void test_duplicate_ids_in_invoke_order(void)
 
 	for (int i = 0; i < output_size; ++i) {
 		for (int j = i + 1; j < output_size; ++j) {
-			rc = compare_manifest_class_id(result_uuid[i], result_uuid[j]);
+			rc = compare_manifest_class_id(result_class_info[i].class_id, result_class_info[j].class_id);
 			zassert_true((rc != 0), "the same uuid used for two manifests");
 		}
 	}

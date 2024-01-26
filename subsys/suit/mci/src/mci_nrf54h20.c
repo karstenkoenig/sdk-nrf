@@ -5,123 +5,24 @@
  */
 #include <suit_mci.h>
 #include <drivers/nrfx_common.h>
+#include <suit_storage_mpi.h>
+#include <suit_execution_mode.h>
 
-/* nRF54H20 topology: Root Manifest orchestrating app, radio, sec (with system controller).
- * Summarizing - Single Root Manifest and three local manifests.
- */
+#define MANIFEST_PUBKEY_NRF_TOP_GEN0		0x4000BB00
+#define MANIFEST_PUBKEY_SYSCTRL_GEN0		0x40082100
+#define MANIFEST_PUBKEY_OEM_ROOT_GEN0		0x4000AA00
+#define MANIFEST_PUBKEY_APPLICATION_GEN0	0x40022100
+#define MANIFEST_PUBKEY_RADIO_GEN0			0x40032100
+#define MANIFEST_PUBKEY_GEN_RANGE 			2
 
-/* RFC4122 uuid5(nordic_vid, 'nRF54H20_sample_root')
- */
-static const suit_manifest_class_id_t nordic_root_manifest_class_id = {
-	{0x3f, 0x6a, 0x3a, 0x4d, 0xcd, 0xfa, 0x58, 0xc5, 0xac, 0xce, 0xf9, 0xf5, 0x84, 0xc4, 0x11,
-	 0x24}};
-
-/* RFC4122 uuid5(nordic_vid, 'nRF54H20_sample_app')
- */
-static const suit_manifest_class_id_t nordic_app_manifest_class_id = {
-	{0x08, 0xc1, 0xb5, 0x99, 0x55, 0xe8, 0x5f, 0xbc, 0x9e, 0x76, 0x7b, 0xc2, 0x9c, 0xe1, 0xb0,
-	 0x4d}};
-
-/* RFC4122 uuid5(nordic_vid, 'nRF54H20_sample_rad')
- */
-static const suit_manifest_class_id_t nordic_rad_manifest_class_id = {
-	{0x81, 0x6a, 0xa0, 0xa0, 0xaf, 0x11, 0x5e, 0xf2, 0x85, 0x8a, 0xfe, 0xb6, 0x68, 0xb2, 0xe9,
-	 0xc9}};
-
-/* RFC4122 uuid5(nordic_vid, 'nRF54H20_nordic_top')
- */
-static const suit_manifest_class_id_t nordic_top_manifest_class_id = {
-	{0xf0, 0x3d, 0x38, 0x5e, 0xa7, 0x31, 0x56, 0x05, 0xb1, 0x5d, 0x03, 0x7f, 0x6d, 0xa6, 0x09,
-	 0x7f}};
-
-/* RFC4122 uuid5(nordic_vid, 'nRF54H20_sec')
- */
-static const suit_manifest_class_id_t nordic_sec_manifest_class_id = {
-	{0xd9, 0x6b, 0x40, 0xb7, 0x09, 0x2b, 0x5c, 0xd1, 0xa5, 0x9f, 0x9a, 0xf8, 0x0c, 0x33, 0x7e,
-	 0xba}};
-
-/* RFC4122 uuid5(nordic_vid, 'nRF54H20_sys')
- */
-static const suit_manifest_class_id_t nordic_sys_manifest_class_id = {
-	{0xc0, 0x8a, 0x25, 0xd7, 0x35, 0xe6, 0x59, 0x2c, 0xb7, 0xad, 0x43, 0xac, 0xc8, 0xd1, 0xd1,
-	 0xc8}};
-
-typedef struct {
-	const suit_manifest_class_id_t *manifest_class_id;
-	const suit_manifest_class_id_t *parent_manifest_class_id;
-	downgrade_prevention_policy_t downgrade_prevention_policy;
-	uint32_t signing_key_bits;
-	uint32_t signing_key_mask;
-} manifest_config_t;
-
-static const manifest_config_t supported_manifests[] = {
-	{&nordic_root_manifest_class_id, NULL, DOWNGRADE_PREVENTION_DISABLED,
-	 /* signing_key_mask equal to 0 means signing is not required
-	  */
-	 0x00000000, 0x00000000},
-	{&nordic_top_manifest_class_id, &nordic_root_manifest_class_id,
-	 DOWNGRADE_PREVENTION_ENABLED,
-	 /* signing_key_mask equal to 0 means signing is not required
-	  */
-	 0x00000000, 0x00000000},
-	/* TODO: Change parent to nordic_top_manifest_class_id once it is supported */
-	{&nordic_sec_manifest_class_id, &nordic_root_manifest_class_id,
-	 DOWNGRADE_PREVENTION_ENABLED,
-	 /* signing_key_mask equal to 0 means signing is not required
-	  */
-	 0x00000000, 0x00000000},
-	/* TODO: Change parent to nordic_top_manifest_class_id once it is supported */
-	{&nordic_sys_manifest_class_id, &nordic_root_manifest_class_id,
-	 DOWNGRADE_PREVENTION_ENABLED,
-	 /* signing_key_mask equal to 0 means signing is not required
-	  */
-	 0x00000000, 0x00000000},
-	{&nordic_app_manifest_class_id, &nordic_root_manifest_class_id,
-	 DOWNGRADE_PREVENTION_DISABLED,
-	 /* signing_key_mask equal to 0 means signing is not required
-	  */
-	 0x00000000, 0x00000000},
-	{&nordic_rad_manifest_class_id, &nordic_root_manifest_class_id,
-	 DOWNGRADE_PREVENTION_DISABLED,
-	 /* signing_key_mask equal to 0 means signing is not required
-	  */
-	 0x00000000, 0x00000000}};
-
-static const manifest_config_t *
-find_manifest_config(const suit_manifest_class_id_t *manifest_class_id)
-{
-	for (int i = 0; i < sizeof(supported_manifests) / sizeof(manifest_config_t); ++i) {
-		const manifest_config_t *manifest_config = &supported_manifests[i];
-
-		if (SUIT_PLAT_SUCCESS ==
-		    suit_metadata_uuid_compare(manifest_config->manifest_class_id,
-					       manifest_class_id)) {
-			return manifest_config;
-		}
-	}
-	return NULL;
-}
-
-mci_err_t suit_mci_supported_manifest_class_ids_get(const suit_manifest_class_id_t **class_id,
+mci_err_t suit_mci_supported_manifest_class_ids_get(suit_manifest_class_info_t *class_info,
 						    size_t *size)
 {
-	if (NULL == class_id || NULL == size) {
+	if (NULL == class_info || NULL == size) {
 		return SUIT_PLAT_ERR_INVAL;
 	}
 
-	size_t output_max_size = *size;
-	size_t output_size = sizeof(supported_manifests) / sizeof(manifest_config_t);
-
-	if (output_size > output_max_size) {
-		return SUIT_PLAT_ERR_SIZE;
-	}
-
-	for (int i = 0; i < output_size; ++i) {
-		class_id[i] = supported_manifests[i].manifest_class_id;
-	}
-
-	*size = output_size;
-	return SUIT_PLAT_SUCCESS;
+	return suit_storage_mpi_class_ids_get(class_info, size);
 }
 
 mci_err_t suit_mci_invoke_order_get(const suit_manifest_class_id_t **class_id, size_t *size)
@@ -130,17 +31,39 @@ mci_err_t suit_mci_invoke_order_get(const suit_manifest_class_id_t **class_id, s
 		return SUIT_PLAT_ERR_INVAL;
 	}
 	size_t output_max_size = *size;
-
-	/* In this implementation the only manifest which shall be utilized to initiate
-	 *  system bringup is a root manifest
-	 */
-	size_t output_size = 1;
+	size_t output_size = 2; /* Current number of elements on invocation order list */
 
 	if (output_size > output_max_size) {
 		return SUIT_PLAT_ERR_SIZE;
 	}
 
-	class_id[0] = &nordic_root_manifest_class_id;
+	suit_execution_mode_t execution_mode = suit_execution_mode_get();
+
+	switch (execution_mode) {
+	case EXECUTION_MODE_INVOKE:
+		if(SUIT_PLAT_SUCCESS != suit_storage_mpi_class_get(SUIT_MANIFEST_SEC_TOP, &class_id[0])) {
+			return SUIT_PLAT_ERR_NOT_FOUND;
+		}
+ 
+		if(SUIT_PLAT_SUCCESS != suit_storage_mpi_class_get(SUIT_MANIFEST_APP_ROOT, &class_id[1])) {
+			return SUIT_PLAT_ERR_NOT_FOUND;
+		}
+		break;
+
+	case EXECUTION_MODE_INVOKE_RECOVERY:
+		if(SUIT_PLAT_SUCCESS != suit_storage_mpi_class_get(SUIT_MANIFEST_SEC_TOP, &class_id[0])) {
+			return SUIT_PLAT_ERR_NOT_FOUND;
+		}
+
+		if(SUIT_PLAT_SUCCESS != suit_storage_mpi_class_get(SUIT_MANIFEST_APP_RECOVERY, &class_id[1])) {
+			return SUIT_PLAT_ERR_NOT_FOUND;
+		}
+		break;
+
+	default:
+		return SUIT_PLAT_ERR_INCORRECT_STATE;
+	}
+
 	*size = output_size;
 	return SUIT_PLAT_SUCCESS;
 }
@@ -152,12 +75,20 @@ mci_err_t suit_mci_downgrade_prevention_policy_get(const suit_manifest_class_id_
 		return SUIT_PLAT_ERR_INVAL;
 	}
 
-	const manifest_config_t *manifest_config = find_manifest_config(class_id);
+	suit_storage_mpi_t *mpi;
 
-	if (NULL == manifest_config) {
+	if (SUIT_PLAT_SUCCESS != suit_storage_mpi_get(class_id, &mpi)) {
 		return MCI_ERR_MANIFESTCLASSID;
 	}
-	*policy = manifest_config->downgrade_prevention_policy;
+
+	if (SUIT_MPI_DOWNGRADE_PREVENTION_DISABLED == mpi->downgrade_prevention_policy) {
+		*policy = DOWNGRADE_PREVENTION_DISABLED;
+	} else if (SUIT_MPI_DOWNGRADE_PREVENTION_ENABLED == mpi->downgrade_prevention_policy) {
+		*policy = DOWNGRADE_PREVENTION_ENABLED;
+	} else {
+		return SUIT_PLAT_ERR_OUT_OF_BOUNDS;
+	}
+
 	return SUIT_PLAT_SUCCESS;
 }
 
@@ -167,11 +98,13 @@ mci_err_t suit_mci_manifest_class_id_validate(const suit_manifest_class_id_t *cl
 		return SUIT_PLAT_ERR_INVAL;
 	}
 
-	const manifest_config_t *manifest_config = find_manifest_config(class_id);
+	suit_manifest_role_t role = SUIT_MANIFEST_UNKNOWN;
+	suit_plat_err_t ret = suit_storage_mpi_role_get(class_id, &role);
 
-	if (NULL == manifest_config) {
+	if (SUIT_PLAT_SUCCESS != ret) {
 		return MCI_ERR_MANIFESTCLASSID;
 	}
+
 	return SUIT_PLAT_SUCCESS;
 }
 
@@ -182,18 +115,81 @@ mci_err_t suit_mci_signing_key_id_validate(const suit_manifest_class_id_t *class
 		return SUIT_PLAT_ERR_INVAL;
 	}
 
-	const manifest_config_t *manifest_config = find_manifest_config(class_id);
-
-	if (NULL == manifest_config) {
+	suit_manifest_role_t role = SUIT_MANIFEST_UNKNOWN;
+	if (SUIT_PLAT_SUCCESS != suit_storage_mpi_role_get(class_id, &role)) {
 		return MCI_ERR_MANIFESTCLASSID;
 	}
 
-	if ((manifest_config->signing_key_bits & manifest_config->signing_key_mask) !=
-	    (key_id & manifest_config->signing_key_mask)) {
+	if (key_id == 0) {
+		if(0) {
+			/* condition above - check if LCS requires to skip signature check. NCSDK-25998
+			*/
+			return SUIT_PLAT_SUCCESS;
+		}
+
+		suit_storage_mpi_t *mpi;
+		if (SUIT_PLAT_SUCCESS != suit_storage_mpi_get(class_id, &mpi)) {
+			return MCI_ERR_MANIFESTCLASSID;
+		}
+
+		if (mpi->signature_verification_policy == SUIT_MPI_SIGNATURE_CHECK_DISABLED) {
+			return SUIT_PLAT_SUCCESS;
+		} else if (mpi->signature_verification_policy ==
+			SUIT_MPI_SIGNATURE_CHECK_ENABLED_ON_UPDATE &&
+			EXECUTION_MODE_INVOKE == suit_execution_mode_get()) {
+				return SUIT_PLAT_SUCCESS;
+		}
+
 		return MCI_ERR_WRONGKEYID;
 	}
 
-	return SUIT_PLAT_SUCCESS;
+	switch (role) {
+	case SUIT_MANIFEST_SEC_TOP:
+	case SUIT_MANIFEST_SEC_SDFW:
+		if (key_id >= MANIFEST_PUBKEY_NRF_TOP_GEN0 &&
+			key_id <= MANIFEST_PUBKEY_NRF_TOP_GEN0 + MANIFEST_PUBKEY_GEN_RANGE) {
+			return SUIT_PLAT_SUCCESS;
+		}
+		break;
+
+	case SUIT_MANIFEST_SEC_SYSCTRL:
+		if (key_id >= MANIFEST_PUBKEY_SYSCTRL_GEN0 &&
+			key_id <= MANIFEST_PUBKEY_SYSCTRL_GEN0 + MANIFEST_PUBKEY_GEN_RANGE) {
+			return SUIT_PLAT_SUCCESS;
+		}
+		break;
+
+	case SUIT_MANIFEST_APP_ROOT:
+		if (key_id >= MANIFEST_PUBKEY_OEM_ROOT_GEN0 &&
+			key_id <= MANIFEST_PUBKEY_OEM_ROOT_GEN0 + MANIFEST_PUBKEY_GEN_RANGE) {
+			return SUIT_PLAT_SUCCESS;
+		}
+		break;
+
+	case SUIT_MANIFEST_APP_RECOVERY:
+	case SUIT_MANIFEST_APP_LOCAL_1:
+	case SUIT_MANIFEST_APP_LOCAL_2:
+	case SUIT_MANIFEST_APP_LOCAL_3:
+		if (key_id >= MANIFEST_PUBKEY_APPLICATION_GEN0 &&
+			key_id <= MANIFEST_PUBKEY_APPLICATION_GEN0 + MANIFEST_PUBKEY_GEN_RANGE) {
+			return SUIT_PLAT_SUCCESS;
+		}
+		break;
+
+	case SUIT_MANIFEST_RAD_RECOVERY:
+	case SUIT_MANIFEST_RAD_LOCAL_1:
+	case SUIT_MANIFEST_RAD_LOCAL_2:
+		if (key_id >= MANIFEST_PUBKEY_RADIO_GEN0 &&
+			key_id <= MANIFEST_PUBKEY_RADIO_GEN0 + MANIFEST_PUBKEY_GEN_RANGE) {
+			return SUIT_PLAT_SUCCESS;
+		}
+		break;
+
+	default:
+		break;
+	}
+
+	return MCI_ERR_WRONGKEYID;
 }
 
 mci_err_t suit_mci_processor_start_rights_validate(const suit_manifest_class_id_t *class_id,
@@ -203,74 +199,58 @@ mci_err_t suit_mci_processor_start_rights_validate(const suit_manifest_class_id_
 		return SUIT_PLAT_ERR_INVAL;
 	}
 
-	const manifest_config_t *manifest_config = find_manifest_config(class_id);
+	suit_manifest_role_t role = SUIT_MANIFEST_UNKNOWN;
 
-	if (NULL == manifest_config) {
+	if (SUIT_PLAT_SUCCESS != suit_storage_mpi_role_get(class_id, &role)) {
 		return MCI_ERR_MANIFESTCLASSID;
 	}
 
-	if (SUIT_PLAT_SUCCESS ==
-	    suit_metadata_uuid_compare(&nordic_root_manifest_class_id, class_id)) {
-		/* Root manifest - ability to start any cpu is intentionally blocked
-		 */
-		return MCI_ERR_NOACCESS;
+	switch (role) {
+	case SUIT_MANIFEST_UNKNOWN:
+		return MCI_ERR_MANIFESTCLASSID;
 
-	} else if (SUIT_PLAT_SUCCESS ==
-		   suit_metadata_uuid_compare(&nordic_top_manifest_class_id, class_id)) {
-		/* Nordic top manifest - ability to start any cpu is intentionally blocked
-		 */
-		return MCI_ERR_NOACCESS;
+	case SUIT_MANIFEST_SEC_TOP:
+	case SUIT_MANIFEST_APP_ROOT:
+	case SUIT_MANIFEST_SEC_SDFW:
+		break;
 
-	} else if (SUIT_PLAT_SUCCESS ==
-		   suit_metadata_uuid_compare(&nordic_sec_manifest_class_id, class_id)) {
-		/* Sec manifest - ability to start any cpu is intentionally blocked
-		 */
-
-		return MCI_ERR_NOACCESS;
-
-	} else if (SUIT_PLAT_SUCCESS ==
-		   suit_metadata_uuid_compare(&nordic_sys_manifest_class_id, class_id)) {
-		/* Sys manifest
-		 */
+	case SUIT_MANIFEST_SEC_SYSCTRL:
+		/* Sys manifest */
 		if (NRF_PROCESSOR_SYSCTRL == processor_id) {
-			/* SysCtrl
-			 */
+			/* SysCtrl */
 			return SUIT_PLAT_SUCCESS;
 		}
+		break;
 
-		return MCI_ERR_NOACCESS;
-
-	} else if (SUIT_PLAT_SUCCESS ==
-		   suit_metadata_uuid_compare(&nordic_app_manifest_class_id, class_id)) {
+	case SUIT_MANIFEST_APP_RECOVERY:
+	case SUIT_MANIFEST_APP_LOCAL_1:
+	case SUIT_MANIFEST_APP_LOCAL_2:
+	case SUIT_MANIFEST_APP_LOCAL_3:
 		/* App manifest.
-		 * TODO - implement verification for NRF_PROCESSOR_ID_PPR(13) and
-		 * NRF_PROCESSOR_ID_FLPR(14) support(based on UICR)
-		 */
+		* TODO - implement verification for NRF_PROCESSOR_ID_PPR(13) and
+		* NRF_PROCESSOR_ID_FLPR(14) support(based on UICR) NCSDK-26006
+		*/
 		if (NRF_PROCESSOR_APPLICATION == processor_id) {
-			/* Appcore
-			 */
+			/* Appcore */
 			return SUIT_PLAT_SUCCESS;
 		}
+		break;
 
-		return MCI_ERR_NOACCESS;
-
-	} else if (SUIT_PLAT_SUCCESS ==
-		   suit_metadata_uuid_compare(&nordic_rad_manifest_class_id, class_id)) {
+	case SUIT_MANIFEST_RAD_RECOVERY:
+	case SUIT_MANIFEST_RAD_LOCAL_1:
+	case SUIT_MANIFEST_RAD_LOCAL_2:
 		/* Rad manifest
-		 * TODO - implement verification for NRF_PROCESSOR_ID_PPR(13) and
-		 * NRF_PROCESSOR_ID_FLPR(14) support(based on UICR)
-		 */
+		* TODO - implement verification for NRF_PROCESSOR_ID_PPR(13) and
+		* NRF_PROCESSOR_ID_FLPR(14) support(based on UICR) NCSDK-26006
+		*/
 		if (NRF_PROCESSOR_RADIOCORE == processor_id) {
-			/* Radiocore
-			 */
-			return SUIT_PLAT_SUCCESS;
-		} else if (NRF_PROCESSOR_BBPR == processor_id) {
-			/* BBPR
-			 */
+			/* Radiocore */
 			return SUIT_PLAT_SUCCESS;
 		}
+		break;
 
-		return MCI_ERR_NOACCESS;
+	default:
+		break;
 	}
 
 	return MCI_ERR_NOACCESS;
@@ -283,47 +263,53 @@ mci_err_t suit_mci_memory_access_rights_validate(const suit_manifest_class_id_t 
 		return SUIT_PLAT_ERR_INVAL;
 	}
 
-	const manifest_config_t *manifest_config = find_manifest_config(class_id);
+	suit_manifest_role_t role = SUIT_MANIFEST_UNKNOWN;
 
-	if (NULL == manifest_config) {
+	if (SUIT_PLAT_SUCCESS != suit_storage_mpi_role_get(class_id, &role)) {
 		return MCI_ERR_MANIFESTCLASSID;
 	}
 
-	if (SUIT_PLAT_SUCCESS ==
-	    suit_metadata_uuid_compare(&nordic_root_manifest_class_id, class_id)) {
-		/* Root manifest - ability to operate on memory ranges intentionally blocked
-		 */
-		return MCI_ERR_NOACCESS;
+	switch (role) {
+	case SUIT_MANIFEST_UNKNOWN:
+		return MCI_ERR_MANIFESTCLASSID;
 
-	} else if (SUIT_PLAT_SUCCESS ==
-		   suit_metadata_uuid_compare(&nordic_top_manifest_class_id, class_id)) {
+	case SUIT_MANIFEST_SEC_TOP:
 		/* Nordic top manifest - ability to operate on memory ranges intentionally blocked
-		 */
+		*/
 		return MCI_ERR_NOACCESS;
 
-	} else if (SUIT_PLAT_SUCCESS ==
-		   suit_metadata_uuid_compare(&nordic_sec_manifest_class_id, class_id)) {
+	case SUIT_MANIFEST_SEC_SDFW:
 		/* Sec manifest - TODO - implement checks based on UICR/SICR
-		 */
+		*/
 		return SUIT_PLAT_SUCCESS;
 
-	} else if (SUIT_PLAT_SUCCESS ==
-		   suit_metadata_uuid_compare(&nordic_sys_manifest_class_id, class_id)) {
+	case SUIT_MANIFEST_SEC_SYSCTRL:
 		/* Sysctrl manifest - TODO - implement checks based on UICR/SICR
-		 */
+		*/
 		return SUIT_PLAT_SUCCESS;
 
-	} else if (SUIT_PLAT_SUCCESS ==
-		   suit_metadata_uuid_compare(&nordic_app_manifest_class_id, class_id)) {
+	case SUIT_MANIFEST_APP_ROOT:
+		/* Root manifest - ability to operate on memory ranges intentionally blocked
+		*/
+		return MCI_ERR_NOACCESS;
+
+	case SUIT_MANIFEST_APP_RECOVERY:
+	case SUIT_MANIFEST_APP_LOCAL_1:
+	case SUIT_MANIFEST_APP_LOCAL_2:
+	case SUIT_MANIFEST_APP_LOCAL_3:
 		/* App manifest - TODO - implement checks based on UICR
-		 */
+		*/
 		return SUIT_PLAT_SUCCESS;
 
-	} else if (SUIT_PLAT_SUCCESS ==
-		   suit_metadata_uuid_compare(&nordic_rad_manifest_class_id, class_id)) {
+	case SUIT_MANIFEST_RAD_RECOVERY:
+	case SUIT_MANIFEST_RAD_LOCAL_1:
+	case SUIT_MANIFEST_RAD_LOCAL_2:
 		/* Rad manifest - TODO - implement checks based on UICR
-		 */
+		*/
 		return SUIT_PLAT_SUCCESS;
+
+	default:
+		break;
 	}
 
 	return MCI_ERR_NOACCESS;
@@ -337,14 +323,13 @@ suit_mci_platform_specific_component_rights_validate(const suit_manifest_class_i
 		return SUIT_PLAT_ERR_INVAL;
 	}
 
-	const manifest_config_t *manifest_config = find_manifest_config(class_id);
+	suit_manifest_role_t role = SUIT_MANIFEST_UNKNOWN;
 
-	if (NULL == manifest_config) {
+	if (SUIT_PLAT_SUCCESS != suit_storage_mpi_role_get(class_id, &role)) {
 		return MCI_ERR_MANIFESTCLASSID;
 	}
 
-	if (SUIT_PLAT_SUCCESS ==
-	    suit_metadata_uuid_compare(&nordic_sec_manifest_class_id, class_id)) {
+	if (SUIT_MANIFEST_SEC_SDFW == role) {
 		/* The only manifest with ability to control platform specific components is secdom.
 		 * 0 - SDFW Firmware
 		 * 1 - SDFW Recovery Firmware
@@ -353,28 +338,9 @@ suit_mci_platform_specific_component_rights_validate(const suit_manifest_class_i
 		    1 == platform_specific_component_number) {
 			return SUIT_PLAT_SUCCESS;
 		}
-		return MCI_ERR_NOACCESS;
 	}
 
 	return MCI_ERR_NOACCESS;
-}
-
-mci_err_t suit_mci_manifest_parent_get(const suit_manifest_class_id_t *child_class_id,
-				       const suit_manifest_class_id_t **parent_class_id)
-{
-	if (NULL == child_class_id || NULL == parent_class_id) {
-		return SUIT_PLAT_ERR_INVAL;
-	}
-
-	const manifest_config_t *child_manifest_config = find_manifest_config(child_class_id);
-
-	if (NULL == child_manifest_config) {
-		return MCI_ERR_MANIFESTCLASSID;
-	}
-
-	*parent_class_id = child_manifest_config->parent_manifest_class_id;
-
-	return SUIT_PLAT_SUCCESS;
 }
 
 mci_err_t suit_mci_vendor_id_for_manifest_class_id_get(const suit_manifest_class_id_t *class_id,
@@ -383,14 +349,132 @@ mci_err_t suit_mci_vendor_id_for_manifest_class_id_get(const suit_manifest_class
 	if (NULL == class_id || NULL == vendor_id) {
 		return SUIT_PLAT_ERR_INVAL;
 	}
-
-	const manifest_config_t *manifest_config = find_manifest_config(class_id);
-
-	if (NULL == manifest_config) {
+ 
+	suit_storage_mpi_t *mpi;
+	if (SUIT_PLAT_SUCCESS != suit_storage_mpi_get(class_id, &mpi)) {
 		return MCI_ERR_MANIFESTCLASSID;
 	}
 
-	return suit_mci_nordic_vendor_id_get(vendor_id);
+	/* Casting is done as a temporary solution until mpi refactoring */
+	*vendor_id = (const suit_uuid_t *)mpi->vendor_id;
+	return SUIT_PLAT_SUCCESS;
+}
+
+mci_err_t suit_mci_manifest_parent_child_declaration_validate(const suit_manifest_class_id_t *parent_class_id,
+						  const suit_manifest_class_id_t *child_class_id)
+{
+	if ((parent_class_id == NULL) || (child_class_id == NULL)) {
+		return SUIT_PLAT_ERR_INVAL;
+	}
+
+	suit_manifest_role_t parent_role = SUIT_MANIFEST_UNKNOWN;
+	if (SUIT_PLAT_SUCCESS != suit_storage_mpi_role_get(parent_class_id, &parent_role)) {
+		return MCI_ERR_MANIFESTCLASSID;
+	}
+
+	suit_manifest_role_t child_role = SUIT_MANIFEST_UNKNOWN;
+	if (SUIT_PLAT_SUCCESS != suit_storage_mpi_role_get(child_class_id, &child_role)) {
+		return MCI_ERR_MANIFESTCLASSID;
+	}
+
+	if ((parent_role == SUIT_MANIFEST_APP_ROOT) &&
+		(((child_role >= SUIT_MANIFEST_APP_LOCAL_1) && (child_role <= SUIT_MANIFEST_APP_LOCAL_3)) ||
+		 ((child_role >= SUIT_MANIFEST_RAD_LOCAL_1) && (child_role >= SUIT_MANIFEST_RAD_LOCAL_2)) ||
+		 (child_role == SUIT_MANIFEST_SEC_TOP))) {
+		return SUIT_PLAT_SUCCESS;
+	}
+
+	if ((parent_role == SUIT_MANIFEST_SEC_TOP) &&
+		((child_role == SUIT_MANIFEST_SEC_SYSCTRL) ||
+		 (child_role == SUIT_MANIFEST_SEC_SDFW))) {
+		return SUIT_PLAT_SUCCESS;
+	}
+
+	if ((parent_role == SUIT_MANIFEST_APP_RECOVERY) &&
+		((child_role == SUIT_MANIFEST_RAD_RECOVERY) ||
+		((child_role >= SUIT_MANIFEST_APP_LOCAL_1) && (child_role <= SUIT_MANIFEST_APP_LOCAL_3)) ||
+		((child_role >= SUIT_MANIFEST_RAD_LOCAL_1) && (child_role >= SUIT_MANIFEST_RAD_LOCAL_2)))) {
+			return SUIT_PLAT_SUCCESS;
+		}
+
+	return MCI_ERR_NOACCESS;
+}
+
+mci_err_t suit_mci_manifest_process_dependency_validate(
+						const suit_manifest_class_id_t *parent_class_id,
+						const suit_manifest_class_id_t *child_class_id)
+{
+	if ((parent_class_id == NULL) || (child_class_id == NULL)) {
+		return SUIT_PLAT_ERR_INVAL;
+	}
+
+	suit_execution_mode_t execution_mode = suit_execution_mode_get();
+
+	suit_manifest_role_t parent_role = SUIT_MANIFEST_UNKNOWN;
+	if (SUIT_PLAT_SUCCESS != suit_storage_mpi_role_get(parent_class_id, &parent_role)) {
+		return MCI_ERR_MANIFESTCLASSID;
+	}
+
+	suit_manifest_role_t child_role = SUIT_MANIFEST_UNKNOWN;
+	if (SUIT_PLAT_SUCCESS != suit_storage_mpi_role_get(child_class_id, &child_role)) {
+		return MCI_ERR_MANIFESTCLASSID;
+	}
+
+	switch(execution_mode) {
+	case EXECUTION_MODE_INVOKE:
+		if ((parent_role == SUIT_MANIFEST_SEC_TOP) &&
+			((child_role == SUIT_MANIFEST_SEC_SYSCTRL) ||
+			 (child_role == SUIT_MANIFEST_SEC_SDFW))) {
+			return SUIT_PLAT_SUCCESS;
+		}
+
+		if ((parent_role == SUIT_MANIFEST_APP_ROOT) &&
+			(((child_role >= SUIT_MANIFEST_APP_LOCAL_1) && (child_role <= SUIT_MANIFEST_APP_LOCAL_3)) ||
+			 ((child_role >= SUIT_MANIFEST_RAD_LOCAL_1) && (child_role >= SUIT_MANIFEST_RAD_LOCAL_2)))) {
+			return SUIT_PLAT_SUCCESS;
+		}
+		break;
+
+	case EXECUTION_MODE_INSTALL:
+		if ((parent_role == SUIT_MANIFEST_SEC_TOP) &&
+			((child_role == SUIT_MANIFEST_SEC_SYSCTRL) ||
+			 (child_role == SUIT_MANIFEST_SEC_SDFW))) {
+			return SUIT_PLAT_SUCCESS;
+		}
+
+		if ((parent_role == SUIT_MANIFEST_APP_ROOT) &&
+		(((child_role >= SUIT_MANIFEST_APP_LOCAL_1) && (child_role <= SUIT_MANIFEST_APP_LOCAL_3)) ||
+		 ((child_role >= SUIT_MANIFEST_RAD_LOCAL_1) && (child_role >= SUIT_MANIFEST_RAD_LOCAL_2)) ||
+		 (child_role == SUIT_MANIFEST_SEC_TOP))) {
+			return SUIT_PLAT_SUCCESS;
+		}
+
+		if ((parent_role == SUIT_MANIFEST_APP_RECOVERY) &&
+			 (child_role == SUIT_MANIFEST_RAD_RECOVERY)) {
+			return SUIT_PLAT_SUCCESS;
+		}
+		break;
+
+	case EXECUTION_MODE_INVOKE_RECOVERY:
+		if ((parent_role == SUIT_MANIFEST_SEC_TOP) &&
+			((child_role == SUIT_MANIFEST_SEC_SYSCTRL) ||
+			(child_role == SUIT_MANIFEST_SEC_SDFW))) {
+			return SUIT_PLAT_SUCCESS;
+		}
+
+		if ((parent_role == SUIT_MANIFEST_APP_RECOVERY) &&
+			((child_role == SUIT_MANIFEST_RAD_RECOVERY) ||
+			((child_role >= SUIT_MANIFEST_APP_LOCAL_1) && (child_role <= SUIT_MANIFEST_APP_LOCAL_3)) ||
+			((child_role >= SUIT_MANIFEST_RAD_LOCAL_1) && (child_role >= SUIT_MANIFEST_RAD_LOCAL_2)))) {
+			return SUIT_PLAT_SUCCESS;
+		}
+		break;
+
+	default:
+		break;
+	}
+
+	return MCI_ERR_NOACCESS;
 }
 
 mci_err_t suit_mci_init(void)

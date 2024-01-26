@@ -13,6 +13,7 @@ target_link_libraries(suit_mci INTERFACE suit_metadata)
 zephyr_library()
 zephyr_library_sources_ifdef(CONFIG_SUIT_MCI_IMPL_NRF54H20_SDFW src/mci_nrf54h20.c)
 zephyr_library_sources(src/generic_ids.c)
-zephyr_library_sources(src/utils.c)
 
 zephyr_library_link_libraries(suit_mci)
+zephyr_library_link_libraries_ifdef(CONFIG_SUIT_STORAGE suit_storage_interface)
+zephyr_library_link_libraries(suit_execution_mode)

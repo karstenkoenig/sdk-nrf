@@ -5,9 +5,11 @@
  */
 #include <zephyr/ztest.h>
 #include <suit_mci.h>
+#include <suit_execution_mode.h>
 
 #define OUTPUT_MAX_SIZE 32
 static const suit_uuid_t *result_uuid[OUTPUT_MAX_SIZE];
+static suit_manifest_class_info_t result_class_info[OUTPUT_MAX_SIZE];
 
 static void test_null_pointers(void)
 {
@@ -25,16 +27,12 @@ static void test_null_pointers(void)
 	rc = suit_mci_nordic_vendor_id_get(NULL);
 	zassert_equal(rc, SUIT_PLAT_ERR_INVAL, "suit_mci_nordic_vendor_id_get returned (%d)", rc);
 
-	rc = suit_mci_nordic_unspecified_class_id_get(NULL);
-	zassert_equal(rc, SUIT_PLAT_ERR_INVAL,
-		      "suit_mci_nordic_unspecified_class_id_get returned (%d)", rc);
-
 	output_size = OUTPUT_MAX_SIZE;
 	rc = suit_mci_supported_manifest_class_ids_get(NULL, &output_size);
 	zassert_equal(rc, SUIT_PLAT_ERR_INVAL,
 		      "suit_mci_supported_manifest_class_ids_get returned (%d)", rc);
 
-	rc = suit_mci_supported_manifest_class_ids_get(result_uuid, NULL);
+	rc = suit_mci_supported_manifest_class_ids_get(result_class_info, NULL);
 	zassert_equal(rc, SUIT_PLAT_ERR_INVAL,
 		      "suit_mci_supported_manifest_class_ids_get returned (%d)", rc);
 
@@ -78,11 +76,19 @@ static void test_null_pointers(void)
 	zassert_equal(rc, SUIT_PLAT_ERR_INVAL,
 		      "suit_mci_platform_specific_component_rights_validate returned (%d)", rc);
 
-	rc = suit_mci_manifest_parent_child_validate(&unsupported_manifest_class_id, NULL);
+	rc = suit_mci_manifest_parent_child_declaration_validate(&unsupported_manifest_class_id, NULL);
 	zassert_equal(rc, SUIT_PLAT_ERR_INVAL,
 		      "suit_mci_manifest_parent_child_validate returned (%d)", rc);
 
-	rc = suit_mci_manifest_parent_child_validate(NULL, &unsupported_manifest_class_id);
+	rc = suit_mci_manifest_parent_child_declaration_validate(NULL, &unsupported_manifest_class_id);
+	zassert_equal(rc, SUIT_PLAT_ERR_INVAL,
+		      "suit_mci_manifest_parent_child_validate returned (%d)", rc);
+
+	rc = suit_mci_manifest_process_dependency_validate(&unsupported_manifest_class_id, NULL);
+	zassert_equal(rc, SUIT_PLAT_ERR_INVAL,
+		      "suit_mci_manifest_parent_child_validate returned (%d)", rc);
+
+	rc = suit_mci_manifest_process_dependency_validate(NULL, &unsupported_manifest_class_id);
 	zassert_equal(rc, SUIT_PLAT_ERR_INVAL,
 		      "suit_mci_manifest_parent_child_validate returned (%d)", rc);
 
@@ -114,7 +120,7 @@ static void test_output_buffer_too_small(void)
 	int rc = SUIT_PLAT_SUCCESS;
 
 	output_size = OUTPUT_MAX_SIZE;
-	rc = suit_mci_supported_manifest_class_ids_get(result_uuid, &output_size);
+	rc = suit_mci_supported_manifest_class_ids_get(result_class_info, &output_size);
 	zassert_equal(rc, SUIT_PLAT_SUCCESS,
 		      "suit_mci_supported_manifest_class_ids_get returned (%d), isn't %d manifests "
 		      "enough?!",
@@ -122,24 +128,25 @@ static void test_output_buffer_too_small(void)
 	supported_manifest_count = output_size;
 
 	output_size = supported_manifest_count;
-	rc = suit_mci_supported_manifest_class_ids_get(result_uuid, &output_size);
+	rc = suit_mci_supported_manifest_class_ids_get(result_class_info, &output_size);
 	zassert_equal(rc, SUIT_PLAT_SUCCESS,
 		      "suit_mci_supported_manifest_class_ids_get returned (%d)", rc);
 
 	if (supported_manifest_count > 1) {
 		output_size = supported_manifest_count - 1;
-		rc = suit_mci_supported_manifest_class_ids_get(result_uuid, &output_size);
+		rc = suit_mci_supported_manifest_class_ids_get(result_class_info, &output_size);
 		zassert_equal(rc, SUIT_PLAT_ERR_SIZE,
 			      "suit_mci_supported_manifest_class_ids_get returned (%d)", rc);
 	}
 
 	if (supported_manifest_count > 0) {
 		output_size = 0;
-		rc = suit_mci_supported_manifest_class_ids_get(result_uuid, &output_size);
+		rc = suit_mci_supported_manifest_class_ids_get(result_class_info, &output_size);
 		zassert_equal(rc, SUIT_PLAT_ERR_SIZE,
 			      "suit_mci_supported_manifest_class_ids_get returned (%d)", rc);
 	}
 
+	suit_execution_mode_set(EXECUTION_MODE_INVOKE);
 	output_size = OUTPUT_MAX_SIZE;
 	rc = suit_mci_invoke_order_get(result_uuid, &output_size);
 	zassert_equal(rc, SUIT_PLAT_SUCCESS,
@@ -150,6 +157,7 @@ static void test_output_buffer_too_small(void)
 	output_size = invokable_manifest_count;
 	rc = suit_mci_invoke_order_get(result_uuid, &output_size);
 	zassert_equal(rc, SUIT_PLAT_SUCCESS, "suit_mci_invoke_order_get returned (%d)", rc);
+
 
 	if (invokable_manifest_count > 1) {
 		output_size = invokable_manifest_count - 1;

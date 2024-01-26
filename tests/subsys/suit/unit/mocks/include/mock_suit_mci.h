@@ -15,7 +15,6 @@
 /* generic_ids.c */
 #ifdef CONFIG_MOCK_SUIT_MCI_GENERIC_IDS
 FAKE_VALUE_FUNC(int, suit_mci_nordic_vendor_id_get, const suit_uuid_t **);
-FAKE_VALUE_FUNC(int, suit_mci_nordic_unspecified_class_id_get, const suit_uuid_t **);
 #endif /* CONFIG_MOCK_SUIT_MCI_GENERIC_IDS */
 
 /* utils.c */
@@ -26,7 +25,7 @@ FAKE_VALUE_FUNC(int, suit_mci_manifest_parent_child_validate, const suit_manifes
 #endif /* CONFIG_MOCK_SUIT_MCI_UTILS */
 
 /* mci_<soc>.c */
-FAKE_VALUE_FUNC(int, suit_mci_supported_manifest_class_ids_get, const suit_manifest_class_id_t **,
+FAKE_VALUE_FUNC(int, suit_mci_supported_manifest_class_ids_get, suit_manifest_class_info_t *,
 		size_t *);
 FAKE_VALUE_FUNC(int, suit_mci_invoke_order_get, const suit_manifest_class_id_t **, size_t *);
 FAKE_VALUE_FUNC(int, suit_mci_downgrade_prevention_policy_get, const suit_manifest_class_id_t *,
@@ -49,7 +48,6 @@ static inline void mock_suit_mci_reset(void)
 {
 #ifdef CONFIG_MOCK_SUIT_MCI_GENERIC_IDS
 	RESET_FAKE(suit_mci_nordic_vendor_id_get);
-	RESET_FAKE(suit_mci_nordic_unspecified_class_id_get);
 #endif /* CONFIG_MOCK_SUIT_MCI_GENERIC_IDS */
 
 #ifdef CONFIG_MOCK_SUIT_MCI_UTILS

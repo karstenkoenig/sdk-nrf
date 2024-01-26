@@ -51,22 +51,22 @@ static int suit_plat_component_id_get_correct_fake_func(suit_component_t handle,
 }
 
 int suit_mci_supported_manifest_class_ids_get_correct_fake_func(
-	const suit_manifest_class_id_t **class_id, size_t *size)
+	suit_manifest_class_info_t *class_info, size_t *size)
 {
-	zassert_not_null(class_id, "The API must provide a valid class_id pointer");
+	zassert_not_null(class_info, "The API must provide a valid class_id pointer");
 	zassert_not_null(size, "The API must provide a valid size pointer");
 	zassert_not_equal(*size, 0, "Invalid size value. Must be > 0");
 
 	*size = 1;
-	class_id[0] = &sample_class_id;
+	class_info[0].class_id = &sample_class_id;
 
 	return SUIT_PLAT_SUCCESS;
 }
 
 int suit_mci_supported_manifest_class_ids_get_invalid_fake_func(
-	const suit_manifest_class_id_t **class_id, size_t *size)
+	suit_manifest_class_info_t *class_info, size_t *size)
 {
-	zassert_not_null(class_id, "The API must provide a valid class_id pointer");
+	zassert_not_null(class_info, "The API must provide a valid class_id pointer");
 	zassert_not_null(size, "The API must provide a valid size pointer");
 	zassert_not_equal(*size, 0, "Invalid size value. Must be > 0");
 

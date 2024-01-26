@@ -22,27 +22,10 @@ static void test_mci_nordic_vendor_id_value(void)
 			  "unexpected vendor_id");
 }
 
-static void test_mci_nordic_unspecified_class_id_value(void)
-{
-
-	suit_uuid_t expected_cid = {{0xca, 0xd8, 0x52, 0x3a, 0xf8, 0x29, 0x5a, 0x9a, 0xba, 0x85,
-				     0x2e, 0xa0, 0xb2, 0xf5, 0x77, 0xc9}};
-
-	const suit_uuid_t *obtained_cid = NULL;
-	mci_err_t rc = SUIT_PLAT_SUCCESS;
-
-	rc = suit_mci_nordic_unspecified_class_id_get(&obtained_cid);
-	zassert_equal(rc, SUIT_PLAT_SUCCESS,
-		      "suit_mci_nordic_unspecified_class_id_get returned (%d)", rc);
-	zassert_not_null(obtained_cid, "obtained_cid points to NULL");
-	zassert_mem_equal(obtained_cid->raw, expected_cid.raw, sizeof(((suit_uuid_t *)0)->raw), "");
-}
-
 void test_generic_ids(void)
 {
 	ztest_test_suite(test_suit_mci_generic_ids,
-			 ztest_unit_test(test_mci_nordic_vendor_id_value),
-			 ztest_unit_test(test_mci_nordic_unspecified_class_id_value));
+			 ztest_unit_test(test_mci_nordic_vendor_id_value));
 
 	ztest_run_test_suite(test_suit_mci_generic_ids);
 }

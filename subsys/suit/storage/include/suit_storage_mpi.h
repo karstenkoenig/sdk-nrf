@@ -48,12 +48,6 @@ typedef const struct {
 	uint8_t class_id[16];
 } suit_storage_mpi_t;
 
-typedef struct {
-	const suit_manifest_class_id_t *vendor_id;
-	const suit_manifest_class_id_t *class_id;
-	suit_manifest_role_t role;
-} suit_manifest_class_info_t;
-
 /**
  * @brief Initialize the SUIT storage module managing Manifest Provisioning Information.
  *

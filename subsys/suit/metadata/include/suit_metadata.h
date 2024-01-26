@@ -105,6 +105,12 @@ typedef struct {
 /** The 128-bit UUID, identifying the SUIT manifest class. */
 typedef suit_uuid_t suit_manifest_class_id_t;
 
+typedef struct {
+	const suit_uuid_t *vendor_id;
+	const suit_manifest_class_id_t *class_id;
+	suit_manifest_role_t role;
+} suit_manifest_class_info_t;
+
 /**
  * @brief Checks if two suit_uuid_t structures hold the same uuid value
  *
