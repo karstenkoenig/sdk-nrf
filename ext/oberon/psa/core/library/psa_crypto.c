@@ -4849,17 +4849,17 @@ psa_status_t psa_crypto_init( void )
     if( global_data.initialized != 0 )
         return( PSA_SUCCESS );
 
+    /* Init drivers */
+    status = psa_driver_wrapper_init( );
+    if( status != PSA_SUCCESS )
+        goto exit;
+
     /* Initialize and seed the random generator. */
     status = psa_driver_wrapper_init_random(&global_data.rng);
     if( status != PSA_SUCCESS )
         goto exit;
 
     status = psa_initialize_key_slots( );
-    if( status != PSA_SUCCESS )
-        goto exit;
-
-    /* Init drivers */
-    status = psa_driver_wrapper_init( );
     if( status != PSA_SUCCESS )
         goto exit;
 
