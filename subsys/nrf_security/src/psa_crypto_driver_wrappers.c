@@ -112,7 +112,7 @@
 #include "oberon_pake.h"
 #endif
 
-#if defined(PSA_CRYPTO_DRIVER_CRACEN) || defined(PSA_NEED_CRACEN_CTR_DRBG_DRIVER)
+#if defined(PSA_CRYPTO_DRIVER_CRACEN)
 #ifndef PSA_CRYPTO_DRIVER_PRESENT
 #define PSA_CRYPTO_DRIVER_PRESENT
 #endif
@@ -120,6 +120,7 @@
 #define PSA_CRYPTO_ACCELERATOR_DRIVER_PRESENT
 #endif
 #include "cracen_psa.h"
+#include "security/cracen.h"
 #endif /* PSA_CRYPTO_DRIVER_CRACEN */
 
 /* Include TF-M builtin key driver */
@@ -171,6 +172,10 @@ psa_status_t prng_test_generate_random(uint8_t *output, size_t output_size);
 
 psa_status_t psa_driver_wrapper_init(void)
 {
+#if defined(PSA_CRYPTO_DRIVER_CRACEN)
+	return cracen_init();
+#endif
+
 	return PSA_SUCCESS;
 }
 
