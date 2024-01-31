@@ -18,6 +18,10 @@ if (CONFIG_SUIT_STREAM_SINK_DIGEST)
 target_link_libraries(suit_stream_sinks_interface INTERFACE mbedTLS)
 endif()
 
+if (CONFIG_SUIT_STORAGE_LAYOUT_NRF54H20)
+target_link_libraries(suit_storage_interface INTERFACE mbedTLS)
+endif()
+
 # Fix the mbedTLS build scripts:
 #   The "mbedtls/library/psa_crypto_cipher.c" file includes "<psa_crypto_cipher.h>",
 #   but this header is not a part of mbedTLS public API, thus it is not found and
