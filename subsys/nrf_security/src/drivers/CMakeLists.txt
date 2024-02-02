@@ -13,3 +13,7 @@ add_subdirectory(zephyr)
 if(CONFIG_PSA_CRYPTO_DRIVER_OBERON OR CONFIG_OBERON_BACKEND)
   add_subdirectory(nrf_oberon)
 endif()
+
+if(CONFIG_PSA_CRYPTO_DRIVER_CRACEN)
+  add_subdirectory(${ZEPHYR_BASE}/../modules/ic-next/subsys/security/cracen ${CMAKE_CURRENT_BINARY_DIR}/cracen)
+endif()

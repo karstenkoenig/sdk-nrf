@@ -141,9 +141,9 @@ manifest:
     - name: ic-next
       repo-path: sdk-ic-next
       path: modules/ic-next
-      revision: 57754e4dfef4cc9226be41ad8181ac1cb953e3bb
+      revision: 06b8c0b7e12d766289fa019ab0e447bfc32f6d39
     - name: sdk-secdom
-      revision: 429e5eeb5d5c869d69df4f7cdd6fb3fe765013e3
+      revision: a0a31fa4cd91010f905e2de8c9250b90b1f1344f
       path: core_fw/secdom
     - name: nrf-regtool
       revision: v4.3.0
@@ -157,7 +157,7 @@ manifest:
     - name: trusted-firmware-m
       repo-path: sdk-trusted-firmware-m-next
       path: modules/tee/tf-m/trusted-firmware-m
-      revision: 2ca0967ec4fe5e0d619cbfaacc80456d02089561
+      revision: f5ebf82685ab92439973cbafc8163b12e26294d3
     - name: psa-arch-tests
       repo-path: sdk-psa-arch-tests
       path: modules/tee/tf-m/psa-arch-tests
@@ -207,7 +207,7 @@ manifest:
           compare-by-default: false
     - name: find-my
       repo-path: sdk-find-my-next
-      revision: b3fb0e88cb6303864541b1f3783b15d8f046d906
+      revision: fa85293157a78f4b845d18158ad39c23ab9eba60
       groups:
         - find-my
     - name: azure-sdk-for-c

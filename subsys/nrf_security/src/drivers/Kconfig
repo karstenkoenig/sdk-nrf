@@ -213,4 +213,6 @@ rsource "nrf_cc3xx/Kconfig"
 
 rsource "nrf_oberon/Kconfig"
 
+rsource "../../../../../modules/ic-next/subsys/security/cracen/Kconfig"
+
 rsource "zephyr/Kconfig"

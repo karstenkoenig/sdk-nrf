@@ -25,10 +25,9 @@
 
 #define k_panic() tfm_core_panic()
 
-// TODO: Verify that this is safe
 static inline bool k_is_pre_kernel(void)
 {
-	return 1;
+	return 0;
 }
 
 #define K_MUTEX_DEFINE(name) uint32_t name

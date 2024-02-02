@@ -91,14 +91,6 @@ Enabling the nrf_cracen driver
 
 The nrf_cracen driver can be enabled by setting the :kconfig:option:`CONFIG_PSA_CRYPTO_DRIVER_CRACEN` Kconfig option.
 
-Using the nrf_cracen driver
-===========================
-
-To use the nrf_cracen driver and enable the use of CRACEN peripheral on the nRF54L Series devices, the following Kconfig options have to be set additionally:
-
-* :kconfig:option:`CONFIG_CRACEN`
-* :kconfig:option:`CONFIG_LIB_KMU`
-
 Also make sure that the nrf_oberon driver is disabled by using the Kconfig option :kconfig:option:`CONFIG_PSA_CRYPTO_DRIVER_OBERON` (``CONFIG_PSA_CRYPTO_DRIVER_OBERON=n``).
 
 Legacy Mbed TLS

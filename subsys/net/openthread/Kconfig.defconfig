@@ -43,7 +43,7 @@ config PSA_CRYPTO_DRIVER_OBERON
 	default y
 
 #To be removed
-config CRACEN
+config PSA_CRYPTO_DRIVER_CRACEN
 	bool
 	default y
 
