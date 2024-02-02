@@ -15,8 +15,47 @@
  * The functionality will be forwarded to TF-M equivalent of the Zephyr API.
  */
 
+#include <stdint.h>
+#include <stdbool.h>
 #include <zephyr/sys/printk.h>
 
+#include <zephyr/kernel_includes.h>
+#include <errno.h>
+#include <stdbool.h>
+
 #define k_panic() tfm_core_panic()
+
+// TODO: Verify that this is safe
+static inline bool k_is_pre_kernel(void)
+{
+	return 1;
+}
+
+#define K_MUTEX_DEFINE(name) uint32_t name
+
+#define K_FOREVER 0
+
+static int k_mutex_lock(uint32_t *mutex, uint32_t timeout)
+{
+	return 0;
+}
+
+static int k_mutex_unlock(uint32_t *mutex)
+{
+	return 0;
+}
+
+
+#define K_SEM_DEFINE(name, unused_arg1, unused_arg2) uint32_t name
+
+static int k_sem_give(uint32_t *mutex)
+{
+	return 0;
+}
+
+static int k_sem_take(uint32_t *mutex, uint32_t timeout)
+{
+	return 0;
+}
 
 #endif /* __ZEPHYR_KERNEL_H */
