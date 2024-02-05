@@ -1366,3 +1366,5 @@
 .. _`sdk-find-my-next repository`: https://github.com/nrfconnect/sdk-find-my-next
 
 .. _`Serial Terminal from nRF Connect for Desktop`: https://infocenter.nordicsemi.com/topic/ug_serial_terminal/UG/serial_terminal/intro.html
+
+.. _`nRF7002 EK`: https://infocenter.nordicsemi.com/topic/ug_nrf7002_ek/UG/nrf7002_EK/intro.html

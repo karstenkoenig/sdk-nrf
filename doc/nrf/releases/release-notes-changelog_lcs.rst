@@ -348,4 +348,4 @@ No changes since the latest nRF Connect SDK release.
 Documentation
 =============
 
-No changes since the latest nRF Connect SDK release.
+* Added the :ref:`Working with the nRF54H20 PDK and the nRF7002EK <ug_nrf54h20_nrf7002ek>` document.
