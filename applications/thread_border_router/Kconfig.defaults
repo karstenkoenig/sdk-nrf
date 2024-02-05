@@ -148,6 +148,9 @@ config OPENTHREAD_LINK_METRICS_SUBJECT
 config OPENTHREAD_EXTERNAL_HEAP
     default y
 
+config OPENTHREAD_SRP_SERVER
+    default y
+
 config NRF_TBR_NAT64_PREFIX_DISCOVERY
     default y
 
