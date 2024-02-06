@@ -21,6 +21,7 @@ zephyr_library_sources_ifdef(CONFIG_SUIT_STREAM_SINK_FLASH src/flash_sink.c)
 zephyr_library_sources_ifdef(CONFIG_SUIT_STREAM_SINK_MEMPTR src/memptr_sink.c)
 zephyr_library_sources_ifdef(CONFIG_SUIT_STREAM_SINK_SDFW src/sdfw_sink.c)
 zephyr_library_sources_ifdef(CONFIG_SUIT_STREAM_SINK_DIGEST src/digest_sink.c)
+zephyr_library_sources_ifdef(CONFIG_SUIT_STREAM_SINK_EXTMEM src/extmem_sink.c)
 
 zephyr_library_link_libraries(suit_stream_sinks_interface)
 

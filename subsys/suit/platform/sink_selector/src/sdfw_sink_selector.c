@@ -23,6 +23,9 @@
 #ifdef CONFIG_SUIT_STREAM_SINK_SDFW
 #include <sdfw_sink.h>
 #endif /* CONFIG_SUIT_STREAM_SINK_SDFW */
+#ifdef CONFIG_SUIT_STREAM_SINK_EXTMEM
+#include <extmem_sink.h>
+#endif /* CONFIG_SUIT_STREAM_SINK_EXTMEM */
 
 LOG_MODULE_REGISTER(suit_plat_sink_selector, CONFIG_SUIT_LOG_LEVEL);
 
@@ -73,7 +76,7 @@ int suit_sink_select(suit_component_t dst_handle, struct stream_sink *sink)
 	} break;
 #endif /* CONFIG_SUIT_STREAM_SINK_MEMPTR */
 
-#if defined(CONFIG_SUIT_STREAM_SINK_FLASH) || defined(CONFIG_SUIT_STREAM_SINK_RAM)
+#ifdef CONFIG_SUIT_STREAM_SINK_COMPONENT_MEM_SUPPORTED
 	case SUIT_COMPONENT_TYPE_MEM: { /* flash_sink or ram_sink */
 		intptr_t run_address;
 		size_t size;
@@ -125,9 +128,24 @@ int suit_sink_select(suit_component_t dst_handle, struct stream_sink *sink)
 		LOG_INF("Address not in RAM");
 #endif /* CONFIG_SUIT_STREAM_SINK_RAM */
 
+#ifdef CONFIG_SUIT_STREAM_SINK_EXTMEM
+		/* External memory */
+		if (suit_extmem_sink_is_address_supported((uint8_t *)run_address)) {
+			sink_get_err = suit_extmem_sink_get(sink, (uint8_t *)run_address, size);
+			if (sink_get_err != SUIT_PLAT_SUCCESS) {
+				LOG_ERR("Failed to get external memory sink: %i", sink_get_err);
+				return suit_plat_err_to_processor_err_convert(sink_get_err);
+			}
+
+			return SUIT_SUCCESS;
+		}
+
+		LOG_INF("Address not in external memory");
+#endif /* CONFIG_SUIT_STREAM_SINK_EXTMEM */
+
 		return SUIT_ERR_UNSUPPORTED_COMPONENT_ID;
 	} break;
-#endif /* CONFIG_SUIT_STREAM_SINK_FLASH  || CONFIG_SUIT_STREAM_SINK_RAM */
+#endif /* CONFIG_SUIT_STREAM_SINK_COMPONENT_MEM_SUPPORTED */
 #ifdef CONFIG_SUIT_STREAM_SINK_SDFW
 	case SUIT_COMPONENT_TYPE_SOC_SPEC: { /* sdfw_sink */
 		uint32_t number;
