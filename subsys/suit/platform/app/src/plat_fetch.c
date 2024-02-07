@@ -44,7 +44,8 @@ static bool is_type_supported(suit_component_type_t *component_type)
 }
 
 static int verify_and_get_sink(suit_component_t dst_handle, struct stream_sink *sink,
-			       struct zcbor_string *uri, suit_component_type_t *component_type)
+			       struct zcbor_string *uri, suit_component_type_t *component_type,
+			       bool write_enabled)
 {
 	uint32_t number;
 	struct zcbor_string *component_id;
@@ -88,7 +89,7 @@ static int verify_and_get_sink(suit_component_t dst_handle, struct stream_sink *
 #endif /* CONFIG_SUIT_STREAM_SINK_MEMPTR */
 #ifdef CONFIG_SUIT_CACHE_RW
 	case SUIT_COMPONENT_TYPE_CACHE_POOL: {
-		ret = suit_dfu_cache_sink_get(&dst_sink, number, uri->value, uri->len);
+		ret = suit_dfu_cache_sink_get(&dst_sink, number, uri->value, uri->len, write_enabled);
 		if (ret != SUIT_PLAT_SUCCESS) {
 			LOG_ERR("Getting cache sink failed");
 			return suit_plat_err_to_processor_err_convert(ret);
@@ -110,7 +111,7 @@ int suit_plat_check_fetch(suit_component_t dst_handle, struct zcbor_string *uri)
 	struct stream_sink dst_sink;
 	suit_component_type_t component_type = SUIT_COMPONENT_TYPE_UNSUPPORTED;
 
-	int ret = verify_and_get_sink(dst_handle, &dst_sink, uri, &component_type);
+	int ret = verify_and_get_sink(dst_handle, &dst_sink, uri, &component_type, false);
 	if (ret != SUIT_SUCCESS) {
 		LOG_ERR("Failed to verify component end get end sink");
 	}
@@ -136,7 +137,7 @@ int suit_plat_fetch(suit_component_t dst_handle, struct zcbor_string *uri)
 	struct stream_sink dst_sink;
 	suit_component_type_t component_type = SUIT_COMPONENT_TYPE_UNSUPPORTED;
 
-	int ret = verify_and_get_sink(dst_handle, &dst_sink, uri, &component_type);
+	int ret = verify_and_get_sink(dst_handle, &dst_sink, uri, &component_type, true);
 	if (ret != SUIT_SUCCESS) {
 		LOG_ERR("Failed to verify component end get end sink");
 	}

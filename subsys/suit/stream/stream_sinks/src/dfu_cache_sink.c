@@ -31,7 +31,7 @@ struct cache_ctx {
 static struct cache_ctx ctx;
 
 suit_plat_err_t suit_dfu_cache_sink_get(struct stream_sink *sink, uint8_t cache_partition_id,
-					const uint8_t *uri, size_t uri_size)
+					const uint8_t *uri, size_t uri_size, bool write_enabled)
 {
 	if ((sink != NULL) && (uri != NULL) && (uri_size > 0)) {
 
@@ -40,8 +40,24 @@ suit_plat_err_t suit_dfu_cache_sink_get(struct stream_sink *sink, uint8_t cache_
 			return SUIT_PLAT_ERR_BUSY;
 		}
 
-		suit_plat_err_t ret = suit_dfu_cache_rw_slot_create(cache_partition_id, &ctx.slot,
-								    uri, uri_size);
+		const uint8_t* dfu_partition_address;
+		size_t dfu_partition_size;
+		(void) dfu_partition_address;
+		(void) dfu_partition_size;
+		if (suit_dfu_cache_rw_partition_info_get(cache_partition_id,
+							 &dfu_partition_address,
+							 &dfu_partition_size) != SUIT_PLAT_SUCCESS)
+		{
+			return SUIT_PLAT_ERR_NOT_FOUND;
+		}
+
+		suit_plat_err_t ret = SUIT_PLAT_SUCCESS;
+
+		if (write_enabled)
+		{
+			ret = suit_dfu_cache_rw_slot_create(cache_partition_id, &ctx.slot,
+							    uri, uri_size);
+		}
 
 		if (ret != SUIT_PLAT_SUCCESS) {
 			LOG_ERR("Getting slot in cache failed");
@@ -51,7 +67,7 @@ suit_plat_err_t suit_dfu_cache_sink_get(struct stream_sink *sink, uint8_t cache_
 		ctx.offset = 0;
 		ctx.offset_limit = ctx.slot.size - ctx.slot.data_offset;
 		ctx.in_use = true;
-		ctx.write_enabled = true;
+		ctx.write_enabled = write_enabled;
 
 		sink->erase = NULL;
 		sink->write = write;
@@ -188,16 +204,20 @@ suit_plat_err_t suit_dfu_cache_sink_commit(void *ctx)
 {
 	if (ctx != NULL) {
 		struct cache_ctx *cache_ctx = (struct cache_ctx *)ctx;
-		suit_plat_err_t ret = suit_dfu_cache_rw_slot_close(&cache_ctx->slot,
-								   cache_ctx->offset);
+		if (cache_ctx->write_enabled) {
+			suit_plat_err_t ret = suit_dfu_cache_rw_slot_close(&cache_ctx->slot,
+									   cache_ctx->offset);
 
-		if (ret != SUIT_PLAT_SUCCESS) {
-			LOG_ERR("Commit to cache failed.");
-			return ret;
+			if (ret != SUIT_PLAT_SUCCESS) {
+				LOG_ERR("Commit to cache failed.");
+				return ret;
+			}
+
+			cache_ctx->write_enabled = false;
+			return SUIT_PLAT_SUCCESS;
 		}
 
-		cache_ctx->write_enabled = false;
-		return SUIT_PLAT_SUCCESS;
+		return SUIT_PLAT_ERR_INCORRECT_STATE;
 	}
 
 	return SUIT_PLAT_ERR_INVAL;
@@ -207,16 +227,19 @@ suit_plat_err_t suit_dfu_cache_sink_drop(void *ctx)
 {
 	if (ctx != NULL) {
 		struct cache_ctx *cache_ctx = (struct cache_ctx *)ctx;
-		suit_plat_err_t ret = suit_dfu_cache_rw_slot_drop(&cache_ctx->slot);
+		if (cache_ctx->write_enabled) {
+			suit_plat_err_t ret = suit_dfu_cache_rw_slot_drop(&cache_ctx->slot);
 
-		if (ret != SUIT_PLAT_SUCCESS) {
-			LOG_ERR("Drop changes to cache failed.");
-			return ret;
+			if (ret != SUIT_PLAT_SUCCESS) {
+				LOG_ERR("Drop changes to cache failed.");
+				return ret;
+			}
+
+			cache_ctx->write_enabled = false;
+			return SUIT_PLAT_SUCCESS;
 		}
 
-		cache_ctx->write_enabled = false;
-
-		return SUIT_PLAT_SUCCESS;
+		return SUIT_PLAT_ERR_INCORRECT_STATE;
 	}
 
 	return SUIT_PLAT_ERR_INVAL;

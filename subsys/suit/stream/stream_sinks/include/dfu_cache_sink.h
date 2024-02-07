@@ -20,10 +20,11 @@ extern "C" {
  * @param cache_partition_id SUIT cache partition index (suit_cache_2 => id == 2)
  * @param uri Pointer to URI that will be used as a key in cache
  * @param uri_size Size of URI
+ * @param write_enabled Enable modifying the cache. Set to @c false during dry run.
  * @return SUIT_PLAT_SUCCESS if success otherwise error code
  */
 suit_plat_err_t suit_dfu_cache_sink_get(struct stream_sink *sink, uint8_t cache_partition_id,
-					const uint8_t *uri, size_t uri_size);
+					const uint8_t *uri, size_t uri_size, bool write_enabled);
 
 /**
  * @brief Commits written data to cache
