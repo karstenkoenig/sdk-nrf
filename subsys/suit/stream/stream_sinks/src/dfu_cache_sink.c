@@ -22,6 +22,7 @@ static suit_plat_err_t release(void *ctx);
 
 struct cache_ctx {
 	struct suit_cache_slot slot;
+	size_t size_used;
 	size_t offset;
 	size_t offset_limit;
 	bool in_use;
@@ -124,6 +125,10 @@ static suit_plat_err_t write(void *ctx, uint8_t *buf, size_t *size)
 					return SUIT_PLAT_ERR_INVAL;
 				}
 
+				if (cache_ctx->offset > cache_ctx->size_used) {
+					cache_ctx->size_used = cache_ctx->offset;
+				}
+
 				return SUIT_PLAT_SUCCESS;
 			}
 			else
@@ -167,7 +172,7 @@ static suit_plat_err_t used_storage(void *ctx, size_t *size)
 	if ((ctx != NULL) && (size != NULL)) {
 		struct cache_ctx *cache_ctx = (struct cache_ctx *)ctx;
 
-		*size = cache_ctx->offset;
+		*size = cache_ctx->size_used;
 
 		return SUIT_PLAT_SUCCESS;
 	}
@@ -194,6 +199,7 @@ static suit_plat_err_t release(void *ctx)
 		}
 
 		cache_ctx->in_use = false;
+		cache_ctx->size_used = 0;
 		return ret;
 	}
 
@@ -206,7 +212,7 @@ suit_plat_err_t suit_dfu_cache_sink_commit(void *ctx)
 		struct cache_ctx *cache_ctx = (struct cache_ctx *)ctx;
 		if (cache_ctx->write_enabled) {
 			suit_plat_err_t ret = suit_dfu_cache_rw_slot_close(&cache_ctx->slot,
-									   cache_ctx->offset);
+									   cache_ctx->size_used);
 
 			if (ret != SUIT_PLAT_SUCCESS) {
 				LOG_ERR("Commit to cache failed.");
@@ -236,6 +242,7 @@ suit_plat_err_t suit_dfu_cache_sink_drop(void *ctx)
 			}
 
 			cache_ctx->write_enabled = false;
+			cache_ctx->size_used = 0;
 			return SUIT_PLAT_SUCCESS;
 		}
 
