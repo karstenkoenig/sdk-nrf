@@ -90,25 +90,26 @@ static suit_plat_err_t schedule_sdfw_update(uint8_t *buf, size_t size)
 {
 	int err = 0;
 
-	uintptr_t signed_manifest =
-		(uintptr_t)(buf + CONFIG_SUIT_SDFW_UPDATE_SIGNED_MANIFEST_OFFSET);
-	uintptr_t public_key = (uintptr_t)(buf + CONFIG_SUIT_SDFW_UPDATE_PUBLIC_KEY_OFFSET);
-	uintptr_t signature = (uintptr_t)(buf + CONFIG_SUIT_SDFW_UPDATE_SIGNATURE_OFFSET);
-	uintptr_t firmware = (uintptr_t)(buf + CONFIG_SUIT_SDFW_UPDATE_FIRMWARE_OFFSET);
+	const struct sdfw_update_blob update_blob = {
+		.manifest_addr = (uintptr_t)(buf + CONFIG_SUIT_SDFW_UPDATE_SIGNED_MANIFEST_OFFSET),
+		.pubkey_addr = (uintptr_t)(buf + CONFIG_SUIT_SDFW_UPDATE_PUBLIC_KEY_OFFSET),
+		.signature_addr = (uintptr_t)(buf + CONFIG_SUIT_SDFW_UPDATE_SIGNATURE_OFFSET),
+		.firmware_addr = (uintptr_t)(buf + CONFIG_SUIT_SDFW_UPDATE_FIRMWARE_OFFSET),
+		.max_size = CONFIG_SUIT_SDFW_UPDATE_MAX_SIZE,
+	};
 
 	LOG_DBG("update_candidate: 0x%08lX", (uintptr_t)buf);
-	LOG_DBG("signed_manifest: 0x%08lX", signed_manifest);
-	LOG_DBG("public_key: 0x%08lX", public_key);
-	LOG_DBG("signature: 0x%08lX", signature);
-	LOG_DBG("firmware: 0x%08lX", firmware);
-	LOG_DBG("max update size: 0x%08X", CONFIG_SUIT_SDFW_UPDATE_MAX_SIZE);
+	LOG_DBG("signed_manifest: 0x%08lX", update_blob.manifest_addr);
+	LOG_DBG("public_key: 0x%08lX", update_blob.pubkey_addr);
+	LOG_DBG("signature: 0x%08lX", update_blob.signature_addr);
+	LOG_DBG("firmware: 0x%08lX", update_blob.firmware_addr);
+	LOG_DBG("max update size: 0x%08X", update_blob.max_size);
 	LOG_DBG("firmware size: 0x%08X (%d)", size, size);
 
 	/* NOTE: SecROM does not use the actual size of new SDFW during update process.
 	 *       However, if SDFW is flashed for the first time, the value is used to limit the
 	 * future maximum SDFW size. Hence, use the maximum allowed size for safety. */
-	err = sdfw_update(firmware, signature, public_key, CONFIG_SUIT_SDFW_UPDATE_MAX_SIZE,
-			  signed_manifest);
+	err = sdfw_update(&update_blob);
 
 	if (err) {
 		LOG_ERR("Failed to schedule SDFW update: %d", err);
