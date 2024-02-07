@@ -536,6 +536,16 @@ static suit_plat_err_t cache_0_update(void *address, size_t size)
 	}
 
 	if (dfu_partitions_ext[0].size > 0) {
+		suit_plat_err_t ret = SUIT_PLAT_SUCCESS;
+#if CONFIG_SUIT_CACHE0_ERASE_ON_ENVELOPE_STORED
+		ret = erase_on_sink(dfu_partitions_ext[0].offset, dfu_partitions_ext[0].size);
+
+		if (ret != SUIT_PLAT_SUCCESS)
+		{
+			return ret;
+		}
+#endif /* CONFIG_SUIT_CACHE0_ERASE_ON_ENVELOPE_STORED */
+
 		return partition_initialize(&dfu_partitions_ext[0]);
 	}
 

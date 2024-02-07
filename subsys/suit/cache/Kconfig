@@ -34,4 +34,17 @@ config SUIT_MAX_URI_LENGTH
 	default 64
 	depends on SUIT_CACHE_RW
 
+config SUIT_CACHE0_ERASE_ON_ENVELOPE_STORED
+	bool "Always erase the DFU cache partition 0 after the envelope is stored"
+	help
+		If this option is set then after the SUIT envelope is stored (more
+		precisely: when calling the suit_dfu_cache_rw_initialize function)
+		then Cache0 will be erased and reinitialized regardless of its previous
+		state. If this option is not set, the SUIT subsystem will check the
+		partition and only erase it if its broken and needs recovery.
+		If this option is not set it is up to the user to ensure that the
+		contents of cache0 are appropriate after the envelope is stored.
+	depends on SUIT_CACHE_RW
+	default y
+
 endif # SUIT_CACHE
