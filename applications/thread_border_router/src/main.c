@@ -258,6 +258,10 @@ static void on_thread_state_changed(otChangedFlags flags, struct openthread_cont
 	if (flags & OT_CHANGED_THREAD_ROLE) {
 		handle_role_change(ot_context->instance, flags);
 	}
+
+	if (flags & OT_CHANGED_THREAD_NETDATA) {
+		infra_if_handle_netdata_change();
+	}
 }
 
 static struct openthread_state_changed_cb ot_state_chaged_cb = { .state_changed_cb =

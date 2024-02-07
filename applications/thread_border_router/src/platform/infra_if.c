@@ -7,6 +7,7 @@
 #include "tbr.h"
 
 #include <ipv6.h>
+#include <route.h>
 
 #include <openthread/error.h>
 #include <openthread/ip6.h>
@@ -288,6 +289,148 @@ static void handle_local_prefix_advertisement(void)
 	memcpy(&prev_onlink_prefix, &curr_prefix, sizeof(curr_prefix));
 }
 
+static void omr_prefix_cleanup(struct net_if *iface, struct net_if_ipv6_prefix *prefix,
+			       struct in6_addr *nbr_addr)
+{
+	if (prefix) {
+		net_if_ipv6_prefix_rm(iface, &prefix->prefix, prefix->len);
+	}
+
+	if (nbr_addr) {
+		net_ipv6_nbr_rm(iface, nbr_addr);
+	}
+}
+
+static void update_prefixes_for_zephyr(struct openthread_context *context)
+{
+	otNetworkDataIterator iterator = OT_NETWORK_DATA_ITERATOR_INIT;
+	otBorderRouterConfig  config;
+	otIp6Prefix ot_prefix;
+	struct in6_addr *prefix;
+	struct net_if_ipv6_prefix *zprefixes;
+	struct net_if_ipv6_prefix *zprefix;
+	const otNetifAddress *address;
+	struct in6_addr *ot_addr;
+	struct net_route_entry *route;
+	struct net_nbr *nbr;
+	bool result;
+	int route_count;
+
+	zprefixes = context->iface->config.ip.ipv6->prefix;
+
+	if (!context->iface->config.ip.ipv6) {
+		return;
+	}
+
+	for (int i = 0; i < NET_IF_MAX_IPV6_PREFIX; ++i) {
+		if (!zprefixes[i].is_used) {
+			continue;
+		}
+
+		ot_prefix.mLength = zprefixes[i].len;
+		memcpy(&ot_prefix.mPrefix, &zprefixes[i].prefix,
+			   sizeof(ot_prefix.mPrefix));
+
+		if (otNetDataContainsOmrPrefix(context->instance, &ot_prefix)) {
+			continue;
+		}
+
+		for (address = otIp6GetUnicastAddresses(context->instance);
+		     address; address = address->mNext) {
+			ot_addr = (struct in6_addr *)(&address->mAddress);
+			route_count = net_route_del_by_nexthop(context->iface, ot_addr);
+
+			if (route_count) {
+				NET_DBG("Removed routes to OMR prefix");
+			}
+
+			if (net_if_ipv6_prefix_get(context->iface, ot_addr) == &zprefixes[i]) {
+				if (CONFIG_OPENTHREAD_L2_LOG_LEVEL == LOG_LEVEL_DBG) {
+					char buf[NET_IPV6_ADDR_LEN];
+					NET_DBG("Removing static neighbor %s",
+						net_addr_ntop(AF_INET6, ot_addr, buf, sizeof(buf)));
+				}
+
+				net_ipv6_nbr_rm(context->iface, ot_addr);
+				break;
+			}
+		}
+
+		if (CONFIG_OPENTHREAD_L2_LOG_LEVEL == LOG_LEVEL_DBG) {
+			char buf[NET_IPV6_ADDR_LEN];
+			NET_DBG("Removing prefix %s", net_addr_ntop(AF_INET6, &zprefixes[i].prefix,
+								    buf, sizeof(buf)));
+		}
+
+		result = net_if_ipv6_prefix_rm(context->iface, &zprefixes[i].prefix,
+					       zprefixes[i].len);
+		if (!result) {
+			NET_ERR("Failed to remove the prefix");
+		}
+	}
+
+	while (otNetDataGetNextOnMeshPrefix(context->instance, &iterator, &config) ==
+		   OT_ERROR_NONE) {
+		prefix = (struct in6_addr *)&config.mPrefix;
+
+		if (net_if_ipv6_prefix_lookup(context->iface, prefix,
+			config.mPrefix.mLength) != NULL) {
+			continue;
+		}
+
+		if (CONFIG_OPENTHREAD_L2_LOG_LEVEL == LOG_LEVEL_DBG) {
+				char buf[NET_IPV6_ADDR_LEN];
+				NET_DBG("Adding prefix %s", net_addr_ntop(AF_INET6, prefix,
+									  buf, sizeof(buf)));
+		}
+
+		zprefix = net_if_ipv6_prefix_add(context->iface, prefix, config.mPrefix.mLength,
+						 PREFIX_INFINITE_LIFETIME);
+
+		if (!zprefix) {
+			NET_ERR("Failed to add the prefix");
+			continue;
+		}
+
+		for (address = otIp6GetUnicastAddresses(context->instance);
+		     address; address = address->mNext) {
+			ot_addr = (struct in6_addr *)(&address->mAddress);
+			if (net_if_ipv6_prefix_get(context->iface, ot_addr) == zprefix) {
+				if (CONFIG_OPENTHREAD_L2_LOG_LEVEL == LOG_LEVEL_DBG) {
+					char buf[NET_IPV6_ADDR_LEN];
+					NET_DBG("Adding static neighbor %s",
+						net_addr_ntop(AF_INET6, ot_addr, buf, sizeof(buf)));
+				}
+
+				nbr = net_ipv6_nbr_add(context->iface, ot_addr, NULL, false,
+						       NET_IPV6_NBR_STATE_STATIC);
+
+				if (!nbr) {
+					NET_ERR("Failed to add the static neighbor");
+					omr_prefix_cleanup(context->iface, zprefix, NULL);
+					continue;
+				}
+
+				route = net_route_lookup(context->iface, ot_addr);
+				if (!route) {
+					route = net_route_add(context->iface, &zprefix->prefix,
+							      zprefix->len, ot_addr,
+							      NET_IPV6_ND_INFINITE_LIFETIME,
+							      NET_ROUTE_PREFERENCE_MEDIUM);
+					if (route) {
+						NET_DBG("Added route to OMR prefix");
+					} else {
+						NET_WARN("Cannot add route to OMR prefix");
+						omr_prefix_cleanup(context->iface, zprefix,
+								   ot_addr);
+					}
+				}
+				break;
+			}
+		}
+	}
+}
+
 otError otPlatInfraIfSendIcmp6Nd(uint32_t aInfraIfIndex, const otIp6Address *aDestAddress,
 				 const uint8_t *aBuffer, uint16_t aBufferLength)
 {
@@ -379,6 +522,13 @@ void infra_if_init(void)
 	net_icmpv6_register_handler(&icpmv6_ra_handler);
 	net_icmpv6_register_handler(&icpmv6_na_handler);
 	net_icmpv6_register_handler(&icpmv6_rs_handler);
+}
+
+void infra_if_handle_netdata_change(void)
+{
+	struct tbr_context *ctx = tbr_get_context();
+
+	update_prefixes_for_zephyr(ctx->ot);
 }
 
 #endif /* defined(CONFIG_OPENTHREAD_BORDER_ROUTING) */
