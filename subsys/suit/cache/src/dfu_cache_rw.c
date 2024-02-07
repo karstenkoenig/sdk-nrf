@@ -504,6 +504,9 @@ static suit_plat_err_t cache_0_update(void *address, size_t size)
 	}
 
 	size_t tmp_offset = suit_plat_mem_nvm_offset_get(address) + size;
+	/* Align to nearest erase block */
+	tmp_offset = DIV_ROUND_UP(tmp_offset, dfu_partitions_ext[0].eb_size)
+		     * dfu_partitions_ext[0].eb_size;
 
 	if (tmp_offset >= cache_0_end) {
 		LOG_WRN("No free space for cache");
