@@ -73,6 +73,8 @@ static suit_plat_err_t slot_in_cache_partition_allocate(const struct zcbor_strin
 							struct dfu_cache_partition_ext *part);
 static suit_plat_err_t cache_free_space_check(struct dfu_cache_partition_ext *part,
 					      struct suit_cache_slot *slot);
+static suit_plat_err_t is_partition_empty(struct dfu_cache_partition_ext *part);
+static suit_plat_err_t erase_on_sink(size_t offset, size_t size);
 
 /**
  * @brief Get cache partition of specified id
@@ -101,7 +103,7 @@ static struct dfu_cache_partition_ext *cache_partition_get(uint8_t partition_id)
  */
 static struct dfu_cache_partition_ext *cache_partition_get_by_offset(size_t offset)
 {
-	for (size_t i = 1; i < ARRAY_SIZE(dfu_partitions_ext); i++) {
+	for (size_t i = 0; i < ARRAY_SIZE(dfu_partitions_ext); i++) {
 		if ((offset >= dfu_partitions_ext[i].offset) &&
 		    (offset < (dfu_partitions_ext[i].offset + dfu_partitions_ext[i].size))) {
 			return &dfu_partitions_ext[i];
@@ -143,10 +145,26 @@ suit_plat_err_t suit_dfu_cache_rw_initialize(void *addr, size_t size)
 	return suit_dfu_cache_initialize(&dfu_cache);
 }
 
-void suit_dfu_cache_rw_deinitialize(void)
+suit_plat_err_t suit_dfu_cache_rw_deinitialize(void)
 {
-	suit_dfu_cache_clear(&dfu_cache);
+	suit_plat_err_t ret = SUIT_PLAT_SUCCESS;
 	suit_dfu_cache_deinitialize();
+	suit_dfu_cache_clear(&dfu_cache);
+
+	/* Erase all cache partitions */
+	for (size_t i = 0; i < ARRAY_SIZE(dfu_partitions_ext); i++) {
+		ret = is_partition_empty(&dfu_partitions_ext[i]);
+
+		if (ret == SUIT_PLAT_ERR_NOMEM) {
+			ret = erase_on_sink(dfu_partitions_ext[i].offset, dfu_partitions_ext[i].size);
+		}
+
+		if (ret != SUIT_PLAT_SUCCESS) {
+			return ret;
+		}
+	}
+
+	return ret;
 }
 
 suit_plat_err_t suit_dfu_cache_rw_partition_info_get(uint8_t cache_partition_id,
@@ -626,12 +644,13 @@ suit_plat_err_t suit_dfu_cache_rw_slot_drop(struct suit_cache_slot *slot)
 	if (slot != NULL) {
 		struct dfu_cache_partition_ext *part =
 			cache_partition_get_by_offset(slot->slot_offset);
-		slot->eb_size = part->eb_size;
 
 		if (part == NULL) {
 			LOG_ERR("Couldn't find partition matching slot offset");
 			return SUIT_PLAT_ERR_IO;
 		}
+
+		slot->eb_size = part->eb_size;
 
 		if (slot->eb_size > ERASE_SWAP_BUFFER_MAX_SIZE) {
 			LOG_ERR("Unable to drop slot: erase block size exceeds set safety limit: "

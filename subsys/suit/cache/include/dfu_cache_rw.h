@@ -43,9 +43,11 @@ struct suit_cache_slot {
 suit_plat_err_t suit_dfu_cache_rw_initialize(void *addr, size_t size);
 
 /**
- * @brief Deinitialize SUIT cache
+ * @brief Deinitialize SUIT cache. This will also erase all the cache partitions.
+ *
+ * @return SUIT_PLAT_SUCCESS in case of success, otherwise error code
  */
-void suit_dfu_cache_rw_deinitialize(void);
+suit_plat_err_t suit_dfu_cache_rw_deinitialize(void);
 
 /**
  * @brief Retrieve information about the address and size of a given cache
