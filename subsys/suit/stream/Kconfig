@@ -18,6 +18,7 @@ config SUIT_STREAM_SINK_COMPONENT_MEM_SUPPORTED
 config SUIT_STREAM_SINK_CACHE
         bool "Enable SUIT cache sink"
         depends on SUIT_CACHE_RW
+        depends on SUIT_STREAM_SINK_FLASH
 
 config SUIT_STREAM_SINK_MEMPTR
         bool "Enable memory pointer storage sink"
@@ -27,6 +28,7 @@ config SUIT_STREAM_SINK_FLASH
         bool "Enable NVM storage sink"
         depends on FLASH
         depends on SUIT_UTILS
+        depends on SUIT_MEMPTR_STORAGE
         select SUIT_STREAM_SINK_COMPONENT_MEM_SUPPORTED
 
 config SUIT_STREAM_SINK_RAM

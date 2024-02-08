@@ -40,8 +40,6 @@ config SUIT_DFU_CANDIDATE_PROCESSING_MINIMAL
 		(the top manifest nor its dependencies) contains a suit-payload-fetch sequence.
 		The only role of the application core is store the SUIT candidate envelope
 		followed by passing the control to the Secure Domain.
-		If the application needs to additionally store detached payloads in DFU cache
-		partitions, CONFIG_SUIT_CACHE must be set apart from this option.
 	imply SUIT_ORCHESTRATOR_APP
 	imply SUIT_ORCHESTRATOR_APP_CANDIDATE_PROCESSING
 	imply SUIT_ENVELOPE_INFO
