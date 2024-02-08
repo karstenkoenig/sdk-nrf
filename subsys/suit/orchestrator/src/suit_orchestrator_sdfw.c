@@ -18,6 +18,7 @@
 #include <suit_plat_digest_cache.h>
 #include "suit_plat_err.h"
 #include <suit_execution_mode.h>
+#include <dfu_cache.h>
 
 LOG_MODULE_REGISTER(suit_orchestrator, CONFIG_SUIT_LOG_LEVEL);
 
@@ -52,6 +53,25 @@ static bool update_candidate_applicable(void)
 	return true;
 }
 
+static int initialize_dfu_cache(const suit_plat_mreg_t *update_regions, size_t update_regions_len)
+{
+	if (update_regions == NULL || update_regions_len < 1)
+	{
+		return -EINVAL;
+	}
+
+	struct dfu_cache cache;
+
+	cache.pools_count = update_regions_len - 1;
+
+	for (size_t i = 1; i < update_regions_len; i++) {
+		cache.pools[i-1].address = (uint8_t*) update_regions[i].mem;
+		cache.pools[i-1].size = update_regions[i].size;
+	}
+
+	return SUIT_PROCESSOR_ERR_TO_ZEPHYR_ERR(suit_dfu_cache_initialize(&cache));
+}
+
 static int validate_update_candidate_manifest(uint8_t *manifest_address, size_t manifest_size)
 {
 	int err = suit_process_sequence(manifest_address, manifest_size, SUIT_SEQ_PARSE);
@@ -69,6 +89,22 @@ static int validate_update_candidate_manifest(uint8_t *manifest_address, size_t 
 	}
 
 	return 0;
+}
+
+static int clear_update_candidate(void)
+{
+	int err = 0;
+
+	err = suit_storage_update_cand_set(NULL, 0);
+	if (err != SUIT_PLAT_SUCCESS) {
+		LOG_ERR("Failed to clear update candidate: %d", err);
+		return SUIT_PLAT_ERR_TO_ZEPHYR_ERR(err);
+	}
+
+	LOG_DBG("Update candidate cleared");
+
+	return 0;
+
 }
 
 static int update_path(void)
@@ -89,32 +125,22 @@ static int update_path(void)
 							 update_regions[0].size);
 	if (err != 0) {
 		LOG_INF("Invalid update candidate: %d", err);
+		return clear_update_candidate();
+	}
 
-		err = suit_storage_update_cand_set(NULL, 0);
-		if (err != SUIT_PLAT_SUCCESS) {
-			LOG_ERR("Failed to clear update candidate: %d", err);
-			return SUIT_PLAT_ERR_TO_ZEPHYR_ERR(err);
-		}
+	err = initialize_dfu_cache(update_regions, update_regions_len);
 
-		LOG_DBG("Update candidate cleared");
-
-		/* Do not return error if candidate is invalid - this can happen */
-		return 0;
+	if (err != 0)
+	{
+		LOG_ERR("Failed to initialize DFU cache pools: %d", err);
+		return clear_update_candidate();
 	}
 
 	err = validate_update_candidate_manifest((uint8_t *)update_regions[0].mem,
 						 update_regions[0].size);
 	if (err != 0) {
 		LOG_ERR("Failed to validate update candidate manifest: %d", err);
-		err = suit_storage_update_cand_set(NULL, 0);
-		if (err != SUIT_PLAT_SUCCESS) {
-			LOG_ERR("Failed to clear update candidate: %d", err);
-			return SUIT_PLAT_ERR_TO_ZEPHYR_ERR(err);
-		}
-
-		LOG_DBG("Update candidate cleared");
-		/* Do not return error if candidate is invalid - this can happen */
-		return 0;
+		return clear_update_candidate();
 	}
 	LOG_DBG("Manifest validated");
 
@@ -127,13 +153,10 @@ static int update_path(void)
 
 	LOG_DBG("suit-install successful");
 
-	err = suit_storage_update_cand_set(NULL, 0);
-	if (err != SUIT_PLAT_SUCCESS) {
-		LOG_ERR("Failed to clear update candidate: %d", err);
-		return SUIT_PLAT_ERR_TO_ZEPHYR_ERR(err);
+	err = clear_update_candidate();
+	if (err != 0) {
+		return err;
 	}
-
-	LOG_DBG("Update candidate cleared");
 
 	if (IS_ENABLED(CONFIG_SUIT_UPDATE_REBOOT_ENABLED)) {
 		LOG_INF("Reboot the system after update");

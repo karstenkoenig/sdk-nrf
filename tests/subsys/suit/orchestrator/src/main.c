@@ -87,7 +87,13 @@ static void setup_update_candidate(const uint8_t *buf, size_t len)
 		      "Unable to set update candidate before test execution (0x%x, %d)", buf, len);
 }
 
-ZTEST_SUITE(orchestrator_tests, NULL, NULL, NULL, NULL, NULL);
+static void orchestrator_tests_cleanup(void* fixture)
+{
+	(void) fixture;
+	suit_dfu_cache_deinitialize();
+}
+
+ZTEST_SUITE(orchestrator_tests, NULL, NULL, NULL, orchestrator_tests_cleanup, NULL);
 
 ZTEST(orchestrator_tests, test_boot_path_empty_storage)
 {
