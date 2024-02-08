@@ -148,6 +148,22 @@ void suit_dfu_cache_rw_deinitialize(void)
 	suit_dfu_cache_clear(&dfu_cache);
 }
 
+suit_plat_err_t suit_dfu_cache_rw_partition_info_get(uint8_t cache_partition_id,
+						     const uint8_t **address, size_t *size)
+{
+	struct dfu_cache_partition_ext* partition = cache_partition_get(cache_partition_id);
+
+	if (partition == NULL)
+	{
+		return SUIT_PLAT_ERR_NOT_FOUND;
+	}
+
+	*address = suit_plat_mem_nvm_ptr_get(partition->offset);
+	*size = partition->size;
+
+	return SUIT_PLAT_SUCCESS;
+}
+
 /**
  * @brief Write to nvm via flash_sink
  *

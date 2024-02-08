@@ -48,6 +48,20 @@ suit_plat_err_t suit_dfu_cache_rw_initialize(void *addr, size_t size);
 void suit_dfu_cache_rw_deinitialize(void);
 
 /**
+ * @brief Retrieve information about the address and size of a given cache
+ *        partition.
+ *
+ * @param cache_partition_id ID of the cache partition
+ * @param address address of the cache partition
+ * @param size size of the cache partition
+ *
+ * @return SUIT_PLAT_SUCCESS in case of success
+ * @return SUIT_PLAT_ERR_NOT_FOUND if the given partition does not exist
+ */
+suit_plat_err_t suit_dfu_cache_rw_partition_info_get(uint8_t cache_partition_id,
+						     const uint8_t **address, size_t *size);
+
+/**
  * @brief Function tries to allocate slot in cache pointed by ID
  *
  * @param cache_partition_id ID of the cache partition in which slot should be allocated

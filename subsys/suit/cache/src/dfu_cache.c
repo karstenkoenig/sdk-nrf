@@ -63,7 +63,8 @@ static suit_plat_err_t search_cache_pool(struct dfu_cache_pool *cache_pool,
 	struct zcbor_string current_key;
 	struct zcbor_string current_data;
 
-	if ((cache_pool != NULL) && (uri != NULL) && (payload != NULL)) {
+	if ((cache_pool != NULL) && (uri != NULL) && (payload != NULL)
+	    && (cache_pool->address != NULL)) {
 		zcbor_new_state(states, sizeof(states) / sizeof(zcbor_state_t), cache_pool->address,
 				cache_pool->size, 1);
 		ret = zcbor_map_start_decode(states);
