@@ -158,6 +158,11 @@ static suit_plat_err_t suit_dfu_cache_copy(struct dfu_cache *dst_cache,
 
 suit_plat_err_t suit_dfu_cache_initialize(struct dfu_cache *cache)
 {
+	if (init_done)
+	{
+		return SUIT_PLAT_ERR_INCORRECT_STATE;
+	}
+
 	suit_plat_err_t ret = suit_dfu_cache_copy(&dfu_cache, cache);
 
 	if (ret != SUIT_PLAT_SUCCESS) {

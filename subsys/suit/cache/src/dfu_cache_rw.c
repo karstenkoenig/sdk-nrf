@@ -140,12 +140,13 @@ suit_plat_err_t suit_dfu_cache_rw_initialize(void *addr, size_t size)
 			dfu_cache.pools[i].size);
 	}
 
-	return SUIT_PLAT_SUCCESS;
+	return suit_dfu_cache_initialize(&dfu_cache);
 }
 
 void suit_dfu_cache_rw_deinitialize(void)
 {
 	suit_dfu_cache_clear(&dfu_cache);
+	suit_dfu_cache_deinitialize();
 }
 
 suit_plat_err_t suit_dfu_cache_rw_partition_info_get(uint8_t cache_partition_id,

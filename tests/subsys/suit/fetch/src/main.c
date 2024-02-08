@@ -161,6 +161,8 @@ ZTEST(fetch_tests, test_fetch_to_memptr_NOK_uri_not_in_cache)
 
 	ret = suit_plat_release_component_handle(component_handle);
 	zassert_equal(ret, SUIT_SUCCESS, "Handle release failed - error %i", ret);
+
+	suit_dfu_cache_deinitialize();
 }
 
 ZTEST(fetch_tests, test_fetch_to_memptr_NOK_invalid_component_id)
@@ -188,6 +190,8 @@ ZTEST(fetch_tests, test_fetch_to_memptr_NOK_invalid_component_id)
 
 	ret = suit_plat_release_component_handle(component_handle);
 	zassert_equal(ret, SUIT_SUCCESS, "Handle release failed - error %i", ret);
+
+	suit_dfu_cache_deinitialize();
 }
 
 ZTEST(fetch_tests, test_integrated_fetch_to_memptr_NOK_data_ptr_NULL)
