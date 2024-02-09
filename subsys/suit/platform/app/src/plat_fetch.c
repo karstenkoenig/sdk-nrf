@@ -11,6 +11,8 @@
 #ifdef CONFIG_SUIT_STREAM
 #include <sink.h>
 #include <sink_selector.h>
+#include <dfu_cache_sink.h>
+#include <dfu_cache_streamer.h>
 #endif /* CONFIG_SUIT_STREAM */
 
 #ifdef CONFIG_SUIT_STREAM_SOURCE_CACHE
@@ -24,9 +26,14 @@
 #include "fetch_source_mgr.h"
 #endif /* CONFIG_SUIT_STREAM_FETCH_SOURCE_MGR */
 
+#ifdef CONFIG_SUIT_STREAM_SINK_MEMPTR
+#include <memptr_sink.h>
+#endif /* CONFIG_SUIT_STREAM_SINK_MEMPTR */
+
 #include <stdbool.h>
 #include <suit_platform.h>
 #include <suit_memptr_storage.h>
+#include <suit_plat_decode_util.h>
 
 LOG_MODULE_REGISTER(suit_plat_fetch_app, CONFIG_SUIT_LOG_LEVEL);
 
@@ -83,13 +90,13 @@ static int verify_and_get_sink(suit_component_t dst_handle, struct stream_sink *
 			return ret;
 		}
 
-		return suit_plat_err_to_processor_err_convert(suit_memptr_sink_get(&dst_sink,
+		return suit_plat_err_to_processor_err_convert(suit_memptr_sink_get(sink,
 							       handle));
 	} break;
 #endif /* CONFIG_SUIT_STREAM_SINK_MEMPTR */
 #ifdef CONFIG_SUIT_CACHE_RW
 	case SUIT_COMPONENT_TYPE_CACHE_POOL: {
-		ret = suit_dfu_cache_sink_get(&dst_sink, number, uri->value, uri->len, write_enabled);
+		ret = suit_dfu_cache_sink_get(sink, number, uri->value, uri->len, write_enabled);
 		if (ret != SUIT_PLAT_SUCCESS) {
 			LOG_ERR("Getting cache sink failed");
 			return suit_plat_err_to_processor_err_convert(ret);
@@ -117,7 +124,7 @@ int suit_plat_check_fetch(suit_component_t dst_handle, struct zcbor_string *uri)
 	}
 
 	if (dst_sink.release != NULL) {
-		suit_plat_err_t err = sink.release(sink.ctx);
+		suit_plat_err_t err = dst_sink.release(dst_sink.ctx);
 
 		if (err != SUIT_PLAT_SUCCESS) {
 			LOG_ERR("sink release failed: %i", err);
@@ -140,6 +147,7 @@ int suit_plat_fetch(suit_component_t dst_handle, struct zcbor_string *uri)
 	int ret = verify_and_get_sink(dst_handle, &dst_sink, uri, &component_type, true);
 	if (ret != SUIT_SUCCESS) {
 		LOG_ERR("Failed to verify component end get end sink");
+		return ret;
 	}
 
 	/* Here other parts of pipe will be instantiated.
@@ -175,8 +183,13 @@ int suit_plat_fetch(suit_component_t dst_handle, struct zcbor_string *uri)
 		break;
 	}
 
+	if (ret == SUIT_SUCCESS && component_type == SUIT_COMPONENT_TYPE_CACHE_POOL)
+	{
+		suit_dfu_cache_sink_commit(dst_sink.ctx);
+	}
+
 	if (dst_sink.release != NULL) {
-		suit_plat_err_t err = dst_sink.release(sink.ctx);
+		suit_plat_err_t err = dst_sink.release(dst_sink.ctx);
 
 		if (err != SUIT_PLAT_SUCCESS) {
 			LOG_ERR("sink release failed: %i", err);
@@ -223,8 +236,8 @@ int suit_plat_check_fetch_integrated(suit_component_t dst_handle, struct zcbor_s
 	 *	Like decryption and/or decompression sinks.
 	 */
 
-	if (sink.release != NULL) {
-		int err = sink.release(sink.ctx);
+	if (dst_sink.release != NULL) {
+		int err = dst_sink.release(dst_sink.ctx);
 
 		if (err != SUIT_PLAT_SUCCESS) {
 			LOG_ERR("sink release failed: %i", err);
@@ -283,8 +296,8 @@ int suit_plat_fetch_integrated(suit_component_t dst_handle, struct zcbor_string 
 	ret = suit_memptr_streamer_stream(payload->value, payload->len, &dst_sink);
 #endif  /* CONFIG_SUIT_STREAM_SOURCE_MEMPTR */
 
-	if (sink.release != NULL) {
-		int err = sink.release(sink.ctx);
+	if (dst_sink.release != NULL) {
+		int err = dst_sink.release(dst_sink.ctx);
 
 		if (err != SUIT_PLAT_SUCCESS) {
 			LOG_ERR("sink release failed: %i", err);

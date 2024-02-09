@@ -5,8 +5,6 @@
  */
 
 #include <zephyr/logging/log.h>
-#include <suit_platform_internal.h>
-#include <stdbool.h>
 #include <suit_platform.h>
 
 LOG_MODULE_REGISTER(suit_plat_invoke, CONFIG_SUIT_LOG_LEVEL);

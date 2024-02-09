@@ -12,5 +12,5 @@ project(suit_plat_authorize_component_id)
 
 target_sources(testbinary PRIVATE
   src/main.c
-  ${SUIT_SUBSYS_DIR}/platform/src/suit_plat_authenticate.c
+  ${SUIT_SUBSYS_DIR}/platform/sdfw/src/suit_plat_authenticate.c
 )
