@@ -48,6 +48,38 @@ config SUIT_DFU_CANDIDATE_PROCESSING_MINIMAL
 	imply SSF_SUIT_SERVICE_ENABLED
 	imply SUIT_MPI_GENERATE
 
+config SUIT_DFU_CANDIDATE_PROCESSING_FULL
+	bool "Application defaults for support of full SUIT envelope processing by the local domain"
+	help
+		This configuration can be used if processing of the SUIT envelope is needed by the
+		local domain. This is equivalent to a situation where one of the manifests
+		(the top manifest or its dependecies) may contain a suit-payload-fetch sequence.
+		Before passing control to the Secure Domain, the local domain implementation of
+		the SUIT DFU module processes the envelope and fetches any additional needed
+		data using the registered fetch sources.
+	imply SUIT_ORCHESTRATOR_APP
+	imply SUIT_ORCHESTRATOR_APP_CANDIDATE_PROCESSING
+	imply SUIT_ENVELOPE_INFO
+	imply SUIT_UTILS
+	imply SUIT_DIGEST
+	imply SUIT_CRYPTO
+	imply SSF_SUIT_SERVICE_ENABLED
+	imply SUIT_METADATA
+	imply SUIT_STREAM
+	imply SUIT_STREAM_FETCH_SOURCE_MGR
+	imply SUIT_STREAM_SOURCE_CACHE
+	imply SUIT_STREAM_SOURCE_MEMPTR
+	imply SUIT_STREAM_SINK_DIGEST
+	imply SUIT_STREAM_SINK_MEMPTR
+	imply SUIT_CACHE
+	imply SUIT_CACHE_RW
+	imply SUIT_STREAM_SINK_CACHE
+	imply SUIT_STREAM_SINK_FLASH
+	imply SUIT_MEMPTR_STORAGE
+	imply SUIT_PLATFORM
+	imply SUIT_PROCESSOR
+	imply SUIT_SINK_SELECTOR # For now This should work, the only usage is for fetch_integrated returning memptr_sink - but shouldn't be needed if verify_and_get_sink is used instead?
+
 config SUIT_DFU_CANDIDATE_PROCESSING_NONE
 	bool "Disable any processing of the SUIT candidate envelope"
 	help

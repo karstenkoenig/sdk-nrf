@@ -12,6 +12,9 @@
 #include <zephyr/drivers/flash.h>
 #include <zephyr/storage/flash_map.h>
 
+#if CONFIG_SUIT_PROCESSOR
+#include <suit.h>
+#endif
 #include <sdfw_services/suit_service.h>
 #include <suit_envelope_info.h>
 #include <suit_plat_mem_util.h>
@@ -39,6 +42,20 @@ LOG_MODULE_REGISTER(suit_dfu, CONFIG_SUIT_LOG_LEVEL);
 #define SUIT_PROCESSOR_ERR_TO_ZEPHYR_ERR(err) ((err) == SUIT_SUCCESS ? 0 : -EACCES)
 
 #if CONFIG_SUIT_ORCHESTRATOR_APP_CANDIDATE_PROCESSING
+
+#if CONFIG_SUIT_PROCESSOR
+static int update_candidate_manifest_validate(uint8_t *manifest_address, size_t manifest_size)
+{
+	int err = suit_process_sequence(manifest_address, manifest_size, SUIT_SEQ_PARSE);
+
+	if (err != SUIT_SUCCESS) {
+		LOG_ERR("Failed to validate update candidate manifest: %d", err);
+		return SUIT_PROCESSOR_ERR_TO_ZEPHYR_ERR(err);
+	}
+
+	return 0;
+}
+#endif /* CONFIG_SUIT_PROCESSOR */
 
 static int dfu_partition_erase(void)
 {
@@ -69,7 +86,13 @@ int suit_dfu_initialize(void)
 	suit_ipc_streamer_provider_init();
 #endif
 
-	/* TODO: add any other needed initialization - Ref: NCSDK-25349 */
+#if CONFIG_SUIT_PROCESSOR
+	int err = suit_processor_init();
+	if (err != SUIT_SUCCESS) {
+		LOG_ERR("Failed to initialize suit processor: %d", err);
+		return SUIT_PROCESSOR_ERR_TO_ZEPHYR_ERR(err);
+	}
+#endif /* CONFIG_SUIT_PROCESSOR */
 
 	LOG_DBG("SUIT DFU module init ok");
 
@@ -138,7 +161,59 @@ int suit_dfu_candidate_envelope_stored(void)
 
 int suit_dfu_candidate_preprocess(void)
 {
-	/* TODO: Run the SUIT processor, Ref: NCSDK-25349 */
+#if CONFIG_SUIT_PROCESSOR
+	uint8_t* candidate_envelope_address;
+	size_t candidate_envelope_size;
+
+	int err = suit_envelope_info_get((const uint8_t**) &candidate_envelope_address,
+					 &candidate_envelope_size);
+
+	if (err != SUIT_PLAT_SUCCESS) {
+		LOG_INF("Invalid update candidate: %d", err);
+
+		return -ENOTSUP;
+	}
+
+	LOG_DBG("Update candidate address: %p", candidate_envelope_address);
+	LOG_DBG("Update candidate size: %d", candidate_envelope_size);
+
+	err = update_candidate_manifest_validate(candidate_envelope_address,
+						 candidate_envelope_size);
+	if (err != SUIT_SUCCESS) {
+		LOG_ERR("Failed to validate update candidate manifest: %d", err);
+
+		return err;
+	}
+
+	LOG_DBG("Manifest validated");
+
+	err = suit_process_sequence(candidate_envelope_address, candidate_envelope_size,
+				    SUIT_SEQ_DEP_RESOLUTION);
+	if (err == SUIT_SUCCESS) {
+		LOG_DBG("suit-dependency-resolution successful");
+	}
+	else if (err == SUIT_ERR_UNAVAILABLE_COMMAND_SEQ) {
+		LOG_DBG("suit-dependency-resolution sequence unavailable");
+	}
+	else {
+		LOG_ERR("Failed to execute suit-dependency-resolution: %d", err);
+		return SUIT_PROCESSOR_ERR_TO_ZEPHYR_ERR(err);
+	}
+
+	err = suit_process_sequence(candidate_envelope_address, candidate_envelope_size,
+				    SUIT_SEQ_PAYLOAD_FETCH);
+	if (err == SUIT_SUCCESS) {
+		LOG_DBG("suit-payload-fetch successful");
+	}
+	else if (err == SUIT_ERR_UNAVAILABLE_COMMAND_SEQ) {
+		LOG_DBG("suit-payload-fetch sequence unavailable");
+	}
+	else {
+		LOG_ERR("Failed to execute suit-payload-fetch: %d", err);
+		return SUIT_PROCESSOR_ERR_TO_ZEPHYR_ERR(err);
+	}
+
+#endif /* CONFIG_SUIT_PROCESSOR */
 
 	return 0;
 }
