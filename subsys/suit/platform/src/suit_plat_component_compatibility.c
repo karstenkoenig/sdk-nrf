@@ -8,6 +8,9 @@
 #include <suit_plat_decode_util.h>
 #include <suit_platform_internal.h>
 
+/* -1 indicates no boot capability for given cpu id */
+#define NO_BOOT_CAPABILITY_CPU_ID 255
+
 int suit_plat_component_compatibility_check(const suit_manifest_class_id_t *class_id,
 					    struct zcbor_string *component_id)
 {
@@ -36,15 +39,16 @@ int suit_plat_component_compatibility_check(const suit_manifest_class_id_t *clas
 	switch (type) {
 	case SUIT_COMPONENT_TYPE_MEM:
 		/* Decode component_id */
-		if (suit_plat_decode_component_id(component_id, &cpu_id, &address, &size)
-		    != SUIT_PLAT_SUCCESS)
-		{
+		if (suit_plat_decode_component_id(component_id, &cpu_id, &address, &size) !=
+		    SUIT_PLAT_SUCCESS) {
 			return SUIT_ERR_DECODING;
 		}
 
-		ret = suit_mci_processor_start_rights_validate(class_id, cpu_id);
-		if (ret != SUIT_PLAT_SUCCESS) {
-			return SUIT_ERR_UNSUPPORTED_COMPONENT_ID;
+		if (NO_BOOT_CAPABILITY_CPU_ID != cpu_id) {
+			ret = suit_mci_processor_start_rights_validate(class_id, cpu_id);
+			if (ret != SUIT_PLAT_SUCCESS) {
+				return SUIT_ERR_UNSUPPORTED_COMPONENT_ID;
+			}
 		}
 
 		ret = suit_mci_memory_access_rights_validate(class_id, (void *)address, size);
@@ -72,8 +76,8 @@ int suit_plat_component_compatibility_check(const suit_manifest_class_id_t *clas
 
 	case SUIT_COMPONENT_TYPE_INSTLD_MFST:
 		/* Decode manifest class id */
-		if (suit_plat_decode_manifest_class_id(component_id, &decoded_class_id)
-		    != SUIT_PLAT_SUCCESS) {
+		if (suit_plat_decode_manifest_class_id(component_id, &decoded_class_id) !=
+		    SUIT_PLAT_SUCCESS) {
 			return SUIT_ERR_UNSUPPORTED_COMPONENT_ID;
 		}
 
