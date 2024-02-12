@@ -31,7 +31,7 @@ config SUIT_CACHE_RW
 config SUIT_MAX_URI_LENGTH
 	int "The maximum number of characters in uri used in fetch operations"
 	range 1 512
-	default 64
+	default 128
 	depends on SUIT_CACHE_RW
 
 config SUIT_CACHE0_ERASE_ON_ENVELOPE_STORED
