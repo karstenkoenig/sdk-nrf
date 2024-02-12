@@ -34,7 +34,6 @@ add_subdirectory(src/net)
 target_sources(app PRIVATE
 	src/border_agent.c
 	src/main.c
-	src/mdns_publisher.c
 	src/tbr.c
 	src/shell.c
 	src/api_extensions/ip6_ext.cpp
