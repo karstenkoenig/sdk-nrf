@@ -16,7 +16,7 @@ config SUIT_MPI_$(manifest)_CLASS_NAME
 
 config SUIT_MPI_$(manifest)_DOWNGRADE_PREVENTION
 	bool "Enable downgrade prevention policy"
-	default $(manifest-downgrade-disabled)
+	default $(manifest-downgrade-prevention-enabled)
 
 config SUIT_MPI_$(manifest)_INDEPENDENT_UPDATE
 	bool "Enable independent updateability policy"

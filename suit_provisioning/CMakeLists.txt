@@ -56,10 +56,10 @@ function(generate_mpi_hex MANIFEST_ROLE)
 
   if(DEFINED CONFIG_SUIT_MPI_${MANIFEST_ROLE}_DOWNGRADE_PREVENTION)
     list(APPEND GENERATE_ARGS
-      --downgrade-disabled
+      --downgrade-prevention-enabled
       )
     list(APPEND DESCR_ARGS
-      downgrade-disabled
+      downgrade-prevention-enabled
       )
   endif()
 

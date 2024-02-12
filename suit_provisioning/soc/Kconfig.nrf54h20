@@ -21,7 +21,7 @@ if SUIT_MPI_SOC_NRF54H20
 
 manifest=ROOT
 manifest-class=nRF54H20_sample_root
-manifest-downgrade-disabled=n
+manifest-downgrade-prevention-enabled=n
 manifest-independent-updates=y
 manifest-signature-check=DISABLED
 manifest-mpi-address=0xe1e9000
@@ -40,7 +40,7 @@ endmenu
 
 manifest=APP_RECOVERY
 manifest-class=nRF54H20_sample_app_recovery
-manifest-downgrade-disabled=n
+manifest-downgrade-prevention-enabled=n
 manifest-independent-updates=y
 manifest-signature-check=DISABLED
 manifest-mpi-address=0xe1e9030
@@ -52,7 +52,7 @@ rsource "Kconfig.template.manifest_config"
 
 manifest=APP_LOCAL_1
 manifest-class=nRF54H20_sample_app
-manifest-downgrade-disabled=n
+manifest-downgrade-prevention-enabled=n
 manifest-independent-updates=n
 manifest-signature-check=DISABLED
 manifest-mpi-address=0xe1e9060
@@ -65,7 +65,7 @@ rsource "Kconfig.template.manifest_config"
 
 manifest=APP_LOCAL_2
 manifest-class=nRF54H20_sample_app_local_2
-manifest-downgrade-disabled=n
+manifest-downgrade-prevention-enabled=n
 manifest-independent-updates=n
 manifest-signature-check=DISABLED
 manifest-mpi-address=0xe1e9090
@@ -77,7 +77,7 @@ rsource "Kconfig.template.manifest_config"
 
 manifest=APP_LOCAL_3
 manifest-class=nRF54H20_sample_app_local_3
-manifest-downgrade-disabled=n
+manifest-downgrade-prevention-enabled=n
 manifest-independent-updates=n
 manifest-signature-check=DISABLED
 manifest-mpi-address=0xe1e90c0
@@ -105,7 +105,7 @@ config SUIT_MPI_APP_AREA_SIZE
 
 manifest=RAD_RECOVERY
 manifest-class=nRF54H20_sample_rad_recovery
-manifest-downgrade-disabled=n
+manifest-downgrade-prevention-enabled=n
 manifest-independent-updates=n
 manifest-signature-check=DISABLED
 manifest-mpi-address=0xe1e8000
@@ -117,7 +117,7 @@ rsource "Kconfig.template.manifest_config"
 
 manifest=RAD_LOCAL_1
 manifest-class=nRF54H20_sample_rad
-manifest-downgrade-disabled=n
+manifest-downgrade-prevention-enabled=n
 manifest-independent-updates=n
 manifest-signature-check=DISABLED
 manifest-mpi-address=0xe1e8030
@@ -129,7 +129,7 @@ rsource "Kconfig.template.manifest_config"
 
 manifest=RAD_LOCAL_2
 manifest-class=nRF54H20_sample_rad_local_2
-manifest-downgrade-disabled=n
+manifest-downgrade-prevention-enabled=n
 manifest-independent-updates=n
 manifest-signature-check=DISABLED
 manifest-mpi-address=0xe1e8060

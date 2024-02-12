@@ -242,7 +242,7 @@ manifest:
       revision: 6b5dd6b83ed5de85838c6f8adb4121104a88b13e
       path: modules/lib/suit-processor
     - name: suit-generator
-      revision: 3ca62a08dbaaf9a3662dd20fa3c0ca487a49bf6f
+      revision: c101ece3191d08540efc7115e51d740e567cbc9b
       path: modules/lib/suit-generator
       groups:
         - suit-generator
