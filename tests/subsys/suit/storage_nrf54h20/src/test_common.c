@@ -38,6 +38,12 @@ static uint8_t app_root_cid[] = {
 	0x89, 0x86, 0xa5, 0x46, 0x60, 0xa1, 0x4b, 0x0a,
 };
 
+/* RFC4122 uuid5(nordic_vid, 'test_sample_rad') */
+static uint8_t rad_cid[] = {
+	0xf3, 0xe2, 0xb4, 0xe0, 0xd3, 0x73, 0x51, 0xdd,
+	0x99, 0x2b, 0xba, 0x1d, 0x84, 0xf1, 0x16, 0x9a,
+};
+
 uint8_t nvv_empty[64] = {
 	/* 0xFF * 32 */
 	0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
@@ -161,6 +167,25 @@ void write_empty_area_app(void)
 	zassert_equal(0, err, "Unable to store application MPI digest before test execution");
 }
 
+void write_empty_area_rad(void)
+{
+	/* Digest of the content defined in assert_empty_mpi_area_rad(). */
+	uint8_t rad_digest[] = {
+		0xd1, 0x69, 0xf6, 0x75, 0x42, 0x29, 0xc2, 0x00,
+		0xba, 0x48, 0x38, 0xa3, 0x8e, 0x48, 0x94, 0xc0,
+		0x3c, 0x47, 0xce, 0x89, 0x39, 0xdb, 0x4b, 0x7a,
+		0x11, 0xc2, 0x24, 0x92, 0x1b, 0x98, 0x25, 0x21,
+	};
+
+	/* Write the digest of radio area filled with 0xFF */
+	const struct device *fdev = DEVICE_DT_GET(DT_CHOSEN(zephyr_flash_controller));
+	zassert_not_null(fdev, "Unable to find a driver to modify MPI area");
+
+	int err = flash_write(fdev, SUIT_STORAGE_RAD_OFFSET + SUIT_STORAGE_RAD_MPI_SIZE, rad_digest,
+			      sizeof(rad_digest));
+	zassert_equal(0, err, "Unable to store radio MPI digest before test execution");
+}
+
 void write_area_app_root(void)
 {
 	uint8_t mpi_root[] = {
@@ -199,9 +224,47 @@ void write_area_app_root(void)
 	zassert_equal(0, err, "Unable to store application MPI digest before test execution");
 }
 
+void write_area_rad(void)
+{
+	uint8_t mpi_rad[] = {
+		0x01, /* version */
+		0x01, /* downgrade prevention disabled */
+		0x02, /* Independent update allowed */
+		0x01, /* signature check disabled */
+		/* reserved (12) */
+		0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+		/* RFC4122 uuid5(uuid.NAMESPACE_DNS, 'nordicsemi.com') */
+		0x76, 0x17, 0xda, 0xa5, 0x71, 0xfd, 0x5a, 0x85,
+		0x8f, 0x94, 0xe2, 0x8d, 0x73, 0x5c, 0xe9, 0xf4,
+		/* RFC4122 uuid5(nordic_vid, 'test_sample_rad') */
+		0xf3, 0xe2, 0xb4, 0xe0, 0xd3, 0x73, 0x51, 0xdd,
+		0x99, 0x2b, 0xba, 0x1d, 0x84, 0xf1, 0x16, 0x9a,
+	};
+	/* Digest of the content defined in assert_valid_mpi_area_rad(). */
+	uint8_t rad_digest[] = {
+		0x29, 0x8b, 0x7b, 0x01, 0x42, 0x24, 0xcf, 0x2f,
+		0x48, 0xe5, 0xf3, 0x6d, 0x0f, 0xa5, 0x66, 0x6d,
+		0x17, 0x42, 0x32, 0xf7, 0x03, 0x9f, 0xf8, 0xa4,
+		0x8d, 0x52, 0xc6, 0x8d, 0xea, 0xdc, 0x33, 0x3b,
+	};
+
+	/* Write the sample radio area (just one MPI entry) and corresponding digest */
+	const struct device *fdev = DEVICE_DT_GET(DT_CHOSEN(zephyr_flash_controller));
+	zassert_not_null(fdev, "Unable to find a driver to modify MPI area");
+
+	int err = flash_write(fdev, SUIT_STORAGE_RAD_OFFSET, mpi_rad, sizeof(mpi_rad));
+	zassert_equal(0, err, "Unable to store radio root MPI contents before test execution");
+
+	err = flash_write(fdev, SUIT_STORAGE_RAD_OFFSET + SUIT_STORAGE_RAD_MPI_SIZE, rad_digest,
+			  sizeof(rad_digest));
+	zassert_equal(0, err, "Unable to store radio MPI digest before test execution");
+}
+
 void write_area_nordic_root(void)
 {
-	uintptr_t mpi_root_backup_offset = SUIT_STORAGE_NORDIC_OFFSET + SUIT_STORAGE_RAD_MPI_SIZE;
+	uintptr_t mpi_root_backup_offset =
+		SUIT_STORAGE_NORDIC_OFFSET + SUIT_STORAGE_RAD_MPI_SIZE + SUIT_STORAGE_DIGEST_SIZE;
 	uint8_t mpi_root[] = {
 		0x01, /* version */
 		0x01, /* downgrade prevention disabled */
@@ -239,9 +302,49 @@ void write_area_nordic_root(void)
 		      "Unable to store application backup MPI digest before test execution");
 }
 
+void write_area_nordic_rad(void)
+{
+	uintptr_t mpi_rad_backup_offset = SUIT_STORAGE_NORDIC_OFFSET;
+	uint8_t mpi_rad[] = {
+		0x01, /* version */
+		0x01, /* downgrade prevention disabled */
+		0x02, /* Independent update allowed */
+		0x01, /* signature check disabled */
+		/* reserved (12) */
+		0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+		/* RFC4122 uuid5(uuid.NAMESPACE_DNS, 'nordicsemi.com') */
+		0x76, 0x17, 0xda, 0xa5, 0x71, 0xfd, 0x5a, 0x85,
+		0x8f, 0x94, 0xe2, 0x8d, 0x73, 0x5c, 0xe9, 0xf4,
+		/* RFC4122 uuid5(nordic_vid, 'test_sample_rad') */
+		0xf3, 0xe2, 0xb4, 0xe0, 0xd3, 0x73, 0x51, 0xdd,
+		0x99, 0x2b, 0xba, 0x1d, 0x84, 0xf1, 0x16, 0x9a,
+	};
+	/* Digest of the content defined in assert_valid_mpi_area_rad(). */
+	uint8_t rad_digest[] = {
+		0x29, 0x8b, 0x7b, 0x01, 0x42, 0x24, 0xcf, 0x2f,
+		0x48, 0xe5, 0xf3, 0x6d, 0x0f, 0xa5, 0x66, 0x6d,
+		0x17, 0x42, 0x32, 0xf7, 0x03, 0x9f, 0xf8, 0xa4,
+		0x8d, 0x52, 0xc6, 0x8d, 0xea, 0xdc, 0x33, 0x3b,
+	};
+
+	/* Write the sample radio backup area (just one MPI entry) and corresponding digest */
+	const struct device *fdev = DEVICE_DT_GET(DT_CHOSEN(zephyr_flash_controller));
+	zassert_not_null(fdev, "Unable to find a driver to modify MPI area");
+
+	int err = flash_write(fdev, mpi_rad_backup_offset, mpi_rad, sizeof(mpi_rad));
+	zassert_equal(0, err,
+		      "Unable to store radio backup root MPI contents before test execution");
+
+	err = flash_write(fdev, mpi_rad_backup_offset + SUIT_STORAGE_RAD_MPI_SIZE, rad_digest,
+			  sizeof(rad_digest));
+	zassert_equal(0, err, "Unable to store radio backup MPI digest before test execution");
+}
+
 void write_area_nordic_old_root(void)
 {
-	uintptr_t mpi_root_backup_offset = SUIT_STORAGE_NORDIC_OFFSET + SUIT_STORAGE_RAD_MPI_SIZE;
+	uintptr_t mpi_root_backup_offset =
+		SUIT_STORAGE_NORDIC_OFFSET + SUIT_STORAGE_RAD_MPI_SIZE + SUIT_STORAGE_DIGEST_SIZE;
 	uint8_t mpi_root[] = {
 		0x01, /* version */
 		0x01, /* downgrade prevention disabled */
@@ -279,6 +382,45 @@ void write_area_nordic_old_root(void)
 		      "Unable to store application backup MPI digest before test execution");
 }
 
+void write_area_nordic_old_rad(void)
+{
+	uintptr_t mpi_rad_backup_offset = SUIT_STORAGE_NORDIC_OFFSET;
+	uint8_t mpi_rad[] = {
+		0x01, /* version */
+		0x01, /* downgrade prevention disabled */
+		0x02, /* Independent update allowed */
+		0x01, /* signature check disabled */
+		/* reserved (12) */
+		0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+		/* RFC4122 uuid5(uuid.NAMESPACE_DNS, 'nordicsemi.com') */
+		0x76, 0x17, 0xda, 0xa5, 0x71, 0xfd, 0x5a, 0x85,
+		0x8f, 0x94, 0xe2, 0x8d, 0x73, 0x5c, 0xe9, 0xf4,
+		/* 0xBB * 16 */
+		0xBB, 0xBB, 0xBB, 0xBB, 0xBB, 0xBB, 0xBB, 0xBB,
+		0xBB, 0xBB, 0xBB, 0xBB, 0xBB, 0xBB, 0xBB, 0xBB,
+	};
+	uint8_t rad_digest[] = {
+		0x7a, 0x07, 0x30, 0x81, 0xea, 0x7b, 0x3b, 0x08,
+		0xca, 0x55, 0xbe, 0x48, 0x8d, 0x75, 0x22, 0x35,
+		0x6f, 0x1f, 0x82, 0x16, 0x28, 0xae, 0x68, 0x71,
+		0xc3, 0xc1, 0x8e, 0x5b, 0xb9, 0xf0, 0x2f, 0xdd,
+	};
+
+	/* Write the sample radio backup area (just the sample MPI with altered class) and
+	 * corresponding digest */
+	const struct device *fdev = DEVICE_DT_GET(DT_CHOSEN(zephyr_flash_controller));
+	zassert_not_null(fdev, "Unable to find a driver to modify MPI area");
+
+	int err = flash_write(fdev, mpi_rad_backup_offset, mpi_rad, sizeof(mpi_rad));
+	zassert_equal(0, err,
+		      "Unable to store radio backup sample MPI contents before test execution");
+
+	err = flash_write(fdev, mpi_rad_backup_offset + SUIT_STORAGE_APP_MPI_SIZE, rad_digest,
+			  sizeof(rad_digest));
+	zassert_equal(0, err, "Unable to store radio backup MPI digest before test execution");
+}
+
 void assert_nordic_classes(void)
 {
 	suit_manifest_class_info_t class_infos[CONFIG_SUIT_STORAGE_N_ENVELOPES];
@@ -290,7 +432,7 @@ void assert_nordic_classes(void)
 		      "Failed to fetch list of supported manifest classes (%d).", err);
 	/* ... and MPI reports at least 3 class IDs */
 	zassert_true(class_infos_len >= 3,
-		     "Invalid number of supported manifest classes (%d < %d).", err, 3);
+		     "Invalid number of supported manifest classes (%d < %d).", class_infos_len, 3);
 	/* ... and the Nordic top manifest class is supported */
 	zassert_mem_equal(class_infos[0].vendor_id, nordic_vid, sizeof(nordic_vid));
 	zassert_mem_equal(class_infos[0].class_id, nordic_top_cid, sizeof(nordic_top_cid));
@@ -319,12 +461,38 @@ void assert_sample_root_class(void)
 		      "Failed to fetch list of supported manifest classes (%d).", err);
 	/* ... and MPI reports 4 supported class IDs */
 	zassert_equal(class_infos_len, 4,
-		      "Invalid number of supported manifest classes (%d != %d).", err, 4);
+		      "Invalid number of supported manifest classes (%d != %d).", class_infos_len,
+		      4);
 	/* ... and the sample application root manifest class is supported */
 	zassert_mem_equal(class_infos[3].vendor_id, nordic_vid, sizeof(nordic_vid));
 	zassert_mem_equal(class_infos[3].class_id, app_root_cid, sizeof(app_root_cid));
 	zassert_equal(class_infos[3].role, SUIT_MANIFEST_APP_ROOT,
 		      "Invalid class role returned: %d", class_infos[3].role);
+}
+
+void assert_sample_root_rad_class(void)
+{
+	suit_manifest_class_info_t class_infos[CONFIG_SUIT_STORAGE_N_ENVELOPES];
+	size_t class_infos_len = CONFIG_SUIT_STORAGE_N_ENVELOPES;
+
+	/* ASSERT that it is possible to fetch list of supported manifest classes and roles */
+	int err = suit_storage_mpi_class_ids_get(class_infos, &class_infos_len);
+	zassert_equal(err, SUIT_PLAT_SUCCESS,
+		      "Failed to fetch list of supported manifest classes (%d).", err);
+	/* ... and MPI reports 5 supported class IDs */
+	zassert_equal(class_infos_len, 5,
+		      "Invalid number of supported manifest classes (%d != %d).", class_infos_len,
+		      5);
+	/* ... and the sample application root manifest class is supported */
+	zassert_mem_equal(class_infos[3].vendor_id, nordic_vid, sizeof(nordic_vid));
+	zassert_mem_equal(class_infos[3].class_id, rad_cid, sizeof(rad_cid));
+	zassert_equal(class_infos[3].role, SUIT_MANIFEST_RAD_RECOVERY,
+		      "Invalid class role returned: %d", class_infos[3].role);
+	/* ... and the sample application root manifest class is supported */
+	zassert_mem_equal(class_infos[4].vendor_id, nordic_vid, sizeof(nordic_vid));
+	zassert_mem_equal(class_infos[4].class_id, app_root_cid, sizeof(app_root_cid));
+	zassert_equal(class_infos[4].role, SUIT_MANIFEST_APP_ROOT,
+		      "Invalid class role returned: %d", class_infos[4].role);
 }
 
 void assert_empty_mpi_area_app(uint8_t *addr, size_t size)
@@ -368,10 +536,11 @@ void assert_empty_mpi_area_app(uint8_t *addr, size_t size)
 		0x98, 0x14, 0x09, 0x7e, 0x9d, 0x62, 0xc8, 0xe1,
 	};
 
-	zassert_equal(size, sizeof(empty_mpi_app), "Incorrect area size (0x%x != 0x%x)", size,
-		      sizeof(empty_mpi_app));
+	zassert_equal(size, sizeof(empty_mpi_app), "Incorrect application area size (0x%x != 0x%x)",
+		      size, sizeof(empty_mpi_app));
 	zassert_mem_equal(addr, empty_mpi_app, sizeof(empty_mpi_app),
-			  "MPI area does not match empty contents (addr: 0x%lx)", (uintptr_t)addr);
+			  "MPI application area does not match empty contents (addr: 0x%lx)",
+			  (uintptr_t)addr);
 }
 
 void assert_valid_mpi_area_app(uint8_t *addr, size_t size)
@@ -422,8 +591,88 @@ void assert_valid_mpi_area_app(uint8_t *addr, size_t size)
 		0xc1, 0xdc, 0x3f, 0xb4, 0x58, 0x96, 0x1e, 0x44,
 	};
 
-	zassert_equal(size, sizeof(valid_mpi_app), "Incorrect area size (0x%x != 0x%x)", size,
-		      sizeof(valid_mpi_app));
+	zassert_equal(size, sizeof(valid_mpi_app), "Incorrect application area size (0x%x != 0x%x)",
+		      size, sizeof(valid_mpi_app));
 	zassert_mem_equal(addr, valid_mpi_app, sizeof(valid_mpi_app),
-			  "MPI area does not match empty contents (addr: 0x%lx)", (uintptr_t)addr);
+			  "MPI application area does not match empty contents (addr: 0x%lx)",
+			  (uintptr_t)addr);
+}
+
+void assert_empty_mpi_area_rad(uint8_t *addr, size_t size)
+{
+	uint8_t empty_mpi_rad[] = {
+		/* 0xFF * 144 */
+		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+		/* SHA-256 */
+		0xd1, 0x69, 0xf6, 0x75, 0x42, 0x29, 0xc2, 0x00,
+		0xba, 0x48, 0x38, 0xa3, 0x8e, 0x48, 0x94, 0xc0,
+		0x3c, 0x47, 0xce, 0x89, 0x39, 0xdb, 0x4b, 0x7a,
+		0x11, 0xc2, 0x24, 0x92, 0x1b, 0x98, 0x25, 0x21,
+	};
+
+	zassert_equal(size, sizeof(empty_mpi_rad), "Incorrect radio area size (0x%x != 0x%x)", size,
+		      sizeof(empty_mpi_rad));
+	zassert_mem_equal(addr, empty_mpi_rad, sizeof(empty_mpi_rad),
+			  "MPI radio area does not match empty contents (addr: 0x%lx)",
+			  (uintptr_t)addr);
+}
+
+void assert_valid_mpi_area_rad(uint8_t *addr, size_t size)
+{
+	uint8_t valid_mpi_rad[] = {
+		0x01, /* version */
+		0x01, /* downgrade prevention disabled */
+		0x02, /* Independent update allowed */
+		0x01, /* signature check disabled */
+		/* reserved (12) */
+		0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+		/* RFC4122 uuid5(uuid.NAMESPACE_DNS, 'nordicsemi.com') */
+		0x76, 0x17, 0xda, 0xa5, 0x71, 0xfd, 0x5a, 0x85,
+		0x8f, 0x94, 0xe2, 0x8d, 0x73, 0x5c, 0xe9, 0xf4,
+		/* RFC4122 uuid5(nordic_vid, 'test_sample_rad') */
+		0xf3, 0xe2, 0xb4, 0xe0, 0xd3, 0x73, 0x51, 0xdd,
+		0x99, 0x2b, 0xba, 0x1d, 0x84, 0xf1, 0x16, 0x9a,
+		/* 0xFF * 96 */
+		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+		0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+		/* SHA-256 */
+		0x29, 0x8b, 0x7b, 0x01, 0x42, 0x24, 0xcf, 0x2f,
+		0x48, 0xe5, 0xf3, 0x6d, 0x0f, 0xa5, 0x66, 0x6d,
+		0x17, 0x42, 0x32, 0xf7, 0x03, 0x9f, 0xf8, 0xa4,
+		0x8d, 0x52, 0xc6, 0x8d, 0xea, 0xdc, 0x33, 0x3b,
+	};
+
+	zassert_equal(size, sizeof(valid_mpi_rad), "Incorrect radio area size (0x%x != 0x%x)", size,
+		      sizeof(valid_mpi_rad));
+	zassert_mem_equal(addr, valid_mpi_rad, sizeof(valid_mpi_rad),
+			  "MPI radio area does not match empty contents (addr: 0x%lx)",
+			  (uintptr_t)addr);
 }

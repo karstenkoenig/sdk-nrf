@@ -32,7 +32,8 @@ ZTEST(suit_storage_nrf54h20_nvv_tests, test_app_nvv_read)
 	/* ... and the application MPI is the same as application backup area */
 	assert_valid_mpi_area_app(SUIT_STORAGE_APP_ADDRESS,
 				  SUIT_STORAGE_APP_MPI_SIZE + SUIT_STORAGE_DIGEST_SIZE);
-	assert_valid_mpi_area_app(SUIT_STORAGE_NORDIC_ADDRESS + SUIT_STORAGE_RAD_MPI_SIZE,
+	assert_valid_mpi_area_app(SUIT_STORAGE_NORDIC_ADDRESS + SUIT_STORAGE_RAD_MPI_SIZE +
+					  SUIT_STORAGE_DIGEST_SIZE,
 				  SUIT_STORAGE_APP_MPI_SIZE + SUIT_STORAGE_DIGEST_SIZE);
 	/* ... and parsing of the root MPI succeeds */
 	int exp_err = SUIT_PLAT_SUCCESS;
@@ -84,7 +85,8 @@ ZTEST(suit_storage_nrf54h20_nvv_tests, test_app_nvv_write)
 	/* ... and the application MPI is the same as application backup area */
 	assert_valid_mpi_area_app(SUIT_STORAGE_APP_ADDRESS,
 				  SUIT_STORAGE_APP_MPI_SIZE + SUIT_STORAGE_DIGEST_SIZE);
-	assert_valid_mpi_area_app(SUIT_STORAGE_NORDIC_ADDRESS + SUIT_STORAGE_RAD_MPI_SIZE,
+	assert_valid_mpi_area_app(SUIT_STORAGE_NORDIC_ADDRESS + SUIT_STORAGE_RAD_MPI_SIZE +
+					  SUIT_STORAGE_DIGEST_SIZE,
 				  SUIT_STORAGE_APP_MPI_SIZE + SUIT_STORAGE_DIGEST_SIZE);
 	/* ... and parsing of the root MPI succeeds */
 	int exp_err = SUIT_PLAT_SUCCESS;
@@ -151,7 +153,8 @@ ZTEST(suit_storage_nrf54h20_nvv_tests, test_app_nvv_ro_backup_read)
 	/* ... and the application MPI is the same as application backup area */
 	assert_valid_mpi_area_app(SUIT_STORAGE_APP_ADDRESS,
 				  SUIT_STORAGE_APP_MPI_SIZE + SUIT_STORAGE_DIGEST_SIZE);
-	assert_valid_mpi_area_app(SUIT_STORAGE_NORDIC_ADDRESS + SUIT_STORAGE_RAD_MPI_SIZE,
+	assert_valid_mpi_area_app(SUIT_STORAGE_NORDIC_ADDRESS + SUIT_STORAGE_RAD_MPI_SIZE +
+					  SUIT_STORAGE_DIGEST_SIZE,
 				  SUIT_STORAGE_APP_MPI_SIZE + SUIT_STORAGE_DIGEST_SIZE);
 	/* ... and parsing of the root MPI succeeds */
 	int exp_err = SUIT_PLAT_SUCCESS;
@@ -209,7 +212,8 @@ ZTEST(suit_storage_nrf54h20_nvv_tests, test_app_nvv_ro_backup_write)
 	/* ... and the application MPI is the same as application backup area */
 	assert_valid_mpi_area_app(SUIT_STORAGE_APP_ADDRESS,
 				  SUIT_STORAGE_APP_MPI_SIZE + SUIT_STORAGE_DIGEST_SIZE);
-	assert_valid_mpi_area_app(SUIT_STORAGE_NORDIC_ADDRESS + SUIT_STORAGE_RAD_MPI_SIZE,
+	assert_valid_mpi_area_app(SUIT_STORAGE_NORDIC_ADDRESS + SUIT_STORAGE_RAD_MPI_SIZE +
+					  SUIT_STORAGE_DIGEST_SIZE,
 				  SUIT_STORAGE_APP_MPI_SIZE + SUIT_STORAGE_DIGEST_SIZE);
 	/* ... and parsing of the root MPI succeeds */
 	int exp_err = SUIT_PLAT_SUCCESS;
@@ -260,7 +264,8 @@ ZTEST(suit_storage_nrf54h20_nvv_tests, test_app_nvv_ro_read)
 	/* ... and the application MPI is the same as application backup area */
 	assert_valid_mpi_area_app(SUIT_STORAGE_APP_ADDRESS,
 				  SUIT_STORAGE_APP_MPI_SIZE + SUIT_STORAGE_DIGEST_SIZE);
-	assert_valid_mpi_area_app(SUIT_STORAGE_NORDIC_ADDRESS + SUIT_STORAGE_RAD_MPI_SIZE,
+	assert_valid_mpi_area_app(SUIT_STORAGE_NORDIC_ADDRESS + SUIT_STORAGE_RAD_MPI_SIZE +
+					  SUIT_STORAGE_DIGEST_SIZE,
 				  SUIT_STORAGE_APP_MPI_SIZE + SUIT_STORAGE_DIGEST_SIZE);
 	/* ... and parsing of the root MPI succeeds */
 	int exp_err = SUIT_PLAT_SUCCESS;
@@ -319,7 +324,8 @@ ZTEST(suit_storage_nrf54h20_nvv_tests, test_app_nvv_ro_write)
 	/* ... and the application MPI is the same as application backup area */
 	assert_valid_mpi_area_app(SUIT_STORAGE_APP_ADDRESS,
 				  SUIT_STORAGE_APP_MPI_SIZE + SUIT_STORAGE_DIGEST_SIZE);
-	assert_valid_mpi_area_app(SUIT_STORAGE_NORDIC_ADDRESS + SUIT_STORAGE_RAD_MPI_SIZE,
+	assert_valid_mpi_area_app(SUIT_STORAGE_NORDIC_ADDRESS + SUIT_STORAGE_RAD_MPI_SIZE +
+					  SUIT_STORAGE_DIGEST_SIZE,
 				  SUIT_STORAGE_APP_MPI_SIZE + SUIT_STORAGE_DIGEST_SIZE);
 	/* ... and parsing of the root MPI succeeds */
 	int exp_err = SUIT_PLAT_SUCCESS;
