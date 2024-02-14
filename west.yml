@@ -59,7 +59,7 @@ manifest:
     # https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/zephyr/guides/modules.html
     - name: zephyr
       repo-path: sdk-zephyr-next
-      revision: bade6a41f99ec59126436852b218eaeb4f37ed23
+      revision: 990c1b1c5041c443139ccecb3e84f8d11cbe9401
       import:
         # In addition to the zephyr repository itself, NCS also
         # imports the contents of zephyr/west.yml at the above
@@ -141,7 +141,7 @@ manifest:
     - name: ic-next
       repo-path: sdk-ic-next
       path: modules/ic-next
-      revision: f761333d7726cbc16e8607c5c18a7afa58d24a3e
+      revision: 3fef17049ff81f346138c2b014ae21be2532edf3
     - name: sdk-secdom
       revision: e441b873ca13ac97a8895410e039cef4f3a4e97e
       path: core_fw/secdom
