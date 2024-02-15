@@ -151,7 +151,7 @@ int suit_dfu_candidate_envelope_stored(void)
 
 	if (err != SUIT_PLAT_SUCCESS)
 	{
-		LOG_INF("Error when initialiazing DFU cache: %d", err);
+		LOG_INF("Error when initializing DFU cache: %d", err);
 		return -EIO;
 	}
 #endif /* CONFIG_SUIT_CACHE_RW */

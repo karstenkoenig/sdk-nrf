@@ -53,7 +53,7 @@ config SUIT_DFU_CANDIDATE_PROCESSING_FULL
 	help
 		This configuration can be used if processing of the SUIT envelope is needed by the
 		local domain. This is equivalent to a situation where one of the manifests
-		(the top manifest or its dependecies) may contain a suit-payload-fetch sequence.
+		(the top manifest or its dependencies) may contain a suit-payload-fetch sequence.
 		Before passing control to the Secure Domain, the local domain implementation of
 		the SUIT DFU module processes the envelope and fetches any additional needed
 		data using the registered fetch sources.
