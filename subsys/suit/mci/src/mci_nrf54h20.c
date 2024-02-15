@@ -7,6 +7,7 @@
 #include <drivers/nrfx_common.h>
 #include <suit_storage_mpi.h>
 #include <suit_execution_mode.h>
+#include <lcs.h>
 
 #define MANIFEST_PUBKEY_NRF_TOP_GEN0		0x4000BB00
 #define MANIFEST_PUBKEY_SYSCTRL_GEN0		0x40082100
@@ -120,12 +121,45 @@ mci_err_t suit_mci_signing_key_id_validate(const suit_manifest_class_id_t *class
 		return MCI_ERR_MANIFESTCLASSID;
 	}
 
+#ifdef CONFIG_SDFW_LCS
+	/* Read the domain-specific LCS value. */
+	enum lcs current_lcs = LCS_DISCARDED;
+	switch (role) {
+	case SUIT_MANIFEST_SEC_TOP:
+	case SUIT_MANIFEST_SEC_SDFW:
+	case SUIT_MANIFEST_SEC_SYSCTRL:
+		current_lcs = lcs_get(LCS_DOMAIN_ID_SECURE);
+		break;
+
+	case SUIT_MANIFEST_APP_ROOT:
+	case SUIT_MANIFEST_APP_RECOVERY:
+	case SUIT_MANIFEST_APP_LOCAL_1:
+	case SUIT_MANIFEST_APP_LOCAL_2:
+	case SUIT_MANIFEST_APP_LOCAL_3:
+		current_lcs = lcs_get(LCS_DOMAIN_ID_APPLICATION);
+		break;
+
+	case SUIT_MANIFEST_RAD_RECOVERY:
+	case SUIT_MANIFEST_RAD_LOCAL_1:
+	case SUIT_MANIFEST_RAD_LOCAL_2:
+		current_lcs = lcs_get(LCS_DOMAIN_ID_RADIOCORE);
+		break;
+
+	default:
+		break;
+	}
+#endif /* CONFIG_SDFW_LCS */
+
 	if (key_id == 0) {
-		if(0) {
-			/* condition above - check if LCS requires to skip signature check. NCSDK-25998
-			*/
+#ifdef CONFIG_SDFW_LCS
+		/* Check if LCS requires to skip signature check.
+		 * Temporarily skip signature verification in LCS_ROT and LCS_ROT_DEBUG.
+		 * Condition to be described and implemented in NCSDK-25998.
+		 */
+		if ((current_lcs == LCS_ROT) || (current_lcs == LCS_ROT_DEBUG)) {
 			return SUIT_PLAT_SUCCESS;
 		}
+#endif /* CONFIG_SDFW_LCS */
 
 		suit_storage_mpi_t *mpi;
 		if (SUIT_PLAT_SUCCESS != suit_storage_mpi_get(class_id, &mpi)) {

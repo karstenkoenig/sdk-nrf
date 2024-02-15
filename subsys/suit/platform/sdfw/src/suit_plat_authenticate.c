@@ -39,6 +39,13 @@ int suit_plat_authenticate_manifest(struct zcbor_string *manifest_component_id,
 		return SUIT_ERR_DECODING;
 	}
 
+	/* Check if signature verification should be skipped. */
+	int err = suit_plat_authorize_unsigned_manifest(manifest_component_id);
+	if (err == SUIT_SUCCESS) {
+		LOG_WRN("Signature verification skipped due to MCI configuration.");
+		return err;
+	}
+
 	/* Check if component ID is a manifest class */
 	if (suit_plat_decode_manifest_class_id(manifest_component_id, &class_id)
 	    != SUIT_PLAT_SUCCESS) {
@@ -71,6 +78,8 @@ int suit_plat_authenticate_manifest(struct zcbor_string *manifest_component_id,
 			       signature->len) == PSA_SUCCESS) {
 		return SUIT_SUCCESS;
 	}
+
+	LOG_ERR("Signature verification failed.");
 
 	return SUIT_ERR_AUTHENTICATION;
 }
@@ -105,6 +114,8 @@ int suit_plat_authorize_unsigned_manifest(struct zcbor_string *manifest_componen
 	if (ret == SUIT_PLAT_SUCCESS) {
 		return SUIT_SUCCESS;
 	}
+
+	LOG_INF("Signature verification required.");
 
 	return SUIT_ERR_AUTHENTICATION;
 }
