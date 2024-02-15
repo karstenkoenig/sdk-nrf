@@ -91,6 +91,28 @@ mci_err_t suit_mci_downgrade_prevention_policy_get(const suit_manifest_class_id_
 	return SUIT_PLAT_SUCCESS;
 }
 
+mci_err_t suit_mci_independent_update_policy_get(const suit_manifest_class_id_t *class_id,
+						 suit_independent_updateability_policy_t *policy)
+{
+	if (NULL == class_id || NULL == policy) {
+		return SUIT_PLAT_ERR_INVAL;
+	}
+
+	suit_storage_mpi_t *mpi;
+
+	if (SUIT_PLAT_SUCCESS != suit_storage_mpi_get(class_id, &mpi)) {
+		return MCI_ERR_MANIFESTCLASSID;
+	}
+
+	*policy = suit_mpi_independent_updateability_policy_to_metadata(
+		mpi->independent_updateability_policy);
+	if (SUIT_INDEPENDENT_UPDATE_UNKNOWN == *policy) {
+		return SUIT_PLAT_ERR_OUT_OF_BOUNDS;
+	}
+
+	return SUIT_PLAT_SUCCESS;
+}
+
 mci_err_t suit_mci_manifest_class_id_validate(const suit_manifest_class_id_t *class_id)
 {
 	if (NULL == class_id) {

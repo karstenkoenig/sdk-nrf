@@ -22,6 +22,7 @@ static void test_null_pointers(void)
 	size_t mem_size = sizeof(mem_address);
 	int platform_specific_component_number = 0;
 	suit_downgrade_prevention_policy_t policy;
+	suit_independent_updateability_policy_t update_policy;
 	int rc = SUIT_PLAT_SUCCESS;
 
 	rc = suit_mci_nordic_vendor_id_get(NULL);
@@ -50,6 +51,14 @@ static void test_null_pointers(void)
 	rc = suit_mci_downgrade_prevention_policy_get(&unsupported_manifest_class_id, NULL);
 	zassert_equal(rc, SUIT_PLAT_ERR_INVAL,
 		      "suit_mci_downgrade_prevention_policy_get returned (%d)", rc);
+
+	rc = suit_mci_independent_update_policy_get(NULL, &update_policy);
+	zassert_equal(rc, SUIT_PLAT_ERR_INVAL,
+		      "suit_mci_independent_update_policy_get returned (%d)", rc);
+
+	rc = suit_mci_independent_update_policy_get(&unsupported_manifest_class_id, NULL);
+	zassert_equal(rc, SUIT_PLAT_ERR_INVAL,
+		      "suit_mci_independent_update_policy_get returned (%d)", rc);
 
 	rc = suit_mci_signing_key_id_validate(NULL, key_id);
 	zassert_equal(rc, SUIT_PLAT_ERR_INVAL, "suit_mci_signing_key_id_validate returned (%d)",

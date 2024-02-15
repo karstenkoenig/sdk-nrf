@@ -106,7 +106,7 @@ mci_err_t suit_mci_invoke_order_get(const suit_manifest_class_id_t **class_id, s
  * @brief Gets downgrade prevention policy for manifest class id
  *
  * @param[in]   class_id	Manifest class id
- * @param[out]  policy
+ * @param[out]  policy		Downgrade prevention policy value
  *
  * @retval SUIT_PLAT_SUCCESS            on success
  * @retval SUIT_PLAT_ERR_INVAL          invalid parameter, i.e. null pointer
@@ -115,6 +115,21 @@ mci_err_t suit_mci_invoke_order_get(const suit_manifest_class_id_t **class_id, s
  */
 mci_err_t suit_mci_downgrade_prevention_policy_get(const suit_manifest_class_id_t *class_id,
 						   suit_downgrade_prevention_policy_t *policy);
+
+/**
+ * @brief Gets independent updateability policy for manifest class id
+ *
+ * @param[in]   class_id	Manifest class id
+ * @param[out]  policy		Independent updateability policy value
+ *
+ * @retval SUIT_PLAT_SUCCESS            on success
+ * @retval SUIT_PLAT_ERR_INVAL          invalid parameter, i.e. null pointer
+ * @retval MCI_ERR_MANIFESTCLASSID      manifest class id unsupported
+ * @retval SUIT_PLAT_ERR_OUT_OF_BOUNDS  data provisioned for independent updateability policy
+ *                                      is invalid
+ */
+mci_err_t suit_mci_independent_update_policy_get(const suit_manifest_class_id_t *class_id,
+						 suit_independent_updateability_policy_t *policy);
 
 /**
  * @brief Validates if manifest class id is supported in the device.
@@ -204,7 +219,7 @@ suit_mci_platform_specific_component_rights_validate(const suit_manifest_class_i
  * @retval MCI_ERR_MANIFESTCLASSID  manifest class id unsupported
  */
 mci_err_t suit_mci_vendor_id_for_manifest_class_id_get(const suit_manifest_class_id_t *class_id,
-						      const suit_uuid_t **vendor_id);
+						       const suit_uuid_t **vendor_id);
 
 /**
  * @brief Verifies whether parent-child relationship for selected manifests is valid
@@ -218,9 +233,9 @@ mci_err_t suit_mci_vendor_id_for_manifest_class_id_get(const suit_manifest_class
  * @retval MCI_ERR_NOACCESS         parent-child relation for selected
  *                                  manifests is invalid
  */
-mci_err_t suit_mci_manifest_parent_child_declaration_validate(
-						const suit_manifest_class_id_t *parent_class_id,
-						const suit_manifest_class_id_t *child_class_id);
+mci_err_t
+suit_mci_manifest_parent_child_declaration_validate(const suit_manifest_class_id_t *parent_class_id,
+						    const suit_manifest_class_id_t *child_class_id);
 
 /**
  * @brief Verifies whether parent-child relationship for selected manifests is valid in the context
@@ -235,9 +250,9 @@ mci_err_t suit_mci_manifest_parent_child_declaration_validate(
  * @retval MCI_ERR_NOACCESS         parent-child relation for selected
  *                                  manifests is invalid
  */
-mci_err_t suit_mci_manifest_process_dependency_validate(
-						const suit_manifest_class_id_t *parent_class_id,
-						const suit_manifest_class_id_t *child_class_id);
+mci_err_t
+suit_mci_manifest_process_dependency_validate(const suit_manifest_class_id_t *parent_class_id,
+					      const suit_manifest_class_id_t *child_class_id);
 
 /**
  * @brief Initializes MCI

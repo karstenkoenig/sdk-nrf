@@ -14,6 +14,7 @@
 #include <suit_platform.h>
 #include <suit_storage.h>
 #include <suit_plat_mem_util.h>
+#include <suit_plat_decode_util.h>
 #include <suit_mci.h>
 #include <suit_plat_digest_cache.h>
 #include "suit_plat_err.h"
@@ -55,8 +56,7 @@ static bool update_candidate_applicable(void)
 
 static int initialize_dfu_cache(const suit_plat_mreg_t *update_regions, size_t update_regions_len)
 {
-	if (update_regions == NULL || update_regions_len < 1)
-	{
+	if (update_regions == NULL || update_regions_len < 1) {
 		return -EINVAL;
 	}
 
@@ -65,8 +65,8 @@ static int initialize_dfu_cache(const suit_plat_mreg_t *update_regions, size_t u
 	cache.pools_count = update_regions_len - 1;
 
 	for (size_t i = 1; i < update_regions_len; i++) {
-		cache.pools[i-1].address = (uint8_t*) update_regions[i].mem;
-		cache.pools[i-1].size = update_regions[i].size;
+		cache.pools[i - 1].address = (uint8_t *)update_regions[i].mem;
+		cache.pools[i - 1].size = update_regions[i].size;
 	}
 
 	return SUIT_PROCESSOR_ERR_TO_ZEPHYR_ERR(suit_dfu_cache_initialize(&cache));
@@ -74,7 +74,38 @@ static int initialize_dfu_cache(const suit_plat_mreg_t *update_regions, size_t u
 
 static int validate_update_candidate_manifest(uint8_t *manifest_address, size_t manifest_size)
 {
-	int err = suit_process_sequence(manifest_address, manifest_size, SUIT_SEQ_PARSE);
+	struct zcbor_string manifest_component_id = {
+		.value = NULL,
+		.len = 0,
+	};
+	suit_manifest_class_id_t *manifest_class_id = NULL;
+	suit_independent_updateability_policy_t policy;
+
+	int err = suit_processor_get_manifest_metadata(manifest_address, manifest_size, true,
+						       &manifest_component_id, NULL, NULL, NULL);
+	if (err != SUIT_SUCCESS) {
+		LOG_ERR("Unable to read update candidate manifest metadata: %d", err);
+		return SUIT_PROCESSOR_ERR_TO_ZEPHYR_ERR(err);
+	}
+
+	err = suit_plat_decode_manifest_class_id(&manifest_component_id, &manifest_class_id);
+	if (err != SUIT_PLAT_SUCCESS) {
+		LOG_ERR("Failed to parse update candidate manifest class ID: %d", err);
+		return SUIT_PROCESSOR_ERR_TO_ZEPHYR_ERR(SUIT_ERR_MANIFEST_VALIDATION);
+	}
+
+	err = suit_mci_independent_update_policy_get(manifest_class_id, &policy);
+	if (err != SUIT_PLAT_SUCCESS) {
+		LOG_ERR("Failed to read independent updateability policy: %d", err);
+		return SUIT_PROCESSOR_ERR_TO_ZEPHYR_ERR(SUIT_ERR_UNSUPPORTED_COMPONENT_ID);
+	}
+
+	if (policy != SUIT_INDEPENDENT_UPDATE_ALLOWED) {
+		LOG_ERR("Independent updates of the provided update candidate denied.");
+		return SUIT_PROCESSOR_ERR_TO_ZEPHYR_ERR(SUIT_ERR_AUTHENTICATION);
+	}
+
+	err = suit_process_sequence(manifest_address, manifest_size, SUIT_SEQ_PARSE);
 
 	if (err != SUIT_SUCCESS) {
 		LOG_ERR("Failed to validate update candidate manifest: %d", err);
@@ -104,7 +135,6 @@ static int clear_update_candidate(void)
 	LOG_DBG("Update candidate cleared");
 
 	return 0;
-
 }
 
 static int update_path(void)
@@ -130,8 +160,7 @@ static int update_path(void)
 
 	err = initialize_dfu_cache(update_regions, update_regions_len);
 
-	if (err != 0)
-	{
+	if (err != 0) {
 		LOG_ERR("Failed to initialize DFU cache pools: %d", err);
 		return clear_update_candidate();
 	}

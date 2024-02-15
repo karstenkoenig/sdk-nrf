@@ -28,17 +28,19 @@ typedef struct {
 	const suit_manifest_class_id_t *manifest_class_id;
 	const suit_manifest_class_id_t *parent_manifest_class_id;
 	suit_downgrade_prevention_policy_t downgrade_prevention_policy;
+	suit_independent_updateability_policy_t independent_update_policy;
 	uint32_t signing_key_bits;
 	uint32_t signing_key_mask;
 } manifest_config_t;
 
 static manifest_config_t supported_manifests[] = {
 	{&nordic_root_manifest_class_id, NULL, SUIT_DOWNGRADE_PREVENTION_DISABLED,
+	 SUIT_INDEPENDENT_UPDATE_ALLOWED,
 	 /* signing_key_mask equal to -1 means signing with specified key is required
 	  */
 	 0x00000000, 0xFFFFFFFF},
 	{&nordic_app_manifest_class_id, &nordic_root_manifest_class_id,
-	 SUIT_DOWNGRADE_PREVENTION_DISABLED,
+	 SUIT_DOWNGRADE_PREVENTION_DISABLED, SUIT_INDEPENDENT_UPDATE_DENIED,
 	 /* signing_key_mask equal to -1 means signing with specified key is required
 	  */
 	 0x00000000, 0xFFFFFFFF}};
@@ -148,6 +150,22 @@ int suit_mci_downgrade_prevention_policy_get(const suit_manifest_class_id_t *cla
 		return MCI_ERR_MANIFESTCLASSID;
 	}
 	*policy = manifest_config->downgrade_prevention_policy;
+	return SUIT_PLAT_SUCCESS;
+}
+
+mci_err_t suit_mci_independent_update_policy_get(const suit_manifest_class_id_t *class_id,
+						 suit_independent_updateability_policy_t *policy)
+{
+	if (NULL == class_id || NULL == policy) {
+		return SUIT_PLAT_ERR_INVAL;
+	}
+
+	const manifest_config_t *manifest_config = find_manifest_config(class_id);
+
+	if (NULL == manifest_config) {
+		return MCI_ERR_MANIFESTCLASSID;
+	}
+	*policy = manifest_config->independent_update_policy;
 	return SUIT_PLAT_SUCCESS;
 }
 
