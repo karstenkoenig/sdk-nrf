@@ -38,6 +38,30 @@ tests:
     build_only: true
     tags: suit
 
+  subsys.suit.smp_transfer.root_with_nordic_top.v1:
+    extra_configs:
+      - CONFIG_APP_VERSION=1
+      - CONFIG_EMULATOR_FPGA=y
+      - CONFIG_SUIT_ENVELOPE_EDITABLE_TEMPLATES_LOCATION="./"
+      - CONFIG_UART_NRFX_LEGACY_SHIM=y
+      - CONFIG_SUIT_SECDOM_UPDATE_LOG=y
+    extra_args: DTC_OVERLAY_FILE="boards/nrf54h20dk_nrf54h20_cpuapp_fpga.overlay"
+    platform_allow: nrf54h20dk_nrf54h20_cpuapp
+    build_only: true
+    tags: suit suit_root_with_nordic_top
+
+  subsys.suit.smp_transfer.root_with_nordic_top.v2:
+    extra_configs:
+      - CONFIG_APP_VERSION=2
+      - CONFIG_EMULATOR_FPGA=y
+      - CONFIG_SUIT_ENVELOPE_EDITABLE_TEMPLATES_LOCATION="./"
+      - CONFIG_UART_NRFX_LEGACY_SHIM=y
+      - CONFIG_SUIT_SECDOM_UPDATE_LOG=y
+    extra_args: DTC_OVERLAY_FILE="boards/nrf54h20dk_nrf54h20_cpuapp_fpga.overlay"
+    platform_allow: nrf54h20dk_nrf54h20_cpuapp
+    build_only: true
+    tags: suit suit_root_with_nordic_top
+
   subsys.suit.smp_transfer.bt.v1:
     extra_args: OVERLAY_CONFIG="overlay-bt.conf"
     extra_configs:
