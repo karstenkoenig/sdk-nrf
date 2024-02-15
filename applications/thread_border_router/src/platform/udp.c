@@ -11,6 +11,7 @@
 #include "tbr.h"
 
 #include <ipv6.h>
+#include <openthread/message.h>
 #include <openthread/platform/udp.h>
 
 #include <sys/errno.h>
@@ -29,12 +30,74 @@ static uint8_t dgram_buffer[MAX_UDP_SIZE];
 
 static void udp_sent_cb(struct net_context *context, int status, void *user_data)
 {
-	if (status < 0) {
-		LOG_DBG("OT socket (%p) - datagram transmission failed, error: %d",
-			user_data, status);
-	} else {
-		LOG_DBG("OT socket (%p) - transmitted %d bytes", user_data, status);
+	LOG_DBG("OT socket (%p) - %s: %d", user_data,
+		(status < 0 ? "transmission failed, error" : "bytes sent"), status);
+}
+
+static void udp_received_cb(struct net_context *context, struct net_pkt *pkt,
+			    union net_ip_header *ip_hdr, union net_proto_header *proto_hdr,
+			    int status, void *user_data)
+{
+	otError error = OT_ERROR_NONE;
+	otMessageSettings msg_settings;
+	otMessageInfo msg_info;
+	otMessage *msg;
+	size_t len;
+	struct tbr_context *tbr_ctx = tbr_get_context();
+	uint8_t *pos;
+	otUdpSocket *socket = (otUdpSocket *)user_data;
+	struct net_pkt_cursor payload_start;
+	bool ow_flag;
+	int res;
+
+	__ASSERT(pkt, "udp_received_cb() without a packet");
+	__ASSERT(socket, "udp_received_cb() without a socket");
+
+	if (status != 0) {
+		LOG_DBG("udp_received_cb() - invalid status");
 	}
+
+	msg_settings.mLinkSecurityEnabled = false;
+	msg_settings.mPriority = OT_MESSAGE_PRIORITY_NORMAL;
+
+	net_ipaddr_copy(msg_info.mSockAddr.mFields.m8, ip_hdr->ipv6->dst);
+	net_ipaddr_copy(msg_info.mPeerAddr.mFields.m8, ip_hdr->ipv6->src);
+
+	msg_info.mPeerPort = ntohs(proto_hdr->udp->src_port);
+	msg_info.mSockPort = ntohs(proto_hdr->udp->dst_port);
+	msg_info.mIsHostInterface = (pkt->iface == tbr_ctx->backbone_iface);
+
+	msg = otUdpNewMessage(tbr_ctx->ot->instance, &msg_settings);
+
+	if (!msg) {
+		return;
+	}
+
+	net_pkt_cursor_backup(pkt, &payload_start);
+	ow_flag = net_pkt_is_being_overwritten(pkt);
+
+	net_pkt_set_overwrite(pkt, true);
+
+	do {
+		len = net_pkt_get_contiguous_len(pkt);
+		pos = pkt->cursor.pos;
+
+		error = otMessageAppend(msg, pos, len);
+
+		res = net_pkt_skip(pkt, len);
+
+	} while (len && error == OT_ERROR_NONE && res == 0);
+
+	if (error == OT_ERROR_NONE) {
+		socket->mHandler(socket->mContext, msg, &msg_info);
+	}
+
+	net_pkt_set_overwrite(pkt, ow_flag);
+	net_pkt_cursor_restore(pkt, &payload_start);
+
+	otMessageFree(msg);
+
+	return;
 }
 
 otError otPlatUdpSocket(otUdpSocket *aUdpSocket)
@@ -56,9 +119,6 @@ otError otPlatUdpSocket(otUdpSocket *aUdpSocket)
 	aUdpSocket->mHandle = net_ctx;
 
 	LOG_DBG("OT socket (%p) - opened", aUdpSocket);
-
-	/* By default, bind every socket to Thread iface */
-	otPlatUdpBindToNetif(aUdpSocket, OT_NETIF_THREAD);
 
 	return OT_ERROR_NONE;
 }
@@ -94,9 +154,18 @@ otError otPlatUdpBind(otUdpSocket *aUdpSocket)
 				(uint8_t *)&aUdpSocket->mSockName.mAddress);
 
 	res = net_context_bind(aUdpSocket->mHandle, &addr, sizeof(struct sockaddr_in6));
-
 	if (res < 0) {
-		LOG_ERR("OT socket (%p) - failed to bind", aUdpSocket);
+		LOG_WRN("OT socket (%p) - failed to bind", aUdpSocket);
+
+		return OT_ERROR_FAILED;
+	}
+
+	res = net_context_recv(aUdpSocket->mHandle, udp_received_cb, K_NO_WAIT, aUdpSocket);
+	if (res < 0) {
+		LOG_WRN("OT socket (%p) - failed to enable receiving", aUdpSocket);
+
+		net_context_put(aUdpSocket->mHandle);
+
 		return OT_ERROR_FAILED;
 	}
 
@@ -113,20 +182,30 @@ otError otPlatUdpBindToNetif(otUdpSocket *aUdpSocket, otNetifIdentifier aNetifId
 {
 	struct tbr_context *ctx = tbr_get_context();
 	struct net_context *net_ctx;
+	struct net_if *ot_iface;
 
 	if (!aUdpSocket || !aUdpSocket->mHandle) {
 		return OT_ERROR_INVALID_ARGS;
 	}
-
 	net_ctx = aUdpSocket->mHandle;
 
 	switch(aNetifIdentifier) {
+	case OT_NETIF_UNSPECIFIED:
+		/* We cannot set iface with net_context_set_iface()
+		 * as it would cause an assert. However, we can
+		 * only clear the flag to remove the binding
+		 */
+		net_ctx->flags &= ~NET_CONTEXT_BOUND_TO_IFACE;
+		break;
 	case OT_NETIF_THREAD:
-		if (!ctx->ot->iface) {
+		ot_iface = openthread_get_default_context()->iface;
+
+		if (!ot_iface) {
 			return OT_ERROR_FAILED;
 		}
 
-		net_context_set_iface(net_ctx, ctx->ot->iface);
+		net_context_set_iface(net_ctx, ot_iface);
+		net_ctx->flags |= NET_CONTEXT_BOUND_TO_IFACE;
 		break;
 	case OT_NETIF_BACKBONE:
 		if (!ctx->backbone_iface) {
@@ -134,16 +213,12 @@ otError otPlatUdpBindToNetif(otUdpSocket *aUdpSocket, otNetifIdentifier aNetifId
 		}
 
 		net_context_set_iface(net_ctx, ctx->backbone_iface);
+		net_ctx->flags |= NET_CONTEXT_BOUND_TO_IFACE;
 		break;
 	default:
+		__ASSERT(false, "Invalid netif identifier");
 		break;
 	}
-
-	/**
-	 * net_context_set_iface() does not set the flag and the binding may be
-	 * overwritten later on, do it manually.
-	 */
-	net_ctx->flags |= NET_CONTEXT_BOUND_TO_IFACE;
 
 	return OT_ERROR_NONE;
 }
