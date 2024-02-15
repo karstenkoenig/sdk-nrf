@@ -39,13 +39,26 @@ LOG_MODULE_REGISTER(suitfu_mgmt, CONFIG_MGMT_SUITFU_LOG_LEVEL);
 #define DFU_PARTITION_WRITE_SIZE FIXED_PARTITION_WRITE_BLOCK_SIZE(DFU_PARTITION_LABEL)
 #define DFU_PARTITION_DEVICE	 FIXED_PARTITION_DEVICE(DFU_PARTITION_LABEL)
 
+#define SYSTEM_UPDATE_WORKER_STACK_SIZE 2048
+
+K_THREAD_STACK_DEFINE(system_update_stack_area, SYSTEM_UPDATE_WORKER_STACK_SIZE);
+
 struct system_update_work {
 	struct k_work_delayable work;
-	size_t image_size;
+	/* Other data to pass to the workqueue might go here */
 };
+
+struct k_work_q system_update_work_queue;
 
 static void schedule_system_update(struct k_work *item)
 {
+	int ret = suit_dfu_candidate_preprocess();
+	if (ret < 0) {
+		LOG_ERR("Envelope processing error");
+		return;
+	}
+	k_msleep(CONFIG_MGMT_SUITFU_TRIGGER_UPDATE_RESET_DELAY_MS);
+
 	(void) suit_dfu_update_start();
 }
 
@@ -59,22 +72,15 @@ int suitfu_mgmt_candidate_envelope_stored(size_t image_size)
 		LOG_ERR("Envelope decoding error");
 		return MGMT_ERR_EBUSY;
 	}
-	ret = suit_dfu_candidate_preprocess();
-	if (ret < 0) {
-		LOG_ERR("Envelope processing error");
-		return MGMT_ERR_EBUSY;
-	}
 
 	static struct system_update_work suw;
 
 	LOG_INF("Schedule system reboot");
 	k_work_init_delayable(&suw.work, schedule_system_update);
-	suw.image_size = image_size;
-
-	ret = k_work_schedule(&suw.work,
+	ret = k_work_schedule_for_queue(&system_update_work_queue, &suw.work,
 			      K_MSEC(CONFIG_MGMT_SUITFU_TRIGGER_UPDATE_RESET_DELAY_MS));
 	if (ret < 0) {
-		LOG_ERR("Unable to reboot the system");
+		LOG_ERR("Unable to process the envelope");
 		rc = MGMT_ERR_EBUSY;
 	}
 
@@ -214,6 +220,10 @@ int suitfu_mgmt_write_dfu_image_data(unsigned int req_offset, const void *addr, 
 
 int suitfu_mgmt_init()
 {
+	k_work_queue_init(&system_update_work_queue);
+	k_work_queue_start(&system_update_work_queue, system_update_stack_area,
+                   K_THREAD_STACK_SIZEOF(system_update_stack_area), K_HIGHEST_THREAD_PRIO,
+                   NULL);
 	return suit_dfu_initialize();
 }
 
