@@ -31,11 +31,11 @@ int suitfu_mgmt_suit_manifests_list(struct smp_streamer *ctx)
 	struct zcbor_string zcs;
 
 	suit_plat_err_t rc;
-	suit_ssf_manifest_class_info_t
-		class_info[CONFIG_MGMT_SUITFU_GRP_SUIT_MFSTS_STATE_MFSTS_COUNT] = {0};
-	size_t class_info_count = ARRAY_SIZE(class_info);
+	suit_manifest_role_t roles[CONFIG_MGMT_SUITFU_GRP_SUIT_MFSTS_STATE_MFSTS_COUNT] = {0};
 
-	rc = suit_get_supported_manifest_class_info(class_info, &class_info_count);
+	size_t class_info_count = ARRAY_SIZE(roles);
+
+	rc = suit_get_supported_manifest_roles(roles, &class_info_count);
 	if (rc != SUIT_PLAT_SUCCESS) {
 		return MGMT_ERR_EBADSTATE;
 	}
@@ -47,22 +47,27 @@ int suitfu_mgmt_suit_manifests_list(struct smp_streamer *ctx)
 	}
 
 	for (int mfst_idx = 0; mfst_idx < class_info_count; mfst_idx++) {
-		suit_ssf_manifest_class_info_t *ci = &class_info[mfst_idx];
+
+		suit_ssf_manifest_class_info_t ci;
+		rc = suit_get_supported_manifest_info(roles[mfst_idx], &ci);
+		if (rc != SUIT_PLAT_SUCCESS) {
+			return MGMT_ERR_EBADSTATE;
+		}
 
 		ok = zcbor_map_start_encode(zse, 2);
 		if (!ok) {
 			return MGMT_ERR_EMSGSIZE;
 		}
 
-		zcs.value = ci->class_id.raw;
-		zcs.len = sizeof(ci->class_id.raw);
+		zcs.value = ci.class_id.raw;
+		zcs.len = sizeof(ci.class_id.raw);
 
 		ok = zcbor_tstr_put_term(zse, "class_id") && zcbor_bstr_encode(zse, &zcs);
 		if (!ok) {
 			return MGMT_ERR_EMSGSIZE;
 		}
 
-		ok = zcbor_tstr_put_term(zse, "role") && zcbor_uint32_put(zse, ci->role);
+		ok = zcbor_tstr_put_term(zse, "role") && zcbor_uint32_put(zse, ci.role);
 		if (!ok) {
 			return MGMT_ERR_EMSGSIZE;
 		}
