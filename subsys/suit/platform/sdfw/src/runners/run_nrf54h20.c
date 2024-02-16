@@ -22,7 +22,7 @@ int suit_plat_cpu_run(uint8_t cpu_id, intptr_t run_address)
 	case NRF_PROCESSOR_RADIOCORE: { /* RadioCore */
 #ifdef CONFIG_SDFW_RESET_HANDLING_ENABLED
 		/* Single run address implies no NSVTOR, so keep at reset value of 0x0. */
-		return reset_mgr_start_cpu(cpu_id, run_address, 0);
+		return reset_mgr_init_and_boot_processor(cpu_id, run_address, 0);
 #else
 		return SUIT_SUCCESS;
 #endif /* CONFIG_SDFW_RESET_HANDLING_ENABLED */
