@@ -164,6 +164,10 @@ suit_plat_err_t suit_dfu_cache_rw_deinitialize(void)
 		}
 	}
 
+	/* Reset cache pool 0 to its initial state */
+	dfu_partitions_ext[0].offset = FIXED_PARTITION_OFFSET(dfu_partition);
+	dfu_partitions_ext[0].size = FIXED_PARTITION_SIZE(dfu_partition);
+
 	return ret;
 }
 
@@ -535,6 +539,11 @@ static suit_plat_err_t cache_0_update(void *address, size_t size)
 	if ((suit_plat_mem_nvm_offset_get(address) < dfu_partitions_ext[0].offset) ||
 	    (suit_plat_mem_nvm_offset_get(address) >= cache_0_end)) {
 		LOG_ERR("Envelope address doesn't match dfu_partition");
+		return SUIT_PLAT_ERR_INVAL;
+	}
+
+	if ((suit_plat_mem_nvm_offset_get(address) + size > cache_0_end)) {
+		LOG_ERR("Envelope exceeds dfu_partition");
 		return SUIT_PLAT_ERR_INVAL;
 	}
 
