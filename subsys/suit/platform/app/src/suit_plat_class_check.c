@@ -25,21 +25,35 @@ static const suit_uuid_t *validate_and_get_uuid(struct zcbor_string *in_uuid)
 	return (const suit_uuid_t *)in_uuid->value;
 }
 
-static int supported_manifest_class_ids_get(const suit_manifest_class_id_t **class_id, size_t *out_size)
+static int supported_manifest_class_infos_get(const suit_ssf_manifest_class_info_t **class_info,
+					      size_t *out_size)
 {
 	static suit_ssf_manifest_class_info_t
 		manifest_class_infos_list[CONFIG_MAX_NUMBER_OF_MANIFEST_CLASS_IDS];
 	static size_t size = CONFIG_MAX_NUMBER_OF_MANIFEST_CLASS_IDS;
 	static bool initialized = false;
 
+	suit_manifest_role_t manifest_roles_list[CONFIG_MAX_NUMBER_OF_MANIFEST_CLASS_IDS];
+
 	if (!initialized) {
-		suit_ssf_err_t ret = suit_get_supported_manifest_class_info(manifest_class_infos_list, &size);
+		suit_ssf_err_t ret = suit_get_supported_manifest_roles(manifest_roles_list, &size);
 		if (ret != SUIT_PLAT_SUCCESS) {
 			return ret;
 		}
+
+		for (size_t i = 0; i < size; i++) {
+			ret = suit_get_supported_manifest_info(manifest_roles_list[i],
+							       &manifest_class_infos_list[i]);
+
+			if (ret != SUIT_PLAT_SUCCESS) {
+				return ret;
+			}
+		}
+
+		initialized = true;
 	}
 
-	if (NULL == class_id || NULL == out_size) {
+	if (NULL == class_info || NULL == out_size) {
 		return SUIT_PLAT_ERR_INVAL;
 	}
 
@@ -48,7 +62,7 @@ static int supported_manifest_class_ids_get(const suit_manifest_class_id_t **cla
 	}
 
 	for (size_t i = 0; i < size; i++) {
-		class_id[i] = &manifest_class_infos_list[i].class_id;
+		class_info[i] = &manifest_class_infos_list[i];
 	}
 
 	*out_size = size;
@@ -58,8 +72,8 @@ static int supported_manifest_class_ids_get(const suit_manifest_class_id_t **cla
 
 int suit_plat_check_cid(suit_component_t component_handle, struct zcbor_string *cid_uuid)
 {
-	const suit_manifest_class_id_t
-		*manifest_class_ids_list[CONFIG_MAX_NUMBER_OF_MANIFEST_CLASS_IDS] = {NULL};
+	const suit_ssf_manifest_class_info_t
+		*manifest_class_infos_list[CONFIG_MAX_NUMBER_OF_MANIFEST_CLASS_IDS] = {NULL};
 	size_t size = CONFIG_MAX_NUMBER_OF_MANIFEST_CLASS_IDS;
 	struct zcbor_string *component_id;
 	const suit_uuid_t *cid = validate_and_get_uuid(cid_uuid);
@@ -69,7 +83,7 @@ int suit_plat_check_cid(suit_component_t component_handle, struct zcbor_string *
 		return SUIT_ERR_UNSUPPORTED_COMPONENT_ID;
 	}
 
-	int ret = supported_manifest_class_ids_get(manifest_class_ids_list, &size);
+	int ret = supported_manifest_class_infos_get(manifest_class_infos_list, &size);
 
 	if (ret != SUIT_PLAT_SUCCESS) {
 		return SUIT_ERR_CRASH;
@@ -81,9 +95,9 @@ int suit_plat_check_cid(suit_component_t component_handle, struct zcbor_string *
 	}
 
 	for (size_t i = 0; i < size; i++) {
-		if ((suit_plat_component_compatibility_check(manifest_class_ids_list[i],
+		if ((suit_plat_component_compatibility_check(&manifest_class_infos_list[i]->class_id,
 							     component_id) == SUIT_SUCCESS) &&
-		    (suit_metadata_uuid_compare(cid, manifest_class_ids_list[i]) ==
+		    (suit_metadata_uuid_compare(cid, &manifest_class_infos_list[i]->class_id) ==
 		     SUIT_PLAT_SUCCESS)) {
 			return SUIT_SUCCESS;
 		}
@@ -94,11 +108,10 @@ int suit_plat_check_cid(suit_component_t component_handle, struct zcbor_string *
 
 int suit_plat_check_vid(suit_component_t component_handle, struct zcbor_string *vid_uuid)
 {
-    	const suit_manifest_class_id_t
-		*manifest_class_ids_list[CONFIG_MAX_NUMBER_OF_MANIFEST_CLASS_IDS] = {NULL};
+	const suit_ssf_manifest_class_info_t
+		*manifest_class_infos_list[CONFIG_MAX_NUMBER_OF_MANIFEST_CLASS_IDS] = {NULL};
 	size_t size = CONFIG_MAX_NUMBER_OF_MANIFEST_CLASS_IDS;
 	struct zcbor_string *component_id;
-	suit_uuid_t vendor_id;
 	const suit_uuid_t *vid = validate_and_get_uuid(vid_uuid);
 
 	if (vid == NULL) {
@@ -106,7 +119,7 @@ int suit_plat_check_vid(suit_component_t component_handle, struct zcbor_string *
 		return SUIT_ERR_UNSUPPORTED_COMPONENT_ID;
 	}
 
-	int ret = supported_manifest_class_ids_get(manifest_class_ids_list, &size);
+	int ret = supported_manifest_class_infos_get(manifest_class_infos_list, &size);
 
 	if (ret != SUIT_PLAT_SUCCESS) {
 		return SUIT_ERR_CRASH;
@@ -118,11 +131,10 @@ int suit_plat_check_vid(suit_component_t component_handle, struct zcbor_string *
 	}
 
 	for (size_t i = 0; i < size; i++) {
-		if ((suit_plat_component_compatibility_check(manifest_class_ids_list[i],
+		if ((suit_plat_component_compatibility_check(&manifest_class_infos_list[i]->class_id,
 							     component_id) == SUIT_SUCCESS) &&
-		    (suit_get_vendor_id_for_manifest_class_id(manifest_class_ids_list[i], &vendor_id) ==
-		     SUIT_PLAT_SUCCESS) &&
-		    (suit_metadata_uuid_compare(vid, &vendor_id) == SUIT_PLAT_SUCCESS)) {
+		    (suit_metadata_uuid_compare(vid, &manifest_class_infos_list[i]->vendor_id) ==
+		     SUIT_PLAT_SUCCESS)) {
 			return SUIT_SUCCESS;
 		}
 	}
