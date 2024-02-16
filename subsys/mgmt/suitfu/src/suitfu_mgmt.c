@@ -50,16 +50,30 @@ struct system_update_work {
 
 struct k_work_q system_update_work_queue;
 
+static void update_failure(void)
+{
+	if (suit_dfu_cleanup() < 0)
+	{
+		LOG_ERR("Error while cleaning up the SUIT DFU module!");
+	}
+}
+
 static void schedule_system_update(struct k_work *item)
 {
 	int ret = suit_dfu_candidate_preprocess();
 	if (ret < 0) {
 		LOG_ERR("Envelope processing error");
+		update_failure();
 		return;
 	}
 	k_msleep(CONFIG_MGMT_SUITFU_TRIGGER_UPDATE_RESET_DELAY_MS);
 
-	(void) suit_dfu_update_start();
+	ret = suit_dfu_update_start();
+	if (ret < 0) {
+		LOG_ERR("Failed to start firmware upgrade!");
+		update_failure();
+		return;
+	}
 }
 
 int suitfu_mgmt_candidate_envelope_stored(size_t image_size)
@@ -70,6 +84,7 @@ int suitfu_mgmt_candidate_envelope_stored(size_t image_size)
 	ret = suit_dfu_candidate_envelope_stored();
 	if (ret < 0) {
 		LOG_ERR("Envelope decoding error");
+		update_failure();
 		return MGMT_ERR_EBUSY;
 	}
 
@@ -81,6 +96,7 @@ int suitfu_mgmt_candidate_envelope_stored(size_t image_size)
 			      K_MSEC(CONFIG_MGMT_SUITFU_TRIGGER_UPDATE_RESET_DELAY_MS));
 	if (ret < 0) {
 		LOG_ERR("Unable to process the envelope");
+		update_failure();
 		rc = MGMT_ERR_EBUSY;
 	}
 
