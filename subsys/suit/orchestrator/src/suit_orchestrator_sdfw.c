@@ -60,7 +60,7 @@ static int initialize_dfu_cache(const suit_plat_mreg_t *update_regions, size_t u
 		return -EINVAL;
 	}
 
-	struct dfu_cache cache;
+	struct dfu_cache cache = {0};
 
 	cache.pools_count = update_regions_len - 1;
 
