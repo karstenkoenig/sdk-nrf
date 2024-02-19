@@ -19,6 +19,23 @@
 LOG_MODULE_REGISTER(suit_cache_rw, CONFIG_SUIT_LOG_LEVEL);
 
 #define SUCCESS 0
+#define INDEFINITE_MAP_HEADER 0xBF
+
+/* BF
+ * tstr_header - max 9 bytes 0x7b UTF-8 string (eight-byte uint64_t for n, and then n bytes follow)
+ * CONFIG_SUIT_MAX_URI_LENGTH
+ * 5A 0 0 0 0
+ * FF
+ */
+#define MIN_VALID_PARTITION_SIZE (CONFIG_SUIT_MAX_URI_LENGTH + 16)
+
+/* Adding 5 bytes for bstring header and 1 byte for indefinite map header and
+ * 9 bytes for tstr
+ */
+#define ENCODING_OUTPUT_BUFFER_LENGTH (CONFIG_SUIT_MAX_URI_LENGTH + 5 + 1 + 9)
+
+/* Adding 9 bytes for max length tstr header*/
+#define MAX_URI_ENCODE_BUFFER_LENGTH (CONFIG_SUIT_MAX_URI_LENGTH + 9)
 
 extern struct dfu_cache dfu_cache;
 
@@ -58,12 +75,6 @@ static struct dfu_cache_partition_ext dfu_partitions_ext[] = {
 		.id = 0,
 	},
 	LISTIFY(CONFIG_SUIT_CACHE_MAX_CACHES, PARTITION_DEFINE, (), dfu_cache_partition_)};
-
-#define ENCODING_OUTPUT_BUFFER_LENGTH                                                              \
-	(CONFIG_SUIT_MAX_URI_LENGTH + 5) /* Adding 5 bytes for bstring header */
-
-#define ERASE_SWAP_BUFFER_MAX_SIZE 4096
-static uint8_t erase_swap_buffer[ERASE_SWAP_BUFFER_MAX_SIZE];
 
 static suit_plat_err_t partition_initialize(struct dfu_cache_partition_ext *part);
 static suit_plat_err_t cache_0_update(void *address, size_t size);
@@ -331,16 +342,12 @@ static suit_plat_err_t is_partition_initialized(struct dfu_cache_partition_ext *
  */
 static suit_plat_err_t partition_initialize(struct dfu_cache_partition_ext *part)
 {
-	const uint8_t header[] = {0xBF,	 /* Indefinite length map */
-				  0xFF}; /* End marker */
-
 	if (part != NULL) {
-		if (part->size > sizeof(header)) {
-			size_t header_size = sizeof(header);
-			uint8_t *address = suit_plat_mem_nvm_ptr_get(part->offset);
-
+		if (part->size >= MIN_VALID_PARTITION_SIZE) {
 			LOG_INF("Partition %u: offset(%p) address(%p) size(%u)", part->id,
-				(void *)part->offset, (void *)address, part->size);
+				(void *)part->offset, 
+				(void *)suit_plat_mem_nvm_ptr_get(part->offset),
+				part->size);
 
 			suit_plat_err_t ret = is_partition_empty(part);
 
@@ -360,12 +367,6 @@ static suit_plat_err_t partition_initialize(struct dfu_cache_partition_ext *part
 				if (ret != SUIT_PLAT_SUCCESS) {
 					return ret;
 				}
-			}
-
-			ret = write_to_sink(part->offset, (uint8_t *)header, &header_size);
-			if (ret != SUIT_PLAT_SUCCESS) {
-				LOG_ERR("Writing header and end marker failed. %i", ret);
-				return SUIT_PLAT_ERR_IO;
 			}
 
 			return SUIT_PLAT_SUCCESS;
@@ -398,36 +399,53 @@ static suit_plat_err_t cache_free_space_check(struct dfu_cache_partition_ext *pa
 	if ((part != NULL) && (slot != NULL)) {
 		part_tmp_offset = part->offset;
 
-		zcbor_new_state(states, sizeof(states) / sizeof(zcbor_state_t),
-				suit_plat_mem_nvm_ptr_get(part->offset), part->size, 1);
-		ret = zcbor_map_start_decode(states);
+		if (is_partition_empty(part) != SUIT_PLAT_SUCCESS) {
+			zcbor_new_state(states, sizeof(states) / sizeof(zcbor_state_t),
+					suit_plat_mem_nvm_ptr_get(part->offset), part->size, 1);
+			ret = zcbor_map_start_decode(states);
 
-		do {
-			ret = ret && (((zcbor_tstr_decode(states, &current_key))) &&
-				      (zcbor_bstr_decode(states, &current_data)));
+			do {
+				ret = ret && (((zcbor_tstr_decode(states, &current_key))) &&
+							(zcbor_bstr_decode(states, &current_data)));
 
-			if (ret) {
-				part_tmp_offset = suit_plat_mem_nvm_offset_get(
-					(uint8_t *)(current_data.value + current_data.len));
-			}
-		} while (ret);
+				if (ret) {
+					part_tmp_offset = suit_plat_mem_nvm_offset_get(
+						(uint8_t *)(current_data.value + current_data.len));
+				}
+			} while (ret);
 
-		zcbor_list_map_end_force_decode(states);
-		zcbor_map_end_decode(states);
-
-		if ((*suit_plat_mem_nvm_ptr_get(part_tmp_offset)) == 0xBF) {
-			part_tmp_offset++;
+			zcbor_list_map_end_force_decode(states);
+			zcbor_map_end_decode(states);
 		}
 
-		slot->size = part->offset + part->size - part_tmp_offset;
+		LOG_INF("partition offset %X", part->offset);
+		LOG_INF("partition size: %X", part->size);
+		LOG_INF("partition tmp offset: %X", part_tmp_offset);
+
+		/* Subtract additional 1 byte to account for required indefinite map end marker
+		 * which needs to fit within cache partition boundary.
+		 */
+		slot->size = ((part->offset + part->size) > part_tmp_offset)
+				     ? part->offset + part->size - part_tmp_offset - 1
+				     : 0;
+
+		if ((part->offset == slot->slot_offset) && (slot->size > 0)) {
+			/* This is a first slot at the beginning of the partition so we have to
+			 * take into account required indefinite map header that will be added.
+			 * We subtract its size.
+			 */
+			slot->size--;
+		}
+
 		slot->slot_offset = part_tmp_offset;
 
 		if ((*suit_plat_mem_nvm_ptr_get(part_tmp_offset)) == 0xFF) {
 			return SUIT_PLAT_SUCCESS;
 		}
 
+		/* Clear corrupted slot */
 		if (suit_dfu_cache_rw_slot_drop(slot) != SUIT_PLAT_SUCCESS) {
-			LOG_ERR("Clearing recovering corrupted cache pool failed: %i", ret);
+			LOG_ERR("Clearing corrupted cache pool failed: %i", ret);
 			return SUIT_PLAT_ERR_CRASH;
 		}
 
@@ -452,9 +470,16 @@ static suit_plat_err_t slot_in_cache_partition_allocate(const struct zcbor_strin
 {
 	size_t encoded_size = 0;
 	uint8_t output[ENCODING_OUTPUT_BUFFER_LENGTH];
+	uint8_t *output_ptr = output;
 	zcbor_state_t states[3];
 
 	if ((uri != NULL) && (slot != NULL) && (part != NULL)) {
+		if (uri->len > CONFIG_SUIT_MAX_URI_LENGTH) {
+			LOG_ERR("URI longer than defined maximum CONFIG_SUIT_MAX_URI_LENGTH: %u",
+						CONFIG_SUIT_MAX_URI_LENGTH);
+			return SUIT_PLAT_ERR_NOMEM;
+		}
+
 		/* Check if uri is not a duplicate */
 		uint8_t *payload = NULL;
 		size_t payload_size = 0;
@@ -475,27 +500,28 @@ static suit_plat_err_t slot_in_cache_partition_allocate(const struct zcbor_strin
 			return ret;
 		}
 
-		zcbor_new_state(states, sizeof(states) / sizeof(zcbor_state_t), output,
-				ENCODING_OUTPUT_BUFFER_LENGTH, 1);
+		if (slot->slot_offset == part->offset) {
+			output[0] = INDEFINITE_MAP_HEADER;
+			output_ptr++;
+		}
+
+		zcbor_new_state(states, sizeof(states) / sizeof(zcbor_state_t), output_ptr,
+				MAX_URI_ENCODE_BUFFER_LENGTH, 1);
 
 		if (!zcbor_tstr_encode(states, uri)) {
 			return SUIT_PLAT_ERR_CRASH;
 		}
 
-		encoded_size = MIN(ENCODING_OUTPUT_BUFFER_LENGTH,
-				   (size_t)states[0].payload - (size_t)output);
+		encoded_size = (size_t)states[0].payload - (size_t)output;
 
-		/* 0x5A - first byte that indicates byte string type of length written on following
-		 *4 bytes 0x5A = 0x40(type 2) + 0x1A(26)
-		 */
+		/* 0x5A - byte string (four-byte uint32_t for n, and then n bytes follow) */
 		output[encoded_size++] = 0x5A;
 		slot->size_offset = encoded_size;
 
-		/* Fill 4 size bytes to 0xFF so that they can be written latter during slot closing
+		/* Fill 4 size bytes to 0xFF so that they can be written later during slot closing
 		 */
-		for (size_t i = 0; i < 4; i++, encoded_size++) {
-			output[encoded_size] = 0xFF;
-		}
+		memset(&output[encoded_size], 0xFF, 4);
+		encoded_size += 4;
 
 		if (slot->size < encoded_size) {
 			LOG_ERR("Not enough free space in slot to write header.");
@@ -503,12 +529,14 @@ static suit_plat_err_t slot_in_cache_partition_allocate(const struct zcbor_strin
 		}
 
 		ret = write_to_sink(slot->slot_offset, output, &encoded_size);
+
 		if (ret != SUIT_PLAT_SUCCESS) {
 			LOG_ERR("Writing slot header failed. %i", ret);
 			return SUIT_PLAT_ERR_IO;
 		}
 
 		slot->data_offset = encoded_size;
+
 		return SUIT_PLAT_SUCCESS;
 	}
 
@@ -525,7 +553,6 @@ static suit_plat_err_t slot_in_cache_partition_allocate(const struct zcbor_strin
  * @return SUIT_PLAT_SUCCESS on success, otherwise error code
  */
 static suit_plat_err_t cache_0_update(void *address, size_t size)
-
 {
 	if ((address == NULL) || (size == 0)) {
 		LOG_WRN("Initialized with empty DFU partition");
@@ -613,11 +640,12 @@ suit_plat_err_t suit_dfu_cache_rw_slot_create(uint8_t cache_partition_id,
 	return SUIT_PLAT_ERR_INVAL;
 }
 
-suit_plat_err_t suit_dfu_cache_rw_slot_close(struct suit_cache_slot *slot, size_t data_end_offset)
+suit_plat_err_t suit_dfu_cache_rw_slot_close(struct suit_cache_slot *slot, size_t size_used)
 {
-	if (slot != NULL) {
-		uint32_t tmp = __bswap_32(data_end_offset);
+	if ((slot != NULL) && (slot->size >= size_used)) {
+		uint32_t tmp = __bswap_32(size_used);
 		size_t tmp_size = sizeof(uint32_t);
+		size_t end_offset = slot->slot_offset + slot->data_offset + size_used;
 
 		/* Update byte string size */
 		if (write_to_sink(slot->slot_offset + slot->size_offset, (uint8_t *)&tmp,
@@ -626,13 +654,79 @@ suit_plat_err_t suit_dfu_cache_rw_slot_close(struct suit_cache_slot *slot, size_
 			return SUIT_PLAT_ERR_IO;
 		}
 
+		struct dfu_cache_partition_ext *part =
+			cache_partition_get_by_offset(slot->slot_offset);
+		if (part == NULL) {
+			LOG_ERR("Couldn't find partition matching slot offset");
+			return SUIT_PLAT_ERR_IO;
+		}
+
+		tmp_size = (slot->data_offset + size_used);
+		size_t padding_size = ROUND_UP(tmp_size, slot->eb_size) - tmp_size;
+
+		/* Minimal size of an entry in the map is 2:
+		 * 0x60 - empty uri ""
+		 * 0x40 - empty byte string h''
+		 */
+		if (padding_size == 1) {
+			padding_size += slot->eb_size;
+		}
+
+		if ((size_used + padding_size) > slot->size) {
+			LOG_ERR("Padding (header + bytes) would overflow slot boundaries");
+			return SUIT_PLAT_ERR_NOMEM;
+		}
+
+		LOG_DBG("Number of padding bytes required: %u", padding_size);
+
+		if (padding_size > 0) {
+			/* Assumed worst case scenario is that padding size is not bigger than
+			 * uint16 */
+			uint8_t header[] = {0x60, 0, 0, 0};
+			size_t header_size = 0;
+
+			if (padding_size <= 23) {
+				header_size = 2;
+				padding_size -= header_size;
+				header[1] =
+					0x40 +
+					padding_size; /* byte string (0x00..0x17 bytes follow) */
+			} else if (padding_size <= UINT16_MAX) {
+				header_size = 4;
+				padding_size -= header_size;
+				header[1] = 0x59; /* byte string (two-byte uint16_t for n, and then
+						     n bytes follow) */
+				*(uint16_t *)(&header[2]) = __bswap_16(padding_size);
+			} else {
+				LOG_ERR("Number of required padding bytes exceeds assumed max size "
+					"0xFFFF");
+				return SUIT_PLAT_ERR_INVAL;
+			}
+
+			if (write_to_sink(end_offset, header, &header_size)) {
+				LOG_ERR("Writing CBOR cache slot header for padding failed.");
+				return SUIT_PLAT_ERR_IO;
+			}
+
+			end_offset += header_size;
+
+			tmp_size = 1;
+			for (size_t i = 0; i < padding_size; i++) {
+				if (write_to_sink(end_offset + i, &(uint8_t){0}, &tmp_size)) {
+					LOG_ERR("Writing padding byte failed.");
+					return SUIT_PLAT_ERR_IO;
+				}
+			}
+
+			end_offset += padding_size;
+		}
+
 		/* To be used as end marker */
 		tmp = 0xFFFFFFFF;
 		tmp_size = 1;
 
 		/* Add indefinite map, end marker 0xFF */
-		if (write_to_sink(slot->slot_offset + slot->data_offset + data_end_offset,
-				  (uint8_t *)&tmp, &tmp_size) != SUIT_PLAT_SUCCESS) {
+		if (write_to_sink(end_offset, (uint8_t *)&tmp, &tmp_size) != SUIT_PLAT_SUCCESS) {
 			LOG_ERR("Writing CBOR map end marker to cache partition failed.");
 			return SUIT_PLAT_ERR_IO;
 		}
@@ -640,15 +734,13 @@ suit_plat_err_t suit_dfu_cache_rw_slot_close(struct suit_cache_slot *slot, size_
 		return SUIT_PLAT_SUCCESS;
 	}
 
-	LOG_ERR("Invalid argument. NULL pointer.");
+	LOG_ERR("Invalid argument. NULL pointer or invalid size.");
 	return SUIT_PLAT_ERR_INVAL;
 }
 
 suit_plat_err_t suit_dfu_cache_rw_slot_drop(struct suit_cache_slot *slot)
 {
-	if (ERASE_SWAP_BUFFER_MAX_SIZE > 128) {
-		LOG_WRN("ERASE_SWAP_BUFFER_MAX_SIZE is set to %u", ERASE_SWAP_BUFFER_MAX_SIZE);
-	}
+	LOG_INF("DROPPING SLOT");
 
 	if (slot != NULL) {
 		struct dfu_cache_partition_ext *part =
@@ -659,80 +751,40 @@ suit_plat_err_t suit_dfu_cache_rw_slot_drop(struct suit_cache_slot *slot)
 			return SUIT_PLAT_ERR_IO;
 		}
 
-		slot->eb_size = part->eb_size;
-
-		if (slot->eb_size > ERASE_SWAP_BUFFER_MAX_SIZE) {
-			LOG_ERR("Unable to drop slot: erase block size exceeds set safety limit: "
-				"%u > %u)",
-				slot->eb_size, ERASE_SWAP_BUFFER_MAX_SIZE);
-
-			return SUIT_PLAT_ERR_IO;
-		}
-
-		if (slot->eb_size > 128) {
-			LOG_WRN("Erase swap buffer for dropping cache slot is at excessive size "
-				"(%u) due to defined erase block size in dts",
-				slot->eb_size);
-		}
-
-		size_t erase_offset = (slot->slot_offset / slot->eb_size) * slot->eb_size;
-		size_t erase_max_offset =
-			((part->offset + part->size) / slot->eb_size) * slot->eb_size;
-
-		if (erase_max_offset > (slot->slot_offset + slot->size)) {
-			erase_max_offset -= slot->eb_size;
-		}
+		size_t erase_offset = slot->slot_offset;
+		size_t erase_size = (part->offset + part->size) - slot->slot_offset;
+		size_t write_size = 1;
 
 		LOG_INF("Erase area: (addr: 0x%x, size: 0x%x)", slot->slot_offset, part->size);
-		if (erase_max_offset <= erase_offset) {
+		if (erase_size < slot->eb_size) {
 			LOG_ERR("Unable to erase area: (addr: 0x%x, size: 0x%x)", slot->slot_offset,
-				part->size);
+				erase_size);
 			return SUIT_PLAT_ERR_IO;
 		}
 
-		if (erase_offset < slot->slot_offset) {
-			LOG_DBG("Cache area (0x%x - 0x%x)", erase_offset, slot->slot_offset);
-			memset(erase_swap_buffer, 0xFF, slot->eb_size);
-
-			memcpy(erase_swap_buffer, suit_plat_mem_nvm_ptr_get(erase_offset),
-			       slot->slot_offset - erase_offset);
-
-			if (memcmp(erase_swap_buffer, suit_plat_mem_nvm_ptr_get(erase_offset),
-				   slot->slot_offset - erase_offset) != 0) {
-				LOG_ERR("Caching slot before erase failed");
-				return SUIT_PLAT_ERR_IO;
-			}
+		bool add_map_header = false;
+		if (*suit_plat_mem_nvm_ptr_get(slot->slot_offset) == INDEFINITE_MAP_HEADER) {
+			add_map_header = true;
 		}
 
-		for (size_t offset = erase_offset; offset < erase_max_offset;
-		     offset += slot->eb_size) {
-			int ret = erase_on_sink(erase_offset, slot->eb_size);
-			if (ret != SUIT_PLAT_SUCCESS) {
-				LOG_ERR("Erasing cache failed: %i", ret);
-				return SUIT_PLAT_ERR_IO;
-			}
+		int ret = erase_on_sink(erase_offset, erase_size);
+		if (ret != SUIT_PLAT_SUCCESS) {
+			LOG_ERR("Erasing cache failed: %i", ret);
+			return SUIT_PLAT_ERR_IO;
 		}
 
-		if (erase_offset < slot->slot_offset) {
-			LOG_DBG("Restore area (0x%x - 0x%x)", erase_offset, slot->slot_offset);
-			size_t write_size = slot->slot_offset - erase_offset;
-			int ret = write_to_sink(erase_offset, erase_swap_buffer, &write_size);
+		if (add_map_header) {
+			LOG_DBG("Restore map header (0x%x)", slot->slot_offset);
+			int ret = write_to_sink(erase_offset, &(uint8_t){INDEFINITE_MAP_HEADER}, &write_size);
 			if (ret != SUIT_PLAT_SUCCESS) {
 				LOG_ERR("Unable to restore slot after erase: %i", ret);
 				return SUIT_PLAT_ERR_IO;
 			}
 		}
 
-		/* To be used as end marker */
-		uint8_t tmp = 0xFF;
-
-		/* Add indefinite map, end marker 0xFF */
-		size_t write_size = 1;
-		if (write_to_sink(slot->slot_offset, &tmp, &write_size) != SUIT_PLAT_SUCCESS) {
-			LOG_ERR("Writing CBOR map end marker to cache partition failed.");
-			return SUIT_PLAT_ERR_IO;
-		}
+		return SUIT_PLAT_SUCCESS;
 	}
 
-	return SUIT_PLAT_SUCCESS;
+	LOG_ERR("Invalid argument. NULL pointer.");
+	return SUIT_PLAT_ERR_INVAL;
 }

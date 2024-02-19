@@ -12,6 +12,7 @@
 #include <dfu_cache_rw.h>
 #include <suit_plat_mem_util.h>
 
+#ifndef CONFIG_BOARD_NATIVE_POSIX
 static const uint8_t corrupted_cache[] = {
 	0xBF, /* map(*) */
 	0x75, /* text(21) */
@@ -20,20 +21,27 @@ static const uint8_t corrupted_cache[] = {
 	0x5A, 0x00, 0x00, 0x00, 0x17,			      /* bytes(23) */
 	0x43, 0x60, 0x02, 0x11, 0x35, 0x85, 0x37, 0x85, 0x76, 0x44, 0x09, 0x44,
 	0x45, 0x42, 0x66, 0x25, 0x12, 0x36, 0x84, 0x00, 0x08, 0x61, 0x17, /* payload(23) */
+	0x60,								  /* Empty padding uri */
+	0x4B,								  /* bytes(11) */
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* padding bytes */
 	0x76,								  /* text(22) */
 	0x68, 0x74, 0x74, 0x70, 0x3A, 0x2F, 0x2F, 0x73, 0x74, 0x6F, 0x72, 0x61,
 	0x67, 0x65, 0x68, 0x6F, 0x6C, 0x65, 0x2E, 0x63, 0x6F, 0x6D, /* "http://storagehole.com" */
 	0x5A, 0x00, 0x00, 0x00, 0x18,				    /* bytes(24) */
 	0x05, 0x37, 0x14, 0x51, 0x42, 0x99, 0x99, 0x49, 0x46, 0x54, 0x89, 0x28,
 	0x82, 0x17, 0x68, 0x20, 0x97, 0x60, 0x22, 0x04, 0x51, 0x45, 0x23, 0x04, /* payload(24) */
-	0x69,									/* text(9) */
-	0x23, 0x66, 0x69, 0x6C, 0x65, 0x2E, 0x62, 0x69, 0x6E,			/* "#file.bin" */
+	0x60,							    /* Empty padding uri */
+	0x49,							    /* bytes(10) */
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* padding bytes */
+	0x69,							    /* text(9) */
+	0x23, 0x66, 0x69, 0x6C, 0x65, 0x2E, 0x62, 0x69, 0x6E,	    /* "#file.bin" */
 	0x5A, 0xFF, 0xFF, 0xFF, 0xFF, /* not updated, corrupted value */
 	0x12, 0x35, 0x89, 0x02, 0x31, 0x70, 0x49, 0x81, 0x20, 0x91, 0x62, 0x38,
 	0x90, 0x47, 0x60, 0x12, 0x37, 0x84, 0x90, 0x70, 0x18, 0x92, 0x36, 0x51,
 	0x92, 0x83, 0x09, 0x86, 0x70, 0x19, 0x23, /* payload(31) */
 	0xFF};					  /* primitive(*) - end marker */
 static const size_t corrupted_cache_len = sizeof(corrupted_cache);
+#endif
 
 static uint8_t uri[] = "http://databucket.com";
 static uint8_t data[] = {0x43, 0x60, 0x02, 0x11, 0x35, 0x85, 0x37, 0x85, 0x76,
@@ -92,6 +100,7 @@ void setup_dfu_test_cache(void *f)
 	zassert_equal(ret, SUIT_PLAT_SUCCESS, "Failed to initialize cache: %i", ret);
 }
 
+#ifndef CONFIG_BOARD_NATIVE_POSIX
 void setup_dfu_test_corrupted_cache(void *f)
 {
 	/* Erase the area, to met the preconditions in the next test. */
@@ -112,6 +121,7 @@ void setup_dfu_test_corrupted_cache(void *f)
 
 	setup_dfu_test_cache(NULL);
 }
+#endif
 
 void clear_dfu_test_partitions(void *f)
 {
@@ -165,6 +175,7 @@ ZTEST(cache_rw_initialization_tests, test_cache_initialization_ok)
 	zassert_equal(ret, SUIT_PLAT_SUCCESS, "Initialization failed: %i", ret);
 }
 
+#ifndef CONFIG_BOARD_NATIVE_POSIX
 ZTEST_SUITE(cache_sink_recovery_tests, NULL, NULL, setup_dfu_test_corrupted_cache,
 	    clear_dfu_test_partitions, NULL);
 
@@ -184,6 +195,7 @@ ZTEST(cache_sink_recovery_tests, test_cache_recovery_header_ok_size_nok)
 	ret = sink.release(sink.ctx);
 	zassert_equal(ret, SUIT_PLAT_SUCCESS, "Failed to release sink: %i", ret);
 }
+#endif
 
 ZTEST_SUITE(cache_sink_tests, NULL, NULL, setup_dfu_test_cache, clear_dfu_test_partitions, NULL);
 
@@ -322,8 +334,8 @@ ZTEST(cache_sink_tests, test_cache_get_slot_nok_not_enough_space)
 	int ret = suit_dfu_cache_sink_get(&sink, 1, uri3, sizeof(uri3), true);
 	zassert_equal(ret, SUIT_PLAT_SUCCESS, "Failed to get sink: %i", ret);
 
-	for (size_t i = 0x10 + sizeof(data3);
-	     i < FLASH_AREA_ERASE_BLOCK_SIZE(dfu_cache_partition_1); i += sizeof(data3)) {
+	for (size_t i = 0x10 + sizeof(data3); i < FIXED_PARTITION_SIZE(dfu_cache_partition_1);
+	     i += sizeof(data3)) {
 		ret = sink.write(sink.ctx, data3, &data3_size);
 		zassert_equal(ret, SUIT_PLAT_SUCCESS, "Failed to write to sink: %i", ret);
 	}
@@ -334,13 +346,20 @@ ZTEST(cache_sink_tests, test_cache_get_slot_nok_not_enough_space)
 	ret = sink.release(sink.ctx);
 	zassert_equal(ret, SUIT_PLAT_SUCCESS, "Failed to release sink: %i", ret);
 
+#ifdef CONFIG_BOARD_NATIVE_POSIX
+	ret = suit_dfu_cache_sink_get(&sink, 1, uri4, sizeof(uri4), true);
+	zassert_not_equal(ret, SUIT_PLAT_SUCCESS,
+			  "Get sink should have failed due to lack of free space: %i", ret);
+#else
 	ret = suit_dfu_cache_sink_get(&sink, 1, uri4, sizeof(uri4), true);
 	zassert_equal(ret, SUIT_PLAT_SUCCESS, "Failed to get sink: %i", ret);
 
 	ret = sink.write(sink.ctx, data3, &data3_size);
 	zassert_not_equal(ret, SUIT_PLAT_SUCCESS,
 			  "Write to sink should fail due to lack of space: %i", ret);
+#endif /* CONFIG_BOARD_NATIVE_POSIX */
 
+	printk("\nReleasing sink\n");
 	ret = sink.release(sink.ctx);
 	zassert_equal(ret, SUIT_PLAT_SUCCESS, "Failed to release sink: %i", ret);
 }

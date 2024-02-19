@@ -81,11 +81,11 @@ suit_plat_err_t suit_dfu_cache_rw_slot_create(uint8_t cache_partition_id,
  * @brief Commits changes written to slot by updating cbor header for the cache slot
  *
  * @param slot Pointer to opened cache slot
- * @param data_end_offset Offset of where written data ends
+ * @param size_used Number of bytes written
  *
  * @return SUIT_PLAT_SUCCESS in case of success, otherwise error code
  */
-suit_plat_err_t suit_dfu_cache_rw_slot_close(struct suit_cache_slot *slot, size_t data_end_offset);
+suit_plat_err_t suit_dfu_cache_rw_slot_close(struct suit_cache_slot *slot, size_t size_used);
 
 /**
  * @brief Drop data written to slot and revert slot allocation

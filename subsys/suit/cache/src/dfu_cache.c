@@ -70,7 +70,7 @@ static suit_plat_err_t search_cache_pool(struct dfu_cache_pool *cache_pool,
 		ret = zcbor_map_start_decode(states);
 
 		do {
-			ret = ret && (((zcbor_tstr_decode(states, &current_key))) &&
+			ret = ret && ((zcbor_tstr_decode(states, &current_key)) &&
 				      (zcbor_bstr_decode(states, &current_data)));
 
 			if ((ret) && uricmp(&current_key, uri)) {
