@@ -5,6 +5,7 @@
 #
 
 # This file is nrf_security's entry-point for the TF-M build system
+set(BUILD_FROM_TFM True)
 
 set(NRFXLIB_DIR ${CMAKE_CURRENT_LIST_DIR}/../../../../nrfxlib)
 set(NRF_SECURITY_ROOT ${CMAKE_CURRENT_LIST_DIR}/..)

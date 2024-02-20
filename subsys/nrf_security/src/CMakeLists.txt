@@ -9,8 +9,11 @@
 #
 # Can be executed by both the NCS and TF-M build systems.
 #
-# For TF-M the nrf_security/tfm/CMakeLists.txt file will execute this file.
-# For NCS  the nrf_security/CMakeLists.txt     file will execute this file.
+# The variable BUILD_FROM_TFM can be used to distinguish between being
+# within the TF-M build system or the NCS build system.
+#
+# For TF-M the nrf_security/tfm/CMakeLists.txt file will execute this file. BUILD_FROM_TFM=True
+# For NCS  the nrf_security/CMakeLists.txt     file will execute this file. BUILD_FROM_TFM=False
 #
 
 set(OBERON_PSA_PATH ${ZEPHYR_NRF_MODULE_DIR}/ext/oberon/psa)
