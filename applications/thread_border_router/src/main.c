@@ -20,6 +20,8 @@
 #include <openthread/backbone_router_ftd.h>
 #include <openthread/thread.h>
 #include <openthread/platform/infra_if.h>
+#include <openthread/srp_server.h>
+#include <openthread/nat64.h>
 
 #include <zephyr/sys/printk.h>
 #include <zephyr/device.h>
@@ -223,7 +225,7 @@ static void routing_set_enabled(struct otInstance *instance, bool enabled)
 	NET_DBG("%s border routing", enabled ? "Enabling" : "Disabling");
 	otBorderRoutingSetEnabled(instance, enabled);
 
-	NET_DBG("%sbackbone router", enabled ? "Enabling" : "Disabling");
+	NET_DBG("%s backbone router", enabled ? "Enabling" : "Disabling");
 	otBackboneRouterSetEnabled(instance, enabled);
 }
 
@@ -317,6 +319,13 @@ int main(void)
 	}
 
 	border_agent_init();
+
+	/* Let Border Routing Manager controls when SRP server
+	 * should be enabled or disabled.
+	 */
+	otSrpServerSetAutoEnableMode(context->ot->instance, true);
+
+	otNat64SetEnabled(context->ot->instance, true);
 
 	return EXIT_SUCCESS;
 }
