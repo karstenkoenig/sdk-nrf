@@ -160,6 +160,7 @@ rsource "stream/Kconfig"
 rsource "utils/Kconfig"
 rsource "envelope_info/Kconfig"
 rsource "execution_mode/Kconfig"
+rsource "memory_layout/Kconfig"
 
 # Configure SUIT_LOG_LEVEL
 module = SUIT
