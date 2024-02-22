@@ -12,13 +12,13 @@
 #ifdef CONFIG_SUIT_STREAM
 #include <sink.h>
 #include <sink_selector.h>
+#include <generic_address_streamer.h>
 #endif /* CONFIG_SUIT_STREAM */
 
 #ifdef CONFIG_SUIT_STREAM_SOURCE_CACHE
 #include <dfu_cache_streamer.h>
 #endif /* CONFIG_SUIT_STREAM_SOURCE_CACHE */
 #ifdef CONFIG_SUIT_STREAM_SOURCE_MEMPTR
-#include <memptr_streamer.h>
 #include <memptr_sink.h>
 #endif /* CONFIG_SUIT_STREAM_SOURCE_MEMPTR */
 #ifdef CONFIG_SUIT_STREAM_IPC_REQUESTOR
@@ -316,9 +316,7 @@ int suit_plat_fetch_integrated(suit_component_t dst_handle, struct zcbor_string 
 	}
 #endif
 
-#ifdef CONFIG_SUIT_STREAM_SOURCE_MEMPTR
-	ret = suit_memptr_streamer_stream(payload->value, payload->len, &dst_sink);
-#endif /* CONFIG_SUIT_STREAM_SOURCE_MEMPTR */
+	ret = suit_generic_address_streamer_stream(payload->value, payload->len, &dst_sink);
 
 	if (ret == SUIT_PLAT_SUCCESS) {
 		/* Update size in memptr for MEM component */

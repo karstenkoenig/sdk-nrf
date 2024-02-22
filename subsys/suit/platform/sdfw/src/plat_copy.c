@@ -16,10 +16,10 @@
 #ifdef CONFIG_SUIT_STREAM
 #include <sink.h>
 #include <sink_selector.h>
+#include <generic_address_streamer.h>
 #endif /* CONFIG_SUIT_STREAM */
 
 #ifdef CONFIG_SUIT_STREAM_SOURCE_MEMPTR
-#include <memptr_streamer.h>
 #include <suit_memptr_storage.h>
 #endif /* CONFIG_SUIT_STREAM_SOURCE_MEMPTR */
 
@@ -223,7 +223,7 @@ int suit_plat_copy(suit_component_t dst_handle, suit_component_t src_handle)
 			}
 		}
 
-		ret = suit_memptr_streamer_stream(payload_ptr, payload_size, &dst_sink);
+		ret = suit_generic_address_streamer_stream(payload_ptr, payload_size, &dst_sink);
 
 		if (ret != SUIT_PLAT_SUCCESS) {
 			LOG_ERR("memptr_streamer failed - error %i", ret);

@@ -12,7 +12,7 @@
 
 #ifdef CONFIG_SUIT_STREAM_SINK_DIGEST
 #include <suit_memptr_storage.h>
-#include <memptr_streamer.h>
+#include <generic_address_streamer.h>
 #include <digest_sink.h>
 
 #include <psa/crypto.h>
@@ -92,7 +92,7 @@ static int suit_plat_check_image_match_mem_mapped(suit_component_t component,
 		return suit_plat_err_to_processor_err_convert(err);
 	}
 
-	err = suit_memptr_streamer_stream(data, size, &digest_sink);
+	err = suit_generic_address_streamer_stream(data, size, &digest_sink);
 	if (err != SUIT_PLAT_SUCCESS) {
 		LOG_ERR("Failed to stream to digest sink: %d", err);
 		err = suit_plat_err_to_processor_err_convert(err);
