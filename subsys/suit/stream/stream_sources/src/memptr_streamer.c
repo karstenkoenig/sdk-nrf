@@ -6,8 +6,14 @@
 
 #include <memptr_streamer.h>
 #include <zephyr/logging/log.h>
+#include <suit_memory_layout.h>
 
 LOG_MODULE_REGISTER(suit_memptr_streamer, CONFIG_SUIT_LOG_LEVEL);
+
+bool suit_memptr_streamer_address_in_range(const uint8_t *address)
+{
+	return suit_memory_global_address_is_directly_readable((uintptr_t)address);
+}
 
 suit_plat_err_t suit_memptr_streamer_stream(const uint8_t *payload, size_t payload_size,
 				struct stream_sink *sink)

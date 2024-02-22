@@ -8,10 +8,20 @@
 #define MEMPTR_STREAMER_H__
 
 #include <sink.h>
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/**
+ * @brief Check if address can be streamed from readable memory.
+ *
+ * @param address Pointer to the payload
+ *
+ * @return True if address can be read from memory, false otherwise.
+ */
+bool suit_memptr_streamer_address_in_range(const uint8_t *address);
 
 /**
  * @brief Stream payload from pointer to sink
