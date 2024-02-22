@@ -28,7 +28,6 @@ int suitfu_mgmt_suit_manifests_list(struct smp_streamer *ctx)
 {
 	zcbor_state_t *zse = ctx->writer->zs;
 	bool ok;
-	struct zcbor_string zcs;
 
 	suit_plat_err_t rc;
 	suit_manifest_role_t roles[CONFIG_MGMT_SUITFU_GRP_SUIT_MFSTS_STATE_MFSTS_COUNT] = {0};
@@ -48,26 +47,12 @@ int suitfu_mgmt_suit_manifests_list(struct smp_streamer *ctx)
 
 	for (int mfst_idx = 0; mfst_idx < class_info_count; mfst_idx++) {
 
-		suit_ssf_manifest_class_info_t ci;
-		rc = suit_get_supported_manifest_info(roles[mfst_idx], &ci);
-		if (rc != SUIT_PLAT_SUCCESS) {
-			return MGMT_ERR_EBADSTATE;
-		}
-
 		ok = zcbor_map_start_encode(zse, 2);
 		if (!ok) {
 			return MGMT_ERR_EMSGSIZE;
 		}
 
-		zcs.value = ci.class_id.raw;
-		zcs.len = sizeof(ci.class_id.raw);
-
-		ok = zcbor_tstr_put_term(zse, "class_id") && zcbor_bstr_encode(zse, &zcs);
-		if (!ok) {
-			return MGMT_ERR_EMSGSIZE;
-		}
-
-		ok = zcbor_tstr_put_term(zse, "role") && zcbor_uint32_put(zse, ci.role);
+		ok = zcbor_tstr_put_term(zse, "role") && zcbor_uint32_put(zse, roles[mfst_idx]);
 		if (!ok) {
 			return MGMT_ERR_EMSGSIZE;
 		}
@@ -95,8 +80,8 @@ int suitfu_mgmt_suit_manifest_state_read(struct smp_streamer *ctx)
 	struct zcbor_string zcs = {0};
 	int rc = 0;
 
-	suit_manifest_class_id_t class_id = {{0}};
-	suit_uuid_t vendor_id = {{0}};
+	suit_manifest_role_t role = 0;
+	suit_ssf_manifest_class_info_t class_info  = {0};
 	unsigned int seq_num = 0;
 	suit_semver_raw_t semver_raw = {0};
 	suit_digest_status_t digest_status = SUIT_DIGEST_UNKNOWN;
@@ -105,7 +90,7 @@ int suitfu_mgmt_suit_manifest_state_read(struct smp_streamer *ctx)
 	suit_plat_mreg_t digest;
 
 	struct zcbor_map_decode_key_val manifest_state_read_decode[] = {
-		ZCBOR_MAP_DECODE_KEY_VAL(class_id, zcbor_bstr_decode, &zcs)};
+		ZCBOR_MAP_DECODE_KEY_VAL(role, zcbor_int_decode, &role)};
 
 	if (zcbor_map_decode_bulk(zsd, manifest_state_read_decode,
 				  ARRAY_SIZE(manifest_state_read_decode), &decoded) != 0) {
@@ -113,22 +98,21 @@ int suitfu_mgmt_suit_manifest_state_read(struct smp_streamer *ctx)
 		return MGMT_ERR_EINVAL;
 	}
 
-	if (zcs.len == sizeof(class_id.raw)) {
-		memcpy(&class_id.raw, zcs.value, zcs.len);
+	rc = suit_get_supported_manifest_info(role, &class_info);
+	if (rc != SUIT_PLAT_SUCCESS) {
+		return MGMT_ERR_EBADSTATE;
 	}
+
+	zcs.value = class_info.class_id.raw;
+	zcs.len = sizeof(class_info.class_id.raw);
 
 	ok = zcbor_tstr_put_term(zse, "class_id") && zcbor_bstr_encode(zse, &zcs);
 	if (!ok) {
 		return MGMT_ERR_EMSGSIZE;
 	}
 
-	rc = suit_get_vendor_id_for_manifest_class_id(&class_id, &vendor_id);
-	if (rc != SUIT_PLAT_SUCCESS) {
-		return MGMT_ERR_EBADSTATE;
-	}
-
-	zcs.value = vendor_id.raw;
-	zcs.len = sizeof(vendor_id.raw);
+	zcs.value = class_info.vendor_id.raw;
+	zcs.len = sizeof(class_info.vendor_id.raw);
 
 	ok = zcbor_tstr_put_term(zse, "vendor_id") && zcbor_bstr_encode(zse, &zcs);
 	if (!ok) {
@@ -138,7 +122,7 @@ int suitfu_mgmt_suit_manifest_state_read(struct smp_streamer *ctx)
 	digest.mem = digest_buf;
 	digest.size = sizeof(digest_buf);
 
-	rc = suit_get_installed_manifest_info(&class_id, &seq_num, &semver_raw, &digest_status,
+	rc = suit_get_installed_manifest_info(&class_info.class_id, &seq_num, &semver_raw, &digest_status,
 					      &digest_alg_id, &digest);
 
 	if (rc == SUIT_PLAT_SUCCESS) {
