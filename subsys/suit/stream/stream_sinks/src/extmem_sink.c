@@ -11,6 +11,7 @@
 #include <extmem_sink.h>
 #include <zephyr/sys/bitarray.h>
 #include <extmem_service.h>
+#include <suit_memory_layout.h>
 
 #define SUIT_MAX_EXTMEM_COMPONENTS 1
 
@@ -62,29 +63,13 @@ static void free_ctx(struct extmem_ctx *ctx_to_free)
 	__ASSERT(err == 0, "Wrong context was freed");
 }
 
-static bool address_in_area(uintptr_t address, uintptr_t area_start, size_t area_size)
-{
-	uintptr_t area_end = area_start + area_size;
-
-	return area_start <= address && address < area_end;
-}
-
 static bool is_address_supported(uintptr_t address, struct extmem_capabilities *capabilities)
 {
 	uintptr_t extmem_area_start = capabilities->base_addr;
 	size_t extmem_area_size = capabilities->capacity;
 	uintptr_t extmem_area_end = extmem_area_start + extmem_area_size;
 
-	if (!address_in_area(extmem_area_start, CONFIG_SUIT_STREAM_SINK_EXTMEM_ADDRESS_RANGE_START,
-			     CONFIG_SUIT_STREAM_SINK_EXTMEM_ADDRESS_RANGE_SIZE) ||
-	    !address_in_area(extmem_area_end, CONFIG_SUIT_STREAM_SINK_EXTMEM_ADDRESS_RANGE_START,
-			     CONFIG_SUIT_STREAM_SINK_EXTMEM_ADDRESS_RANGE_SIZE) ||
-	    !address_in_area(address, extmem_area_start, extmem_area_end)) {
-		LOG_INF("Address does not belong to extmem area: %p", (void *)address);
-		return false;
-	}
-
-	return true;
+	return suit_memory_global_address_range_is_in_external_memory(extmem_area_start, extmem_area_size);
 }
 
 bool suit_extmem_sink_is_address_supported(uint8_t *address)
