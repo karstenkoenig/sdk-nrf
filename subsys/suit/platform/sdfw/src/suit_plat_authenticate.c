@@ -140,3 +140,34 @@ int suit_plat_authorize_component_id(struct zcbor_string *manifest_component_id,
 
 	return suit_plat_component_compatibility_check(class_id, component_id);
 }
+
+int suit_plat_authorize_process_dependency(struct zcbor_string *parent_component_id,
+					   struct zcbor_string *child_component_id,
+					   enum suit_command_sequence seq_name)
+{
+	suit_manifest_class_id_t *parent_class_id = NULL;
+	suit_manifest_class_id_t *child_class_id = NULL;
+
+	suit_plat_err_t err =
+		suit_plat_decode_manifest_class_id(parent_component_id, &parent_class_id);
+	if (err != SUIT_PLAT_SUCCESS) {
+		LOG_ERR("Unable to parse parent manifest class ID (err: %i)", err);
+		return SUIT_ERR_UNSUPPORTED_COMPONENT_ID;
+	}
+
+	err = suit_plat_decode_manifest_class_id(child_component_id, &child_class_id);
+	if (err != SUIT_PLAT_SUCCESS) {
+		LOG_ERR("Unable to parse child manifest class ID (err: %i)", err);
+		return SUIT_ERR_UNSUPPORTED_COMPONENT_ID;
+	}
+
+	mci_err_t ret =
+		suit_mci_manifest_process_dependency_validate(parent_class_id, child_class_id);
+	if (ret == SUIT_PLAT_SUCCESS) {
+		return SUIT_SUCCESS;
+	}
+
+	LOG_INF("Manifest dependency link unauthorized for sequence %d (err: %i)", seq_name, ret);
+
+	return SUIT_ERR_AUTHENTICATION;
+}

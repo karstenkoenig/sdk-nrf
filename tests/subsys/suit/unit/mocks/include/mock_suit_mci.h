@@ -44,6 +44,8 @@ FAKE_VALUE_FUNC(int, suit_mci_manifest_parent_get, const suit_manifest_class_id_
 		const suit_manifest_class_id_t **);
 FAKE_VALUE_FUNC(int, suit_mci_vendor_id_for_manifest_class_id_get, const suit_manifest_class_id_t *,
 		const suit_uuid_t **);
+FAKE_VALUE_FUNC(int, suit_mci_manifest_process_dependency_validate,
+		const suit_manifest_class_id_t *, const suit_manifest_class_id_t *);
 FAKE_VALUE_FUNC(int, suit_mci_init);
 
 static inline void mock_suit_mci_reset(void)
@@ -68,6 +70,7 @@ static inline void mock_suit_mci_reset(void)
 	RESET_FAKE(suit_mci_platform_specific_component_rights_validate);
 	RESET_FAKE(suit_mci_manifest_parent_get);
 	RESET_FAKE(suit_mci_vendor_id_for_manifest_class_id_get);
+	RESET_FAKE(suit_mci_manifest_process_dependency_validate);
 	RESET_FAKE(suit_mci_init);
 }
 
