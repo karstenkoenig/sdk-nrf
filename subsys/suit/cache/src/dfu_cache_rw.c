@@ -16,6 +16,9 @@
 #include <zephyr/sys/util_macro.h>
 #include <flash_sink.h>
 
+#include "dfu_cache_internal.h"
+#include <suit_memory_layout.h>
+
 LOG_MODULE_REGISTER(suit_cache_rw, CONFIG_SUIT_LOG_LEVEL);
 
 #define SUCCESS 0
@@ -29,10 +32,7 @@ LOG_MODULE_REGISTER(suit_cache_rw, CONFIG_SUIT_LOG_LEVEL);
  */
 #define MIN_VALID_PARTITION_SIZE (CONFIG_SUIT_MAX_URI_LENGTH + 16)
 
-/* Adding 5 bytes for bstring header and 1 byte for indefinite map header and
- * 9 bytes for tstr
- */
-#define ENCODING_OUTPUT_BUFFER_LENGTH (CONFIG_SUIT_MAX_URI_LENGTH + 5 + 1 + 9)
+#define ENCODING_OUTPUT_BUFFER_LENGTH CACHE_METADATA_MAX_LENGTH
 
 /* Adding 9 bytes for max length tstr header*/
 #define MAX_URI_ENCODE_BUFFER_LENGTH (CONFIG_SUIT_MAX_URI_LENGTH + 9)
@@ -40,17 +40,19 @@ LOG_MODULE_REGISTER(suit_cache_rw, CONFIG_SUIT_LOG_LEVEL);
 extern struct dfu_cache dfu_cache;
 
 struct dfu_cache_partition_ext { /* Extended structure describing single cache partition */
+	const struct device *fdev;
 	size_t size;
-	size_t offset;
+	uint8_t *address;
 	size_t eb_size;
 	uint8_t id;
 };
 
 #define PARTITION_INIT(index, label)                                                               \
 	{                                                                                          \
-		.offset = FIXED_PARTITION_OFFSET(label),                                           \
+		.fdev = FIXED_PARTITION_DEVICE(label),                                             \
+		.address = (uint8_t *)FIXED_PARTITION_OFFSET(label),                               \
 		.size = FIXED_PARTITION_SIZE(label),                                               \
-		.eb_size = FLASH_AREA_ERASE_BLOCK_SIZE(label),                                     \
+		.eb_size = CONFIG_SUIT_CACHEX_ERASE_BLOCK_SIZE,                                    \
 		.id = index,                                                                       \
 	},
 
@@ -69,7 +71,8 @@ struct dfu_cache_partition_ext { /* Extended structure describing single cache p
 
 static struct dfu_cache_partition_ext dfu_partitions_ext[] = {
 	{
-		.offset = FIXED_PARTITION_OFFSET(dfu_partition),
+		.fdev = FIXED_PARTITION_DEVICE(dfu_partition),
+		.address = (uint8_t *)FIXED_PARTITION_OFFSET(dfu_partition),
 		.size = FIXED_PARTITION_SIZE(dfu_partition),
 		.eb_size = FLASH_AREA_ERASE_BLOCK_SIZE(dfu_partition),
 		.id = 0,
@@ -77,15 +80,14 @@ static struct dfu_cache_partition_ext dfu_partitions_ext[] = {
 	LISTIFY(CONFIG_SUIT_CACHE_MAX_CACHES, PARTITION_DEFINE, (), dfu_cache_partition_)};
 
 static suit_plat_err_t partition_initialize(struct dfu_cache_partition_ext *part);
-static suit_plat_err_t cache_0_update(void *address, size_t size);
+static suit_plat_err_t cache_0_update(uint8_t *address, size_t size);
 static struct dfu_cache_partition_ext *cache_partition_get(uint8_t partition_id);
 static suit_plat_err_t slot_in_cache_partition_allocate(const struct zcbor_string *uri,
 							struct suit_cache_slot *slot,
 							struct dfu_cache_partition_ext *part);
 static suit_plat_err_t cache_free_space_check(struct dfu_cache_partition_ext *part,
 					      struct suit_cache_slot *slot);
-static suit_plat_err_t is_partition_empty(struct dfu_cache_partition_ext *part);
-static suit_plat_err_t erase_on_sink(size_t offset, size_t size);
+static suit_plat_err_t erase_on_sink(uint8_t *address, size_t size);
 
 /**
  * @brief Get cache partition of specified id
@@ -112,11 +114,11 @@ static struct dfu_cache_partition_ext *cache_partition_get(uint8_t partition_id)
  * @param offset Offset in desired partition
  * @return struct dfu_cache_partition_ext* or NULL in case of error
  */
-static struct dfu_cache_partition_ext *cache_partition_get_by_offset(size_t offset)
+static struct dfu_cache_partition_ext *cache_partition_get_by_address(uint8_t *address)
 {
 	for (size_t i = 0; i < ARRAY_SIZE(dfu_partitions_ext); i++) {
-		if ((offset >= dfu_partitions_ext[i].offset) &&
-		    (offset < (dfu_partitions_ext[i].offset + dfu_partitions_ext[i].size))) {
+		if ((address >= dfu_partitions_ext[i].address) &&
+		    (address < (dfu_partitions_ext[i].address + dfu_partitions_ext[i].size))) {
 			return &dfu_partitions_ext[i];
 		}
 	}
@@ -124,8 +126,52 @@ static struct dfu_cache_partition_ext *cache_partition_get_by_offset(size_t offs
 	return NULL;
 }
 
+static bool translate_partition_start_address(struct dfu_cache_partition_ext *part)
+{
+	struct nvm_address addr = {
+		.fdev = part->fdev,
+		.offset = (uintptr_t)part->address,
+	};
+
+	uintptr_t ret;
+	if (!suit_memory_nvm_address_to_global_address(&addr, &ret)) {
+		LOG_ERR("Address not translated: %p(dev):%lX", (void *)addr.fdev, addr.offset);
+		return false;
+	}
+
+	LOG_DBG("Address translated: %p(dev):%lX -> %p", (void *)addr.fdev, addr.offset,
+		(void *)ret);
+	part->address = (uint8_t *)ret;
+
+	return true;
+}
+
+static bool setup_partition_addresses(void)
+{
+	static bool initialized = false;
+
+	if (!translate_partition_start_address(&dfu_partitions_ext[0])) {
+		return false;
+	}
+
+	if (!initialized) {
+		for (size_t i = 1; i < ARRAY_SIZE(dfu_partitions_ext); i++) {
+			if (!translate_partition_start_address(&dfu_partitions_ext[i])) {
+				return false;
+			}
+		}
+	}
+
+	initialized = true;
+	return true;
+}
+
 suit_plat_err_t suit_dfu_cache_rw_initialize(void *addr, size_t size)
 {
+	if (!setup_partition_addresses()) {
+		return SUIT_PLAT_ERR_OUT_OF_BOUNDS;
+	}
+
 	suit_plat_err_t ret = cache_0_update(addr, size);
 
 	if (ret != SUIT_PLAT_SUCCESS) {
@@ -146,8 +192,7 @@ suit_plat_err_t suit_dfu_cache_rw_initialize(void *addr, size_t size)
 
 	for (size_t i = 0; i < ARRAY_SIZE(dfu_partitions_ext); i++) {
 		dfu_cache.pools[i].size = dfu_partitions_ext[i].size;
-		dfu_cache.pools[i].address =
-			suit_plat_mem_nvm_ptr_get(dfu_partitions_ext[i].offset);
+		dfu_cache.pools[i].address = dfu_partitions_ext[i].address;
 		LOG_INF("Found partition %d: id: %u, (addr: %p, size: 0x%x)", i,
 			dfu_partitions_ext[i].id, (void *)dfu_cache.pools[i].address,
 			dfu_cache.pools[i].size);
@@ -164,19 +209,27 @@ suit_plat_err_t suit_dfu_cache_rw_deinitialize(void)
 
 	/* Erase all cache partitions */
 	for (size_t i = 0; i < ARRAY_SIZE(dfu_partitions_ext); i++) {
-		ret = is_partition_empty(&dfu_partitions_ext[i]);
+		suit_plat_err_t ret2;
 
-		if (ret == SUIT_PLAT_ERR_NOMEM) {
-			ret = erase_on_sink(dfu_partitions_ext[i].offset, dfu_partitions_ext[i].size);
+		struct dfu_cache_pool cache_pool = {
+			.address = dfu_partitions_ext[i].address,
+			.size = dfu_partitions_ext[i].size,
+		};
+
+		ret2 = suit_dfu_cache_partition_is_empty(&cache_pool);
+
+		if (ret2 == SUIT_PLAT_ERR_NOMEM) {
+			ret2 = erase_on_sink(dfu_partitions_ext[i].address,
+					     dfu_partitions_ext[i].size);
 		}
 
-		if (ret != SUIT_PLAT_SUCCESS) {
-			return ret;
+		if (ret2 != SUIT_PLAT_SUCCESS) {
+			ret = ret2;
 		}
 	}
 
 	/* Reset cache pool 0 to its initial state */
-	dfu_partitions_ext[0].offset = FIXED_PARTITION_OFFSET(dfu_partition);
+	dfu_partitions_ext[0].address = (uint8_t *)FIXED_PARTITION_OFFSET(dfu_partition);
 	dfu_partitions_ext[0].size = FIXED_PARTITION_SIZE(dfu_partition);
 
 	return ret;
@@ -192,7 +245,7 @@ suit_plat_err_t suit_dfu_cache_rw_partition_info_get(uint8_t cache_partition_id,
 		return SUIT_PLAT_ERR_NOT_FOUND;
 	}
 
-	*address = suit_plat_mem_nvm_ptr_get(partition->offset);
+	*address = partition->address;
 	*size = partition->size;
 
 	return SUIT_PLAT_SUCCESS;
@@ -206,11 +259,11 @@ suit_plat_err_t suit_dfu_cache_rw_partition_info_get(uint8_t cache_partition_id,
  * @param size Size of data to be written
  * @return suit_plat_err_t SUIT_PLAT_SUCCESS in case of success, otherwise error code
  */
-static suit_plat_err_t write_to_sink(size_t offset, uint8_t *data, size_t *size)
+static suit_plat_err_t write_to_sink(uint8_t *address, uint8_t *data, size_t *size)
 {
 	struct stream_sink sink;
 
-	suit_plat_err_t ret = suit_flash_sink_get(&sink, suit_plat_mem_nvm_ptr_get(offset), *size);
+	suit_plat_err_t ret = suit_flash_sink_get(&sink, address, *size);
 	if (ret != SUIT_PLAT_SUCCESS) {
 		LOG_ERR("Getting flash_sink failed. %i", ret);
 		return SUIT_PLAT_ERR_IO;
@@ -243,11 +296,13 @@ static suit_plat_err_t write_to_sink(size_t offset, uint8_t *data, size_t *size)
  * @param size Size of region to be erased
  * @return suit_plat_err_t SUIT_PLAT_SUCCESS in case of success, otherwise error code
  */
-static suit_plat_err_t erase_on_sink(size_t offset, size_t size)
+static suit_plat_err_t erase_on_sink(uint8_t *address, size_t size)
 {
 	struct stream_sink sink;
 
-	suit_plat_err_t ret = suit_flash_sink_get(&sink, suit_plat_mem_nvm_ptr_get(offset), size);
+	LOG_DBG("Erasing memory: %p(size:%u)", (void*)address, size);
+
+	suit_plat_err_t ret = suit_flash_sink_get(&sink, address, size);
 	if (ret != SUIT_PLAT_SUCCESS) {
 		LOG_ERR("Getting flash_sink failed. %i", ret);
 		return SUIT_PLAT_ERR_IO;
@@ -274,67 +329,6 @@ static suit_plat_err_t erase_on_sink(size_t offset, size_t size)
 }
 
 /**
- * @brief Check if partition is empty (0xFF)
- *
- * @param part Partition to check
- * @return suit_plat_err_t SUIT_PLAT_SUCCESS if true, SUIT_PLAT_ERR_NOMEM if false,
- *				SUIT_PLAT_ERR_INVAL in case of error
- */
-static suit_plat_err_t is_partition_empty(struct dfu_cache_partition_ext *part)
-{
-	if (part != NULL) {
-		uint8_t *address = suit_plat_mem_nvm_ptr_get(part->offset);
-
-		for (size_t i = 0; i < part->size; i++) {
-			if (address[i] != 0xFF) {
-				return SUIT_PLAT_ERR_NOMEM;
-			}
-		}
-
-		return SUIT_PLAT_SUCCESS;
-	}
-
-	LOG_ERR("Invalid argument.");
-	return SUIT_PLAT_ERR_INVAL;
-}
-
-/**
- * @brief Check if partition was initialized with valid cache pool.
- *
- * @param part Partition to be checked
- * @return suit_plat_err_t SUIT_PLAT_SUCCESS if true, SUIT_PLAT_ERR_NOT_FOUND if false,
- *				SUIT_PLAT_ERR_INVAL in case of error
- */
-static suit_plat_err_t is_partition_initialized(struct dfu_cache_partition_ext *part)
-{
-	bool ret = true;
-	zcbor_state_t states[3];
-	struct zcbor_string key;
-	struct zcbor_string data;
-
-	if (part != NULL) {
-		uint8_t *address = suit_plat_mem_nvm_ptr_get(part->offset);
-
-		zcbor_new_state(states, sizeof(states) / sizeof(zcbor_state_t), address, part->size,
-				1);
-		ret = zcbor_map_start_decode(states);
-		ret = ret &&
-		      (((zcbor_tstr_decode(states, &key))) && (zcbor_bstr_decode(states, &data)));
-		zcbor_list_map_end_force_decode(states);
-		zcbor_map_end_decode(states);
-
-		if (ret) {
-			return SUIT_PLAT_SUCCESS;
-		}
-
-		return SUIT_PLAT_ERR_NOT_FOUND;
-	}
-
-	LOG_ERR("Invalid argument.");
-	return SUIT_PLAT_ERR_INVAL;
-}
-
-/**
  * @brief Creates indefinite map at given offset by adding appropriate header and end marker
  *
  * @param part Pointer to cache partition structure
@@ -342,27 +336,33 @@ static suit_plat_err_t is_partition_initialized(struct dfu_cache_partition_ext *
  */
 static suit_plat_err_t partition_initialize(struct dfu_cache_partition_ext *part)
 {
+	struct dfu_cache_pool cache_pool = {
+		.address = part->address,
+		.size = part->size,
+	};
+
 	if (part != NULL) {
 		if (part->size >= MIN_VALID_PARTITION_SIZE) {
-			LOG_INF("Partition %u: offset(%p) address(%p) size(%u)", part->id,
-				(void *)part->offset, 
-				(void *)suit_plat_mem_nvm_ptr_get(part->offset),
-				part->size);
+			LOG_INF("Partition %u: address(%p) size(%u)", part->id,
+				(void *)part->address, part->size);
 
-			suit_plat_err_t ret = is_partition_empty(part);
+			suit_plat_err_t ret = suit_dfu_cache_partition_is_empty(&cache_pool);
 
 			if (ret == SUIT_PLAT_ERR_CRASH) {
 				return ret;
 			}
 
 			if (ret == SUIT_PLAT_ERR_NOMEM) {
-				ret = is_partition_initialized(part);
+				ret = suit_dfu_cache_partition_is_initialized(&cache_pool);
 
 				if (ret == SUIT_PLAT_SUCCESS) {
 					return ret;
 				}
 
-				ret = erase_on_sink(part->offset, part->size);
+				LOG_INF("Erasing partition %p(size:%d) on init",
+					(void*)part->address,
+					part->size);
+				ret = erase_on_sink(part->address, part->size);
 
 				if (ret != SUIT_PLAT_SUCCESS) {
 					return ret;
@@ -390,46 +390,44 @@ static suit_plat_err_t partition_initialize(struct dfu_cache_partition_ext *part
 static suit_plat_err_t cache_free_space_check(struct dfu_cache_partition_ext *part,
 					      struct suit_cache_slot *slot)
 {
-	bool ret = true;
-	zcbor_state_t states[3];
-	struct zcbor_string current_key;
-	struct zcbor_string current_data;
-	size_t part_tmp_offset;
+	suit_plat_err_t ret = SUIT_PLAT_SUCCESS;
+	uintptr_t part_tmp_address;
+	bool needs_erase = false;
+
+	struct dfu_cache_pool cache_pool = {
+		.address = part->address,
+		.size = part->size,
+	};
 
 	if ((part != NULL) && (slot != NULL)) {
-		part_tmp_offset = part->offset;
-
-		if (is_partition_empty(part) != SUIT_PLAT_SUCCESS) {
-			zcbor_new_state(states, sizeof(states) / sizeof(zcbor_state_t),
-					suit_plat_mem_nvm_ptr_get(part->offset), part->size, 1);
-			ret = zcbor_map_start_decode(states);
-
-			do {
-				ret = ret && (((zcbor_tstr_decode(states, &current_key))) &&
-							(zcbor_bstr_decode(states, &current_data)));
-
-				if (ret) {
-					part_tmp_offset = suit_plat_mem_nvm_offset_get(
-						(uint8_t *)(current_data.value + current_data.len));
-				}
-			} while (ret);
-
-			zcbor_list_map_end_force_decode(states);
-			zcbor_map_end_decode(states);
+		part_tmp_address = (uintptr_t)part->address;
+		if (suit_dfu_cache_partition_is_empty(&cache_pool) != SUIT_PLAT_SUCCESS) {
+			ret = suit_dfu_cache_partition_find_free_space(&cache_pool,
+								       &part_tmp_address,
+								       &needs_erase);
+			if (ret == SUIT_PLAT_ERR_CBOR_DECODING) {
+				part_tmp_address = (uintptr_t)part->address;
+				ret = SUIT_PLAT_SUCCESS;
+			}
 		}
 
-		LOG_INF("partition offset %X", part->offset);
+		if (ret != SUIT_PLAT_SUCCESS) {
+			LOG_ERR("Free space was not found: %d", ret);
+			return ret;
+		}
+
+		LOG_INF("partition address %p", (void *)part->address);
 		LOG_INF("partition size: %X", part->size);
-		LOG_INF("partition tmp offset: %X", part_tmp_offset);
+		LOG_INF("partition tmp address: %lX", part_tmp_address);
 
 		/* Subtract additional 1 byte to account for required indefinite map end marker
 		 * which needs to fit within cache partition boundary.
 		 */
-		slot->size = ((part->offset + part->size) > part_tmp_offset)
-				     ? part->offset + part->size - part_tmp_offset - 1
+		slot->size = (((uintptr_t)part->address + part->size) > part_tmp_address)
+				     ? (size_t)part->address + part->size - part_tmp_address - 1
 				     : 0;
 
-		if ((part->offset == slot->slot_offset) && (slot->size > 0)) {
+		if ((part->address == slot->slot_address) && (slot->size > 0)) {
 			/* This is a first slot at the beginning of the partition so we have to
 			 * take into account required indefinite map header that will be added.
 			 * We subtract its size.
@@ -437,15 +435,15 @@ static suit_plat_err_t cache_free_space_check(struct dfu_cache_partition_ext *pa
 			slot->size--;
 		}
 
-		slot->slot_offset = part_tmp_offset;
+		slot->slot_address = (uint8_t *)part_tmp_address;
 
-		if ((*suit_plat_mem_nvm_ptr_get(part_tmp_offset)) == 0xFF) {
+		if (!needs_erase) {
 			return SUIT_PLAT_SUCCESS;
 		}
 
 		/* Clear corrupted slot */
 		if (suit_dfu_cache_rw_slot_drop(slot) != SUIT_PLAT_SUCCESS) {
-			LOG_ERR("Clearing corrupted cache pool failed: %i", ret);
+			LOG_ERR("Clearing corrupted cache pool failed");
 			return SUIT_PLAT_ERR_CRASH;
 		}
 
@@ -497,10 +495,11 @@ static suit_plat_err_t slot_in_cache_partition_allocate(const struct zcbor_strin
 		ret = cache_free_space_check(part, slot);
 
 		if (ret != SUIT_PLAT_SUCCESS) {
+			LOG_ERR("Insufficient free space in cache");
 			return ret;
 		}
 
-		if (slot->slot_offset == part->offset) {
+		if (slot->slot_address == part->address) {
 			output[0] = INDEFINITE_MAP_HEADER;
 			output_ptr++;
 		}
@@ -528,8 +527,7 @@ static suit_plat_err_t slot_in_cache_partition_allocate(const struct zcbor_strin
 			return SUIT_PLAT_ERR_NOMEM;
 		}
 
-		ret = write_to_sink(slot->slot_offset, output, &encoded_size);
-
+		ret = write_to_sink(slot->slot_address, output, &encoded_size);
 		if (ret != SUIT_PLAT_SUCCESS) {
 			LOG_ERR("Writing slot header failed. %i", ret);
 			return SUIT_PLAT_ERR_IO;
@@ -552,7 +550,8 @@ static suit_plat_err_t slot_in_cache_partition_allocate(const struct zcbor_strin
  *
  * @return SUIT_PLAT_SUCCESS on success, otherwise error code
  */
-static suit_plat_err_t cache_0_update(void *address, size_t size)
+static suit_plat_err_t cache_0_update(uint8_t *address, size_t size)
+
 {
 	if ((address == NULL) || (size == 0)) {
 		LOG_WRN("Initialized with empty DFU partition");
@@ -560,31 +559,31 @@ static suit_plat_err_t cache_0_update(void *address, size_t size)
 		return SUIT_PLAT_SUCCESS;
 	}
 
-	size_t cache_0_end = dfu_partitions_ext[0].offset + dfu_partitions_ext[0].size;
+	uint8_t *cache_0_end = dfu_partitions_ext[0].address + dfu_partitions_ext[0].size;
 
 	/* Check if update address is in dfu_partition range */
-	if ((suit_plat_mem_nvm_offset_get(address) < dfu_partitions_ext[0].offset) ||
-	    (suit_plat_mem_nvm_offset_get(address) >= cache_0_end)) {
+	if ((address < dfu_partitions_ext[0].address) || (address >= cache_0_end)) {
 		LOG_ERR("Envelope address doesn't match dfu_partition");
 		return SUIT_PLAT_ERR_INVAL;
 	}
 
-	if ((suit_plat_mem_nvm_offset_get(address) + size > cache_0_end)) {
+	if (((uint8_t *)address + size > cache_0_end)) {
 		LOG_ERR("Envelope exceeds dfu_partition");
 		return SUIT_PLAT_ERR_INVAL;
 	}
 
-	size_t tmp_offset = suit_plat_mem_nvm_offset_get(address) + size;
+	uint8_t *tmp_offset = address + size;
 	/* Align to nearest erase block */
-	tmp_offset = DIV_ROUND_UP(tmp_offset, dfu_partitions_ext[0].eb_size)
-		     * dfu_partitions_ext[0].eb_size;
+	tmp_offset =
+		(uint8_t *)(DIV_ROUND_UP((uintptr_t)tmp_offset, dfu_partitions_ext[0].eb_size) *
+			    dfu_partitions_ext[0].eb_size);
 
 	if (tmp_offset >= cache_0_end) {
 		LOG_WRN("No free space for cache");
 		dfu_partitions_ext[0].size = 0;
 	} else {
 		/* Set offset to the end of the envelope */
-		dfu_partitions_ext[0].offset = tmp_offset;
+		dfu_partitions_ext[0].address = tmp_offset;
 
 		/* Calculate remaining free space in dfu_partition */
 		dfu_partitions_ext[0].size = cache_0_end - tmp_offset;
@@ -593,7 +592,7 @@ static suit_plat_err_t cache_0_update(void *address, size_t size)
 	if (dfu_partitions_ext[0].size > 0) {
 		suit_plat_err_t ret = SUIT_PLAT_SUCCESS;
 #if CONFIG_SUIT_CACHE0_ERASE_ON_ENVELOPE_STORED
-		ret = erase_on_sink(dfu_partitions_ext[0].offset, dfu_partitions_ext[0].size);
+		ret = erase_on_sink(dfu_partitions_ext[0].address, dfu_partitions_ext[0].size);
 
 		if (ret != SUIT_PLAT_SUCCESS)
 		{
@@ -629,7 +628,7 @@ suit_plat_err_t suit_dfu_cache_rw_slot_create(uint8_t cache_partition_id,
 		suit_plat_err_t ret = slot_in_cache_partition_allocate(&tmp_uri, slot, part);
 
 		if (ret != SUIT_PLAT_SUCCESS) {
-			LOG_ERR("Allocating slot in cache failed.");
+			LOG_ERR("Allocating slot in cache failed: %d", ret);
 			return ret;
 		}
 
@@ -645,17 +644,17 @@ suit_plat_err_t suit_dfu_cache_rw_slot_close(struct suit_cache_slot *slot, size_
 	if ((slot != NULL) && (slot->size >= size_used)) {
 		uint32_t tmp = __bswap_32(size_used);
 		size_t tmp_size = sizeof(uint32_t);
-		size_t end_offset = slot->slot_offset + slot->data_offset + size_used;
+		size_t end_address = (size_t)slot->slot_address + slot->data_offset + size_used;
 
 		/* Update byte string size */
-		if (write_to_sink(slot->slot_offset + slot->size_offset, (uint8_t *)&tmp,
+		if (write_to_sink(slot->slot_address + slot->size_offset, (uint8_t *)&tmp,
 				  &tmp_size) != SUIT_PLAT_SUCCESS) {
 			LOG_ERR("Updating cache slot size in header failed.");
 			return SUIT_PLAT_ERR_IO;
 		}
 
 		struct dfu_cache_partition_ext *part =
-			cache_partition_get_by_offset(slot->slot_offset);
+			cache_partition_get_by_address(slot->slot_address);
 		if (part == NULL) {
 			LOG_ERR("Couldn't find partition matching slot offset");
 			return SUIT_PLAT_ERR_IO;
@@ -703,22 +702,23 @@ suit_plat_err_t suit_dfu_cache_rw_slot_close(struct suit_cache_slot *slot, size_
 				return SUIT_PLAT_ERR_INVAL;
 			}
 
-			if (write_to_sink(end_offset, header, &header_size)) {
+			if (write_to_sink((uint8_t *)end_address, header, &header_size)) {
 				LOG_ERR("Writing CBOR cache slot header for padding failed.");
 				return SUIT_PLAT_ERR_IO;
 			}
 
-			end_offset += header_size;
+			end_address += header_size;
 
 			tmp_size = 1;
 			for (size_t i = 0; i < padding_size; i++) {
-				if (write_to_sink(end_offset + i, &(uint8_t){0}, &tmp_size)) {
+				if (write_to_sink((uint8_t *)(end_address + i), &(uint8_t){0},
+						  &tmp_size)) {
 					LOG_ERR("Writing padding byte failed.");
 					return SUIT_PLAT_ERR_IO;
 				}
 			}
 
-			end_offset += padding_size;
+			end_address += padding_size;
 		}
 
 		/* To be used as end marker */
@@ -726,7 +726,8 @@ suit_plat_err_t suit_dfu_cache_rw_slot_close(struct suit_cache_slot *slot, size_
 		tmp_size = 1;
 
 		/* Add indefinite map, end marker 0xFF */
-		if (write_to_sink(end_offset, (uint8_t *)&tmp, &tmp_size) != SUIT_PLAT_SUCCESS) {
+		if (write_to_sink((uint8_t *)end_address, (uint8_t *)&tmp, &tmp_size) !=
+		    SUIT_PLAT_SUCCESS) {
 			LOG_ERR("Writing CBOR map end marker to cache partition failed.");
 			return SUIT_PLAT_ERR_IO;
 		}
@@ -741,41 +742,50 @@ suit_plat_err_t suit_dfu_cache_rw_slot_close(struct suit_cache_slot *slot, size_
 suit_plat_err_t suit_dfu_cache_rw_slot_drop(struct suit_cache_slot *slot)
 {
 	LOG_INF("DROPPING SLOT");
+	uint8_t map_header;
 
 	if (slot != NULL) {
 		struct dfu_cache_partition_ext *part =
-			cache_partition_get_by_offset(slot->slot_offset);
+			cache_partition_get_by_address(slot->slot_address);
 
 		if (part == NULL) {
 			LOG_ERR("Couldn't find partition matching slot offset");
 			return SUIT_PLAT_ERR_IO;
 		}
 
-		size_t erase_offset = slot->slot_offset;
-		size_t erase_size = (part->offset + part->size) - slot->slot_offset;
+		uint8_t *erase_address = slot->slot_address;
+		size_t erase_size = (part->address + part->size) - slot->slot_address;
 		size_t write_size = 1;
 
-		LOG_INF("Erase area: (addr: 0x%x, size: 0x%x)", slot->slot_offset, part->size);
+		LOG_INF("Erase area: (addr: %p, size: 0x%x)", slot->slot_address, part->size);
 		if (erase_size < slot->eb_size) {
-			LOG_ERR("Unable to erase area: (addr: 0x%x, size: 0x%x)", slot->slot_offset,
+			LOG_ERR("Unable to erase area: (addr: %p, size: 0x%x)", slot->slot_address,
 				erase_size);
 			return SUIT_PLAT_ERR_IO;
 		}
 
+		suit_plat_err_t ret = suit_dfu_cache_memcpy(
+			&map_header, (uintptr_t)slot->slot_address, sizeof(map_header));
+		if (ret > 0) {
+			LOG_ERR("Read from cache failed: %d", ret);
+			return ret;
+		}
+
 		bool add_map_header = false;
-		if (*suit_plat_mem_nvm_ptr_get(slot->slot_offset) == INDEFINITE_MAP_HEADER) {
+		if (map_header == INDEFINITE_MAP_HEADER) {
 			add_map_header = true;
 		}
 
-		int ret = erase_on_sink(erase_offset, erase_size);
+		ret = erase_on_sink(erase_address, erase_size);
 		if (ret != SUIT_PLAT_SUCCESS) {
 			LOG_ERR("Erasing cache failed: %i", ret);
 			return SUIT_PLAT_ERR_IO;
 		}
 
 		if (add_map_header) {
-			LOG_DBG("Restore map header (0x%x)", slot->slot_offset);
-			int ret = write_to_sink(erase_offset, &(uint8_t){INDEFINITE_MAP_HEADER}, &write_size);
+			LOG_DBG("Restore map header (%p)", slot->slot_address);
+			int ret = write_to_sink(erase_address, &(uint8_t){INDEFINITE_MAP_HEADER},
+						&write_size);
 			if (ret != SUIT_PLAT_SUCCESS) {
 				LOG_ERR("Unable to restore slot after erase: %i", ret);
 				return SUIT_PLAT_ERR_IO;

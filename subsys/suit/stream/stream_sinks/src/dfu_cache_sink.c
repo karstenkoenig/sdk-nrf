@@ -96,9 +96,9 @@ static suit_plat_err_t write(void *ctx, uint8_t *buf, size_t *size)
 			if ((*size + cache_ctx->offset) < cache_ctx->offset_limit) {
 				suit_plat_err_t ret = suit_flash_sink_get(
 					&sink,
-					suit_plat_mem_nvm_ptr_get(cache_ctx->slot.slot_offset +
+					cache_ctx->slot.slot_address +
 								  cache_ctx->slot.data_offset +
-								  cache_ctx->offset),
+								  cache_ctx->offset,
 					*size);
 				if (ret != SUIT_PLAT_SUCCESS) {
 					LOG_ERR("Getting flash_sink failed. %i", ret);

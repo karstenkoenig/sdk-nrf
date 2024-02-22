@@ -7,6 +7,8 @@
 menuconfig SUIT_CACHE
 	bool "Enable SUIT cache support library"
 	depends on ZCBOR
+	imply SUIT_STREAM_SINK_RAM
+	imply SUIT_STREAM
 
 if SUIT_CACHE
 
@@ -23,16 +25,18 @@ config APP_LINK_WITH_SUIT_CACHE_INTERFACE
 	bool
 	default y
 
-config SUIT_CACHE_RW
-	bool "Enable write mode for SUIT cache"
-	depends on FLASH
-	depends on SUIT_UTILS
-
 config SUIT_MAX_URI_LENGTH
 	int "The maximum number of characters in uri used in fetch operations"
 	range 1 512
 	default 128
-	depends on SUIT_CACHE_RW
+	help
+		This option determines the longest URI that can be read or written from
+		the cache.
+
+config SUIT_CACHE_RW
+	bool "Enable write mode for SUIT cache"
+	depends on FLASH
+	depends on SUIT_UTILS
 
 config SUIT_CACHE0_ERASE_ON_ENVELOPE_STORED
 	bool "Always erase the DFU cache partition 0 after the envelope is stored"
@@ -46,5 +50,12 @@ config SUIT_CACHE0_ERASE_ON_ENVELOPE_STORED
 		contents of cache0 are appropriate after the envelope is stored.
 	depends on SUIT_CACHE_RW
 	default y
+
+config SUIT_CACHEX_ERASE_BLOCK_SIZE
+	int "Erase block size"
+	default 4096
+	help
+		Erase block size of cache partitions 1 .. n.
+		This configuration does not affect cache partition 0.
 
 endif # SUIT_CACHE

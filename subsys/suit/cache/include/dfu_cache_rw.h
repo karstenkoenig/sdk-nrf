@@ -22,7 +22,7 @@ extern "C" {
  */
 
 struct suit_cache_slot {
-	size_t slot_offset;
+	uint8_t *slot_address;
 	size_t size;
 	size_t size_offset;
 	size_t data_offset;

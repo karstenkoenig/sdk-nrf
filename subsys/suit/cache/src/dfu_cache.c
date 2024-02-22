@@ -14,6 +14,8 @@
 #include <zephyr/storage/flash_map.h>
 #include <zephyr/sys/util_macro.h>
 
+#include "dfu_cache_internal.h"
+
 LOG_MODULE_REGISTER(dfu_cache, CONFIG_SUIT_LOG_LEVEL);
 
 static bool init_done = false;
@@ -27,7 +29,7 @@ struct dfu_cache dfu_cache;
  * @return true
  * @return false
  */
-static bool uricmp(struct zcbor_string *current_key, const struct zcbor_string *uri)
+static bool uricmp(const struct zcbor_string *current_key, const struct zcbor_string *uri)
 {
 	/* Check what type of string is uri */
 	if (uri->value[uri->len - 1] == '\0') {
@@ -45,6 +47,33 @@ static bool uricmp(struct zcbor_string *current_key, const struct zcbor_string *
 	return !strncmp(current_key->value, uri->value, current_key->len);
 }
 
+/* Match callback context. */
+struct match_uri_ctx {
+	const struct zcbor_string *uri;
+	uintptr_t payload_offset;
+	size_t payload_size;
+	bool match;
+};
+
+/**
+ * @brief Foreach callback for matching.
+ */
+static bool match_uri(struct dfu_cache_pool *cache_pool, zcbor_state_t *state,
+		      const struct zcbor_string *uri, uintptr_t payload_offset, size_t payload_size,
+		      void *ctx)
+{
+	struct match_uri_ctx *cb_ctx = ctx;
+	cb_ctx->match = uricmp(uri, cb_ctx->uri);
+
+	if (cb_ctx->match) {
+		cb_ctx->payload_offset = payload_offset;
+		cb_ctx->payload_size = payload_size;
+	}
+
+	/* Stop further iteration if URI matches. */
+	return !cb_ctx->match;
+}
+
 /**
  * @brief Check if cache_pool contains slot with key equal to uri and if true get data
  *
@@ -57,34 +86,23 @@ static suit_plat_err_t search_cache_pool(struct dfu_cache_pool *cache_pool,
 					 const struct zcbor_string *uri,
 					 struct zcbor_string *payload)
 {
-	bool ret = true;
 	suit_plat_err_t res = SUIT_PLAT_ERR_NOT_FOUND;
-	zcbor_state_t states[3];
-	struct zcbor_string current_key;
-	struct zcbor_string current_data;
 
-	if ((cache_pool != NULL) && (uri != NULL) && (payload != NULL)
-	    && (cache_pool->address != NULL)) {
-		zcbor_new_state(states, sizeof(states) / sizeof(zcbor_state_t), cache_pool->address,
-				cache_pool->size, 1);
-		ret = zcbor_map_start_decode(states);
+	if ((cache_pool != NULL) && (uri != NULL) && (payload != NULL) &&
+	    (cache_pool->address != NULL) && (uri->len <= CONFIG_SUIT_MAX_URI_LENGTH)) {
+		struct match_uri_ctx ctx = {
+			.match = false,
+			.uri = uri,
+		};
+		res = suit_dfu_cache_partition_slot_foreach(cache_pool, match_uri, &ctx);
 
-		do {
-			ret = ret && ((zcbor_tstr_decode(states, &current_key)) &&
-				      (zcbor_bstr_decode(states, &current_data)));
-
-			if ((ret) && uricmp(&current_key, uri)) {
-				/* Matching uri was found */
-				payload->value = (uint8_t *)current_data.value;
-				payload->len = current_data.len;
-
-				res = SUIT_PLAT_SUCCESS;
-				break;
-			}
-		} while (ret);
-
-		zcbor_list_map_end_force_decode(states);
-		zcbor_map_end_decode(states);
+		if (ctx.match) {
+			payload->value = (uint8_t *)ctx.payload_offset;
+			payload->len = ctx.payload_size;
+			res = SUIT_PLAT_SUCCESS;
+		} else {
+			res = SUIT_PLAT_ERR_NOT_FOUND;
+		}
 
 		return res;
 	}
