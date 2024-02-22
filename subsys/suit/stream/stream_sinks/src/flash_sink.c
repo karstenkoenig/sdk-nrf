@@ -188,8 +188,6 @@ suit_plat_err_t suit_flash_sink_get(struct stream_sink *sink, uint8_t *dst, size
 
 static suit_plat_err_t write_unaligned_start(struct flash_ctx *flash_ctx, size_t *size_left, uint8_t **buf)
 {
-	LOG_ERR("write_unaligned_start...start");
-
 	uint8_t edit_buffer[SWAP_BUFFER_SIZE];
 
 	size_t start_offset = 0;
@@ -200,20 +198,16 @@ static suit_plat_err_t write_unaligned_start(struct flash_ctx *flash_ctx, size_t
 	start_offset = WRITE_OFFSET(flash_ctx) - block_start;
 	write_size = 0;
 
-	LOG_ERR("write_unaligned)_start...1");
 	if (flash_read(flash_ctx->fdev, block_start, edit_buffer, flash_ctx->flash_write_size) != 0) {
 		LOG_ERR("Flash read failed.");
 		return SUIT_PLAT_ERR_IO;
 	}
 
-	LOG_ERR("write_unaligned)_start...2");
 	/* write_size - how much data from buf will be written */
 	write_size = MIN(*size_left, flash_ctx->flash_write_size - start_offset);
 
-	LOG_ERR("write_unaligned)_start...3");
 	memcpy(edit_buffer + start_offset, *buf, write_size);
 
-	LOG_ERR("write_unaligned)_start...4");
 	/* Write back edit_buffer that now contains unaligned bytes from the start of buf */
 	if (flash_write(flash_ctx->fdev, block_start, edit_buffer, flash_ctx->flash_write_size) != 0) {
 		LOG_ERR("Writing initial unaligned data failed.");
@@ -233,7 +227,6 @@ static suit_plat_err_t write_unaligned_start(struct flash_ctx *flash_ctx, size_t
 	/* Decrease size by the number of bytes written */
 	*size_left -= write_size;
 
-	LOG_ERR("write_unaligned_start...end");
 	return SUIT_PLAT_SUCCESS;
 }
 
