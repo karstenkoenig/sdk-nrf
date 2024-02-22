@@ -127,6 +127,10 @@ config SUIT_STREAM_SOURCE_EXTMEM
   bool "Enable external memory storage source"
   depends on SSF_EXTMEM_SERVICE_ENABLED
 
+config SUIT_STREAM_SOURCE_FLASH
+  bool "Enable flash memory storage source"
+  depends on FLASH
+
 menuconfig SUIT_STREAM_SOURCE_IPC
         bool "Enable feeding images from external sources to SDFW"
 
