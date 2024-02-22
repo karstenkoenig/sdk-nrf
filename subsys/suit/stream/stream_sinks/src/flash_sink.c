@@ -8,30 +8,7 @@
 #include <flash_sink.h>
 #include <zephyr/drivers/flash.h>
 #include <suit_plat_mem_util.h>
-
-/* Definitions for SOC internal nonvolatile memory */
-#if (DT_NODE_EXISTS(DT_NODELABEL(mram10))) /* nrf54H20 */
-	#define INTERNAL_NVM_START (DT_REG_ADDR(DT_NODELABEL(mram10)) & 0xFFFFFFUL)
-	#define INTERNAL_NVM_SIZE DT_REG_SIZE(DT_NODELABEL(mram10)) + DT_REG_SIZE(DT_NODELABEL(mram11))
-#elif (DT_NODE_EXISTS(DT_NODELABEL(flash0))) /* nrf52 or flash simulator */
-	#define INTERNAL_NVM_START DT_REG_ADDR(DT_NODELABEL(flash0))
-	#define INTERNAL_NVM_SIZE DT_REG_SIZE(DT_NODELABEL(flash0))
-#elif (DT_NODE_EXISTS(DT_NODELABEL(rram0))) /* nrf54l15 */
-	#define INTERNAL_NVM_START DT_REG_ADDR(DT_NODELABEL(rram0))
-	#define INTERNAL_NVM_SIZE DT_REG_SIZE(DT_NODELABEL(rram0))
-#else
-	#error "No recognizable internal nvm nodes found."
-#endif
-
-/* Example of how external nvm could be added
- * #define EXTERNAL_NVM_START
- * #define EXTERNAL_NVM_SIZE
- */
-
-#define INTERNAL_NVM_DEV DEVICE_DT_GET(DT_CHOSEN(zephyr_flash_controller))
-/* For external nvm, device could be defined for example
- * #define INTERNAL_NVM_DEV DT_INST(0, jedec_spi_nor)
- */
+#include <suit_memory_layout.h>
 
 #if defined(CONFIG_SOC_FLASH_NRF_MRAM_ONE_BYTE_WRITE_ACCESS)
 	#define SWAP_BUFFER_SIZE 4
@@ -55,11 +32,6 @@ static suit_plat_err_t flush(void *ctx);
 static suit_plat_err_t used_storage(void *ctx, size_t *size);
 static suit_plat_err_t release(void *ctx);
 
-struct nvm_area {
-	uintptr_t na_start;
-	size_t na_size;
-	const struct device *na_fdev;
-};
 struct flash_ctx {
 	size_t size_used;
 	size_t offset;
@@ -71,23 +43,6 @@ struct flash_ctx {
 };
 
 static struct flash_ctx ctx[SUIT_MAX_FLASH_COMPONENTS];
-
-/* List of nonvolatile memories accessible for flash_sink */
-static const struct nvm_area nvm_area_map[] = {
-	{
-		.na_start = INTERNAL_NVM_START,
-		.na_size = INTERNAL_NVM_SIZE,
-		.na_fdev = INTERNAL_NVM_DEV,
-	},
-/* { Example how external nvm could be added
- *		.na_start = EXTERNAL_NVM_START,
- *		.na_size = EXTERNAL_NVM_SIZE,
- *		.na_fdev = EXTERNAL_NVM_DEV,
- * },
- */
-};
-const uint8_t nvm_area_map_size = ARRAY_SIZE(nvm_area_map);
-
 
 /**
  * @brief Get the new, free ctx object
@@ -124,29 +79,6 @@ static suit_plat_err_t register_write(struct flash_ctx *flash_ctx, size_t write_
 }
 
 /**
- * @brief Get the nvm area object corresponding to given address
- *
- * @param address Address to look for in registered areas
- * @return const struct flash_area* Pointer to flash area or NULL in case of fail
- */
-static const struct nvm_area *nvm_area_get(uint8_t *address)
-{
-	size_t target_offset = suit_plat_mem_nvm_offset_get(address);
-
-	for (size_t i = 0; i < nvm_area_map_size; i++) {
-		LOG_DBG("nvm_area: start_address: 0x%lX,  size: 0x%X,  target offset: 0x%X", nvm_area_map[i].na_start, nvm_area_map[i].na_size, target_offset);
-
-		if ((target_offset >= nvm_area_map[i].na_start) &&
-			(target_offset < (nvm_area_map[i].na_start + nvm_area_map[i].na_size))) {
-				return &nvm_area_map[i];
-			}
-	}
-
-	LOG_DBG("nvm_area: Not found");
-	return NULL;
-}
-
-/**
  * @brief Get the flash write size for given flash driver
  *
  * @param fdev Flash driver to get the size from
@@ -161,7 +93,7 @@ static size_t flash_write_size_get(const struct device *fdev)
 
 bool suit_flash_sink_is_address_supported(uint8_t *address)
 {
-	if ((address == NULL) || (nvm_area_get(address) == NULL)) {
+	if (!suit_memory_global_address_is_in_nvm((uintptr_t)address)) {
 		LOG_INF("Failed to find nvm area corresponding to address: %p", address);
 		return false;
 	}
@@ -196,40 +128,37 @@ suit_plat_err_t suit_flash_sink_get(struct stream_sink *sink, uint8_t *dst, size
 		struct flash_ctx *ctx = new_ctx_get();
 
 		if (ctx != NULL) {
-			LOG_DBG("flash_sink requested area: offset: 0x%lX; size: 0x%X",
-				suit_plat_mem_nvm_offset_get(dst), size);
+			struct nvm_address nvm_address;
 
-			const struct nvm_area *nvm_area = nvm_area_get(dst);
-
-			if (nvm_area == NULL) {
+			if (!suit_memory_global_address_to_nvm_address((uintptr_t)dst, &nvm_address)) {
 				LOG_ERR("Failed to find nvm area corresponding to requested address.");
 				return SUIT_PLAT_ERR_HW_NOT_READY;
 			}
 
-			if (!device_is_ready(nvm_area->na_fdev)) {
+			LOG_DBG("flash_sink requested area: offset: 0x%lX; size: 0x%X",
+				nvm_address.offset, size);
+
+			if (!device_is_ready(nvm_address.fdev)) {
 				LOG_ERR("Flash device not ready.");
 				return SUIT_PLAT_ERR_HW_NOT_READY;
 			}
 
 			/* Check if requested area fits in found nvm */
-			if ((suit_plat_mem_nvm_offset_get(dst) + size)
-			    > (nvm_area->na_start + nvm_area->na_size)) {
+			if (!suit_memory_global_address_range_is_in_nvm((uintptr_t)dst, size)) {
 				LOG_ERR("Requested memory area out of bounds of corresponding nvm");
 				return SUIT_PLAT_ERR_OUT_OF_BOUNDS;
 			}
 
 			memset(ctx, 0, sizeof(*ctx));
-			ctx->flash_write_size = flash_write_size_get(nvm_area->na_fdev);
-			ctx->fdev = nvm_area->na_fdev;
+			ctx->flash_write_size = flash_write_size_get(nvm_address.fdev);
+			ctx->fdev = nvm_address.fdev;
 			ctx->offset = 0;
-			ctx->offset_limit = suit_plat_mem_nvm_offset_get(dst) + size; /* max address */
+			ctx->offset_limit = nvm_address.offset + size; /* max address */
 			ctx->size_used = 0;
-			ctx->ptr = suit_plat_mem_nvm_offset_get(dst);
+			ctx->ptr = nvm_address.offset;
 			ctx->in_use = true;
 
-			if ((ctx->flash_write_size >
-				(nvm_area->na_start + nvm_area->na_size)) ||
-				(ctx->flash_write_size > SWAP_BUFFER_SIZE)) {
+			if (ctx->flash_write_size > SWAP_BUFFER_SIZE) {
 
 				memset(ctx, 0, sizeof(*ctx));
 				LOG_ERR("Write block size exceeds set safety limits");
