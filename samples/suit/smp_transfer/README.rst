@@ -7,7 +7,7 @@ SUIT DFU: Firmware update on the nRF54H20 SoC
    :local:
    :depth: 2
 
-The sample demonstrates how to update and boot the nRF54H20 System on Chip (SoC) using the Software Update for Internet of Things (SUIT) procedure on the Application and Radio Cores of the SoC.
+The sample demonstrates how to update and boot the nRF54H20 System-on-Chip (SoC) using the Software Update for Internet of Things (SUIT) procedure on the Application and Radio Cores of the SoC.
 The update on the nRF54H20 SoC can be done over Bluetooth® Low Energy or UART.
 
 Requirements
@@ -256,7 +256,7 @@ After programming the sample to your development kit, complete the following ste
                west build -p -b nrf54h20dk_nrf54h20_cpuapp@soc1 -d C:/ncs-lcs/work-dir -- -DOVERLAY_CONFIG=overlay-bt.conf -DCONFIG_APP_VERSION=2
 
          Another :file:`root.suit` file is created after running this command, that contains the updated firmware.
-
+         You must manually transfer this file onto the same mobile device you will use with the nRF Device Manager app.
 
       #. **Upload the signed envelope onto your mobile phone:**
 
@@ -280,10 +280,14 @@ After programming the sample to your development kit, complete the following ste
 
          #. From the **Firmware Upload** section, click on :guilabel:`SELECT FILE` and select the :file:`root.suit` file from your mobile device.
 
+            .. note::
+               As described in Step 1, you must manually add the :file:`root.suit` file to the same mobile device you are using for nRF Device Manager.
+
             .. figure:: images/suit_smp_select_firmware_select_file.png
                :alt: Select Firmware Upload and Select File
 
          #. Click on :guilabel:`UPLOAD` to reveal the **Select Image** menu.
+
          #. From the **Select Image** menu, select :guilabel:`Application Core (0)` and click the :guilabel:`OK` button to upload the :file:`root.suit` file.
 
             Observe an upload progress bar below the "UPLOADING…" text in the **Firmware Upload** section.
