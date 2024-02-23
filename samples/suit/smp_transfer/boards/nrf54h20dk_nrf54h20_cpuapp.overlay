@@ -3,7 +3,8 @@
  *
  * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
  */
- #include <zephyr/dt-bindings/mbox/nrf-ids.h>
+#include <zephyr/dt-bindings/mbox/nrf-ids.h>
+#include <common/nordic_nrf_next/nrfx_ram3x_dma.dtsi>
 
 
  / {
@@ -31,6 +32,7 @@
 	chosen {
 		zephyr,entropy = &rng_sim;
 		zephyr,uart-mcumgr = &uart136;
+		zephyr,console = &uart136;
 	};
 };
 
