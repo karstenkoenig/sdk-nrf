@@ -29,7 +29,7 @@ FAKE_VALUE_FUNC(int, suit_mci_supported_manifest_class_ids_get, suit_manifest_cl
 		size_t *);
 FAKE_VALUE_FUNC(int, suit_mci_invoke_order_get, const suit_manifest_class_id_t **, size_t *);
 FAKE_VALUE_FUNC(int, suit_mci_downgrade_prevention_policy_get, const suit_manifest_class_id_t *,
-		downgrade_prevention_policy_t *);
+		suit_downgrade_prevention_policy_t *);
 FAKE_VALUE_FUNC(int, suit_mci_manifest_class_id_validate, const suit_manifest_class_id_t *);
 FAKE_VALUE_FUNC(int, suit_mci_signing_key_id_validate, const suit_manifest_class_id_t *, uint32_t);
 FAKE_VALUE_FUNC(int, suit_mci_processor_start_rights_validate, const suit_manifest_class_id_t *,

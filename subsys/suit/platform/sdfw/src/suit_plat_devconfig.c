@@ -59,7 +59,7 @@ int suit_plat_authorize_sequence_num(enum suit_command_sequence seq_name,
 	size_t envelope_size;
 	uint32_t current_seq_num;
 	suit_manifest_class_id_t *class_id;
-	downgrade_prevention_policy_t policy;
+	suit_downgrade_prevention_policy_t policy;
 	suit_plat_err_t ret = SUIT_PLAT_ERR_CRASH;
 
 	if ((manifest_component_id == NULL) || (manifest_component_id->value == NULL)) {
@@ -124,12 +124,12 @@ int suit_plat_authorize_sequence_num(enum suit_command_sequence seq_name,
 		return SUIT_ERR_AUTHENTICATION;
 	}
 
-	if (policy == DOWNGRADE_PREVENTION_DISABLED) {
+	if (policy == SUIT_DOWNGRADE_PREVENTION_DISABLED) {
 		LOG_DBG("Manifest sequence number %d for sequence %d authorized (current: %d, "
 			"policy: %d)",
 			seq_num, seq_name, current_seq_num, policy);
 		return SUIT_SUCCESS;
-	} else if (policy != DOWNGRADE_PREVENTION_ENABLED) {
+	} else if (policy != SUIT_DOWNGRADE_PREVENTION_ENABLED) {
 		LOG_ERR("Unsupported downgrade prevention policy value: %d", policy);
 		return SUIT_ERR_AUTHENTICATION;
 	} else if (current_seq_num <= seq_num) {

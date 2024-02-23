@@ -39,7 +39,7 @@ static void test_suit_mci_downgrade_prevention_policy_get(void)
 		      "suit_mci_supported_manifest_class_ids_get returned (%d)", rc);
 
 	for (int i = 0; i < output_size; ++i) {
-		downgrade_prevention_policy_t policy;
+		suit_downgrade_prevention_policy_t policy;
 
 		rc = suit_mci_downgrade_prevention_policy_get(result_class_info[i].class_id, &policy);
 		zassert_equal(rc, SUIT_PLAT_SUCCESS,

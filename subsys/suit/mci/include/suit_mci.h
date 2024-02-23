@@ -54,11 +54,6 @@
 extern "C" {
 #endif
 
-typedef enum {
-	DOWNGRADE_PREVENTION_DISABLED = 0,
-	DOWNGRADE_PREVENTION_ENABLED = 1
-} downgrade_prevention_policy_t;
-
 typedef int mci_err_t;
 
 /**< Invalid or unsupported manifest class id */
@@ -119,7 +114,7 @@ mci_err_t suit_mci_invoke_order_get(const suit_manifest_class_id_t **class_id, s
  * @retval SUIT_PLAT_ERR_OUT_OF_BOUNDS  data provisioned for downgrade prevention policy is invalid
  */
 mci_err_t suit_mci_downgrade_prevention_policy_get(const suit_manifest_class_id_t *class_id,
-						   downgrade_prevention_policy_t *policy);
+						   suit_downgrade_prevention_policy_t *policy);
 
 /**
  * @brief Validates if manifest class id is supported in the device.

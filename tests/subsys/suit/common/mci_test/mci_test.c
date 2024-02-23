@@ -27,18 +27,18 @@ static const suit_manifest_class_id_t nordic_app_manifest_class_id = {
 typedef struct {
 	const suit_manifest_class_id_t *manifest_class_id;
 	const suit_manifest_class_id_t *parent_manifest_class_id;
-	downgrade_prevention_policy_t downgrade_prevention_policy;
+	suit_downgrade_prevention_policy_t downgrade_prevention_policy;
 	uint32_t signing_key_bits;
 	uint32_t signing_key_mask;
 } manifest_config_t;
 
 static manifest_config_t supported_manifests[] = {
-	{&nordic_root_manifest_class_id, NULL, DOWNGRADE_PREVENTION_DISABLED,
+	{&nordic_root_manifest_class_id, NULL, SUIT_DOWNGRADE_PREVENTION_DISABLED,
 	 /* signing_key_mask equal to -1 means signing with specified key is required
 	  */
 	 0x00000000, 0xFFFFFFFF},
 	{&nordic_app_manifest_class_id, &nordic_root_manifest_class_id,
-	 DOWNGRADE_PREVENTION_DISABLED,
+	 SUIT_DOWNGRADE_PREVENTION_DISABLED,
 	 /* signing_key_mask equal to -1 means signing with specified key is required
 	  */
 	 0x00000000, 0xFFFFFFFF}};
@@ -136,7 +136,7 @@ int suit_mci_invoke_order_get(const suit_manifest_class_id_t **class_id, size_t 
 }
 
 int suit_mci_downgrade_prevention_policy_get(const suit_manifest_class_id_t *class_id,
-					     downgrade_prevention_policy_t *policy)
+					     suit_downgrade_prevention_policy_t *policy)
 {
 	if (NULL == class_id || NULL == policy) {
 		return SUIT_PLAT_ERR_INVAL;

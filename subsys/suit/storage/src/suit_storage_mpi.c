@@ -266,3 +266,46 @@ suit_plat_err_t suit_storage_mpi_class_ids_get(suit_manifest_class_info_t *class
 
 	return SUIT_PLAT_SUCCESS;
 }
+
+suit_downgrade_prevention_policy_t suit_mpi_downgrade_prevention_policy_to_metadata(int mpi_policy)
+{
+	switch (mpi_policy)
+	{
+		case SUIT_MPI_DOWNGRADE_PREVENTION_DISABLED:
+			return SUIT_DOWNGRADE_PREVENTION_DISABLED;
+		case SUIT_MPI_DOWNGRADE_PREVENTION_ENABLED:
+			return SUIT_DOWNGRADE_PREVENTION_ENABLED;
+		default:
+			return SUIT_DOWNGRADE_PREVENTION_UNKNOWN;
+	}
+}
+
+suit_independent_updateability_policy_t
+suit_mpi_independent_updateability_policy_to_metadata(int mpi_policy)
+{
+	switch (mpi_policy)
+	{
+		case SUIT_MPI_INDEPENDENT_UPDATE_DENIED:
+			return SUIT_INDEPENDENT_UPDATE_DENIED;
+		case SUIT_MPI_INDEPENDENT_UPDATE_ALLOWED:
+			return SUIT_INDEPENDENT_UPDATE_ALLOWED;
+		default:
+			return SUIT_INDEPENDENT_UPDATE_UNKNOWN;
+	}
+}
+
+suit_signature_verification_policy_t
+suit_mpi_signature_verification_policy_to_metadata(int mpi_policy)
+{
+	switch (mpi_policy)
+	{
+		case SUIT_MPI_SIGNATURE_CHECK_DISABLED:
+			return SUIT_SIGNATURE_CHECK_DISABLED;
+		case SUIT_MPI_SIGNATURE_CHECK_ENABLED_ON_UPDATE:
+			return SUIT_SIGNATURE_CHECK_ENABLED_ON_UPDATE;
+		case SUIT_MPI_SIGNATURE_CHECK_ENABLED_ON_UPDATE_AND_BOOT:
+			return SUIT_SIGNATURE_CHECK_ENABLED_ON_UPDATE_AND_BOOT;
+		default:
+			return SUIT_SIGNATURE_CHECK_UNKNOWN;
+	}
+}

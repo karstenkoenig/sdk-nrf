@@ -70,7 +70,7 @@ mci_err_t suit_mci_invoke_order_get(const suit_manifest_class_id_t **class_id, s
 }
 
 mci_err_t suit_mci_downgrade_prevention_policy_get(const suit_manifest_class_id_t *class_id,
-						   downgrade_prevention_policy_t *policy)
+						   suit_downgrade_prevention_policy_t *policy)
 {
 	if (NULL == class_id || NULL == policy) {
 		return SUIT_PLAT_ERR_INVAL;
@@ -82,11 +82,9 @@ mci_err_t suit_mci_downgrade_prevention_policy_get(const suit_manifest_class_id_
 		return MCI_ERR_MANIFESTCLASSID;
 	}
 
-	if (SUIT_MPI_DOWNGRADE_PREVENTION_DISABLED == mpi->downgrade_prevention_policy) {
-		*policy = DOWNGRADE_PREVENTION_DISABLED;
-	} else if (SUIT_MPI_DOWNGRADE_PREVENTION_ENABLED == mpi->downgrade_prevention_policy) {
-		*policy = DOWNGRADE_PREVENTION_ENABLED;
-	} else {
+	*policy =
+		suit_mpi_downgrade_prevention_policy_to_metadata(mpi->downgrade_prevention_policy);
+	if (SUIT_DOWNGRADE_PREVENTION_UNKNOWN == *policy) {
 		return SUIT_PLAT_ERR_OUT_OF_BOUNDS;
 	}
 

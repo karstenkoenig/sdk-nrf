@@ -80,13 +80,13 @@ static int suit_processor_get_manifest_metadata_decoder_busy_fake_func(
 
 static mci_err_t
 suit_mci_downgrade_prevention_policy_get_enabled_fake_func(const suit_manifest_class_id_t *class_id,
-						      downgrade_prevention_policy_t *policy)
+						      suit_downgrade_prevention_policy_t *policy)
 {
 	zassert_equal(class_id, &sample_class_id, "Invalid manifest class ID value");
 	zassert_not_equal(
 		policy, NULL,
 		"The API must provide a valid pointer, to read the downgrade prevention policy");
-	*policy = DOWNGRADE_PREVENTION_ENABLED;
+	*policy = SUIT_DOWNGRADE_PREVENTION_ENABLED;
 
 	return SUIT_PLAT_SUCCESS;
 }
@@ -94,13 +94,13 @@ suit_mci_downgrade_prevention_policy_get_enabled_fake_func(const suit_manifest_c
 static mci_err_t
 suit_mci_downgrade_prevention_policy_get_disabled_fake_func(
 						       const suit_manifest_class_id_t *class_id,
-						       downgrade_prevention_policy_t *policy)
+						       suit_downgrade_prevention_policy_t *policy)
 {
 	zassert_equal(class_id, &sample_class_id, "Invalid manifest class ID value");
 	zassert_not_equal(
 		policy, NULL,
 		"The API must provide a valid pointer, to read the downgrade prevention policy");
-	*policy = DOWNGRADE_PREVENTION_DISABLED;
+	*policy = SUIT_DOWNGRADE_PREVENTION_DISABLED;
 
 	return SUIT_PLAT_SUCCESS;
 }
@@ -108,13 +108,13 @@ suit_mci_downgrade_prevention_policy_get_disabled_fake_func(
 static mci_err_t
 suit_mci_downgrade_prevention_policy_get_unsupported_fake_func(
 							  const suit_manifest_class_id_t *class_id,
-							  downgrade_prevention_policy_t *policy)
+							  suit_downgrade_prevention_policy_t *policy)
 {
 	zassert_equal(class_id, &sample_class_id, "Invalid manifest class ID value");
 	zassert_not_equal(
 		policy, NULL,
 		"The API must provide a valid pointer, to read the downgrade prevention policy");
-	*policy = (downgrade_prevention_policy_t)0x1234;
+	*policy = (suit_downgrade_prevention_policy_t)0x1234;
 
 	return SUIT_PLAT_SUCCESS;
 }

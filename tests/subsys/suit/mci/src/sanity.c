@@ -21,7 +21,7 @@ static void test_null_pointers(void)
 	void *mem_address = &mem_address;
 	size_t mem_size = sizeof(mem_address);
 	int platform_specific_component_number = 0;
-	downgrade_prevention_policy_t policy;
+	suit_downgrade_prevention_policy_t policy;
 	int rc = SUIT_PLAT_SUCCESS;
 
 	rc = suit_mci_nordic_vendor_id_get(NULL);

@@ -105,6 +105,38 @@ typedef struct {
 /** The 128-bit UUID, identifying the SUIT manifest class. */
 typedef suit_uuid_t suit_manifest_class_id_t;
 
+/** Downgrade prevention policy for the manifest */
+typedef enum {
+	/** No downgrade prevention. */
+	SUIT_DOWNGRADE_PREVENTION_DISABLED = 0,
+	/** Update forbidden if candidate version is lower than installed version */
+	SUIT_DOWNGRADE_PREVENTION_ENABLED = 1,
+	/** Unknown downgrade prevention policy */
+	SUIT_DOWNGRADE_PREVENTION_UNKNOWN = 2,
+} suit_downgrade_prevention_policy_t;
+
+/** Policy determining if the manifest can be updated independently from its parent */
+typedef enum {
+	/** Independent update is forbidden. */
+	SUIT_INDEPENDENT_UPDATE_DENIED = 0,
+	/** Independent update is allowed. */
+	SUIT_INDEPENDENT_UPDATE_ALLOWED = 1,
+	/** Unknown independent updateability policy. */
+	SUIT_INDEPENDENT_UPDATE_UNKNOWN = 2,
+} suit_independent_updateability_policy_t;
+
+/** Manifest signature verification policy */
+typedef enum {
+	/** Do not verify the manifest signature */
+	SUIT_SIGNATURE_CHECK_DISABLED = 0,
+	/** Verify the manifest signature only when performing update */
+	SUIT_SIGNATURE_CHECK_ENABLED_ON_UPDATE = 1,
+	/** Verify the manifest signature only both when performing update and when booting */
+	SUIT_SIGNATURE_CHECK_ENABLED_ON_UPDATE_AND_BOOT = 2,
+	/** Unknown signature verification policy */
+	SUIT_SIGNATURE_CHECK_UNKNOWN = 3,
+} suit_signature_verification_policy_t;
+
 typedef struct {
 	const suit_uuid_t *vendor_id;
 	const suit_manifest_class_id_t *class_id;

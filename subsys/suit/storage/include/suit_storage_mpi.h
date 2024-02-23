@@ -128,4 +128,36 @@ suit_plat_err_t suit_storage_mpi_get(const suit_manifest_class_id_t *class_id,
 suit_plat_err_t suit_storage_mpi_class_ids_get(suit_manifest_class_info_t *class_info,
 					       size_t *size);
 
+/**
+ * @brief Convert value representing the downgrade prevention policy stored in MPI
+ *        to the corresponding value of the suit_downgrade_prevention_policy_t enum.
+ *
+ * @param[in] mpi_policy The value stored in the MPI storage
+ *
+ * @retval Value of the suit_downgrade_prevention_policy_t enum
+ */
+suit_downgrade_prevention_policy_t suit_mpi_downgrade_prevention_policy_to_metadata(int mpi_policy);
+
+/**
+ * @brief Convert value representing the independent updateability policy stored in MPI
+ *        to the corresponding value of the suit_independent_updateability_policy_t enum.
+ *
+ * @param[in] mpi_policy The value stored in the MPI storage
+ *
+ * @retval Value of the suit_independent_updateability_policy_t enum
+ */
+suit_independent_updateability_policy_t
+suit_mpi_independent_updateability_policy_to_metadata(int mpi_policy);
+
+/**
+ * @brief Convert value representing the signature verification policy stored in MPI
+ *        to the corresponding value of the suit_signature_verification_policy_t enum.
+ *
+ * @param[in] mpi_policy The value stored in the MPI storage
+ *
+ * @retval Value of the suit_signature_verification_policy_t enum
+ */
+suit_signature_verification_policy_t
+suit_mpi_signature_verification_policy_to_metadata(int mpi_policy);
+
 #endif /* SUIT_STORAGE_MPI_H__ */
