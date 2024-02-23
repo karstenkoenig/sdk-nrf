@@ -25,27 +25,6 @@
 
 LOG_MODULE_REGISTER(suit_plat_copy, CONFIG_SUIT_LOG_LEVEL);
 
-#ifdef CONFIG_SUIT_STREAM
-static suit_plat_err_t release_sink(struct stream_sink *sink)
-{
-	if (sink != NULL) {
-		if (sink->release != NULL) {
-			suit_plat_err_t err = sink->release(sink->ctx);
-
-			if (err != SUIT_PLAT_SUCCESS) {
-				LOG_ERR("sink release failed.");
-			}
-
-			return err;
-		}
-
-		return SUIT_PLAT_SUCCESS;
-	}
-
-	return SUIT_PLAT_ERR_INVAL;
-}
-#endif /* CONFIG_SUIT_STREAM */
-
 int suit_plat_check_copy(suit_component_t dst_handle, suit_component_t src_handle)
 {
 #ifdef CONFIG_SUIT_STREAM

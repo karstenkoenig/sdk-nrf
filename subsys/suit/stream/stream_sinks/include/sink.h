@@ -40,6 +40,25 @@ struct stream_sink {
 	void *ctx; /* context used by specific sink implementation */
 };
 
+/**
+ * @brief Helper function for releasing sink
+ * 
+ * @param sink Sink to be released
+ * @return suit_plat_err_t 
+ */
+static inline suit_plat_err_t release_sink(struct stream_sink *sink)
+{
+	if (sink != NULL) {
+		if (sink->release != NULL) {
+			return sink->release(sink->ctx);
+		}
+
+		return SUIT_PLAT_SUCCESS;
+	}
+
+	return SUIT_PLAT_ERR_INVAL;
+}
+
 #ifdef __cplusplus
 }
 #endif

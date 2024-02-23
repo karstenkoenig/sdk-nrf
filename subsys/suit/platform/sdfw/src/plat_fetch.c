@@ -33,25 +33,6 @@
 LOG_MODULE_REGISTER(suit_plat_fetch_sdfw, CONFIG_SUIT_LOG_LEVEL);
 
 #ifdef CONFIG_SUIT_STREAM
-static suit_plat_err_t release_sink(struct stream_sink *sink)
-{
-	if (sink != NULL) {
-		if (sink->release != NULL) {
-			suit_plat_err_t err = sink->release(sink->ctx);
-
-			if (err != SUIT_PLAT_SUCCESS) {
-				LOG_ERR("sink release failed.");
-			}
-
-			return err;
-		}
-
-		return SUIT_PLAT_SUCCESS;
-	}
-
-	return SUIT_PLAT_ERR_INVAL;
-}
-
 /**
  * @brief Function checks if component type is supported by SDFW fetch command
  *
