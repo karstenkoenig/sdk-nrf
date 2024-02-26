@@ -214,8 +214,9 @@ int mdns_link_records(struct mdns_record_handle *parent, const struct mdns_recor
  * @retval -EINVAL if any of provided parameter is invalid
  * @retval -EBUSY if failed to acquire the lock
  */
-int mdns_record_add_a(const char *name, uint8_t name_len, int32_t ttl, struct in_addr *address,
-		      k_timeout_t timeout, struct mdns_record_handle **output);
+int mdns_record_add_a(const char *name, uint8_t name_len, int32_t ttl,
+		      const struct in_addr *address, k_timeout_t timeout,
+		      struct mdns_record_handle **output);
 
 /**
  * @brief Add AAAA record
@@ -236,8 +237,9 @@ int mdns_record_add_a(const char *name, uint8_t name_len, int32_t ttl, struct in
  * @retval -EINVAL if any of provided parameter is invalid
  * @retval -EBUSY if failed to acquire the lock
  */
-int mdns_record_add_aaaa(const char *name, uint8_t name_len, int32_t ttl, struct in6_addr *address,
-			 k_timeout_t timeout, struct mdns_record_handle **output);
+int mdns_record_add_aaaa(const char *name, uint8_t name_len, int32_t ttl,
+			 const struct in6_addr *address, k_timeout_t timeout,
+			 struct mdns_record_handle **output);
 
 /**
  * @brief Add NS record

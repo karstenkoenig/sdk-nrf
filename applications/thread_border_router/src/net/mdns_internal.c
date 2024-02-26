@@ -78,11 +78,23 @@ static bool domain_is_valid(const char *dname, uint8_t len)
 	        strcmp(&dname[last_label_pos + 1], DOMAIN_ARPA_STR) == 0);
 }
 
+static void remove_additional_rr(struct mdns_record_handle *handle, void *user_data)
+{
+	struct mdns_record *current = FROM_HANDLE(handle);
+	struct mdns_record *removed = (struct mdns_record *)user_data;
+
+	if (current->next_add_rr == removed) {
+		current->next_add_rr = removed->next_add_rr;
+	}
+}
+
 int free_mdns_record(struct mdns_record *record)
 {
 	if (!record) {
 		return -EINVAL;
 	}
+
+	iterate_mdns_records(remove_additional_rr, (void *)record);
 
 	if (!sys_slist_find_and_remove(&records_list, &record->node)) {
 		return -EINVAL;

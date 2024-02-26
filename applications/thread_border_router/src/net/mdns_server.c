@@ -39,7 +39,6 @@ LOG_MODULE_DECLARE(mdns_server, CONFIG_NRF_TBR_MDNS_SERVER_LOG_LEVEL);
 #define HDR_RESPONSE_FLAG (1 << 15)
 #define HDR_OPCODE_MASK (0b1111 << 14)
 #define HDR_AA_FLAG (1 << 10)
-#define RECORD_CACHE_FLUSH_FLAG (1 << 15)
 
 struct mdns_server_listener listeners[MDNS_SERVER_LISTENERS_COUNT];
 static struct in6_addr mdns_server_ipv6_addr;
@@ -271,8 +270,6 @@ static void add_compression_entries(uint8_t *name, size_t labels_len, size_t tot
 	size_t stored = 0;
 	struct compression_entry *entry;
 
-	LOG_DBG("Adding compression entries from pkt offset: %u", pkt_offset);
-
 	while (stored < labels_len) {
 		if (comp_entry_count == COMPRESSION_ENTRIES) {
 			return;
@@ -283,7 +280,7 @@ static void add_compression_entries(uint8_t *name, size_t labels_len, size_t tot
 		entry->buffer = buf;
 		entry->buffer_offset = buf_offset + stored;
 		entry->data_len = total_len - stored;
-		entry->pkt_offset = pkt_offset + buf_offset + stored;
+		entry->pkt_offset = pkt_offset + stored;
 
 		stored += name[stored] + LABEL_LEN_SIZE;
 		comp_entry_count++;
@@ -307,8 +304,6 @@ static size_t compress_name(struct net_buf *src, size_t src_len, size_t src_offs
 
 		entry = find_compression_entry(&dst[dst_pos], to_compare, is_unicast);
 		if (entry) {
-			LOG_DBG("Compressing name from pos: %u, pkt offset: %u", dst_pos, entry->pkt_offset);
-
 			*((uint16_t *)&dst[dst_pos]) = htons(LABEL_POINTER_MARK << 8 |
 							     entry->pkt_offset);
 			dst_pos += LABEL_PTR_SIZE;
@@ -338,6 +333,20 @@ static size_t get_current_label_offset(struct net_pkt *pkt)
 									 NET_IPV6UDPH_LEN);
 }
 
+static void append_buffers(struct net_pkt *pkt, size_t size)
+{
+#if defined(CONFIG_NET_BUF_FIXED_DATA_SIZE)
+	while (size > CONFIG_NET_BUF_DATA_SIZE) {
+		net_pkt_append_buffer(pkt, net_buf_alloc_len(net_buf_pool_get(pkt->buffer->pool_id),
+							     CONFIG_NET_BUF_DATA_SIZE, K_FOREVER));
+		size -= CONFIG_NET_BUF_DATA_SIZE;
+	}
+#endif /* CONFIG_NET_BUF_FIXED_DATA_SIZE */
+
+	net_pkt_append_buffer(pkt, net_buf_alloc_len(net_buf_pool_get(pkt->buffer->pool_id), size,
+			      K_FOREVER));
+}
+
 static void append_response(struct mdns_record *record, struct net_pkt *pkt, bool is_unicast)
 {
 	size_t to_write = 0;
@@ -347,25 +356,19 @@ static void append_response(struct mdns_record *record, struct net_pkt *pkt, boo
 	struct net_pkt_cursor answer_end_curs;
 	struct srv_rdata *srv_data;
 	const size_t max_payload_len = record->name_len + record->rdata_len + ANSWER_METADATA_SIZE;
+	size_t tailroom;
 
 	net_pkt_set_overwrite(pkt, false);
 
-	NET_DBG("appending record: %p to the response", record);
-
-	NET_DBG("pkt len before alloc: %u", net_pkt_get_len(pkt));
+	tailroom = net_buf_tailroom(net_buf_frag_last(pkt->buffer));
 
 	/* As we do not know the number and final size of the payload allocate memory in the fly
 	 * if the potential result will not fit into unused space. We could use a bigger `data`
 	 * buffer but it could result in a lot of small buffer fragments after the compression.
 	 */
-	if (net_buf_tailroom(net_buf_frag_last(pkt->buffer)) < max_payload_len) {
-		NET_DBG("allocating new buffer with len: %u", max_payload_len);
-		net_pkt_append_buffer(pkt, net_buf_alloc_len(net_buf_pool_get(pkt->buffer->pool_id),
-							     max_payload_len,
-							     K_FOREVER));
+	if (tailroom < max_payload_len) {
+		append_buffers(pkt, max_payload_len);
 	}
-
-	NET_DBG("pkt len after alloc: %u", net_pkt_get_len(pkt));
 
 	to_write = compress_name(record->name, record->name_len, 0, data, sizeof(data), is_unicast,
 				 get_current_label_offset(pkt));
@@ -373,7 +376,7 @@ static void append_response(struct mdns_record *record, struct net_pkt *pkt, boo
 	net_pkt_write(pkt, data, to_write);
 
 	net_pkt_write_be16(pkt, record->type);
-	net_pkt_write_be16(pkt, RECORD_CLASS_IN | RECORD_CACHE_FLUSH_FLAG);
+	net_pkt_write_be16(pkt, RECORD_CLASS_IN );
 	net_pkt_write_be32(pkt, record->ttl);
 
 	/* Record data length will be updated at the end */
@@ -890,15 +893,17 @@ static int alloc_locked(const char* name, uint8_t name_len, int32_t ttl, uint16_
 	return *handle ? 0 : -EFAULT;
 }
 
-int mdns_record_add_a(const char *name, uint8_t name_len, int32_t ttl, struct in_addr *address,
-		      k_timeout_t timeout, struct mdns_record_handle **output)
+int mdns_record_add_a(const char *name, uint8_t name_len, int32_t ttl,
+		      const struct in_addr *address, k_timeout_t timeout,
+		      struct mdns_record_handle **output)
 {
 	return alloc_locked(name, name_len, ttl, MDNS_RECORD_TYPE_A, address,
 					   sizeof(*address), NULL, 0, timeout, output);
 }
 
-int mdns_record_add_aaaa(const char *name, uint8_t name_len, int32_t ttl, struct in6_addr *address,
-			 k_timeout_t timeout, struct mdns_record_handle **output)
+int mdns_record_add_aaaa(const char *name, uint8_t name_len, int32_t ttl,
+			 const struct in6_addr *address, k_timeout_t timeout,
+			 struct mdns_record_handle **output)
 {
 	return alloc_locked(name, name_len, ttl, MDNS_RECORD_TYPE_AAAA, address,sizeof(*address),
 			    NULL, 0, timeout, output);
@@ -1125,7 +1130,7 @@ int mdns_link_records(struct mdns_record_handle *parent, const struct mdns_recor
 {
 	struct mdns_record *current = FROM_HANDLE(parent);
 
-	if (!parent || !handle || !is_record_handle_valid(parent) ||
+	if (!parent || !handle || parent == handle || !is_record_handle_valid(parent) ||
 	    !is_record_handle_valid(handle)) {
 		return -EINVAL;
 	}
