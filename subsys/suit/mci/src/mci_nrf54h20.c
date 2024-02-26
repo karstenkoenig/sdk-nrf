@@ -280,10 +280,7 @@ mci_err_t suit_mci_processor_start_rights_validate(const suit_manifest_class_id_
 	case SUIT_MANIFEST_APP_LOCAL_1:
 	case SUIT_MANIFEST_APP_LOCAL_2:
 	case SUIT_MANIFEST_APP_LOCAL_3:
-		/* App manifest.
-		* TODO - implement verification for NRF_PROCESSOR_ID_PPR(13) and
-		* NRF_PROCESSOR_ID_FLPR(14) support(based on UICR) NCSDK-26006
-		*/
+		/* App manifest */
 		if (NRF_PROCESSOR_APPLICATION == processor_id) {
 			/* Appcore */
 			return SUIT_PLAT_SUCCESS;
@@ -293,10 +290,7 @@ mci_err_t suit_mci_processor_start_rights_validate(const suit_manifest_class_id_
 	case SUIT_MANIFEST_RAD_RECOVERY:
 	case SUIT_MANIFEST_RAD_LOCAL_1:
 	case SUIT_MANIFEST_RAD_LOCAL_2:
-		/* Rad manifest
-		* TODO - implement verification for NRF_PROCESSOR_ID_PPR(13) and
-		* NRF_PROCESSOR_ID_FLPR(14) support(based on UICR) NCSDK-26006
-		*/
+		/* Rad manifest */
 		if (NRF_PROCESSOR_RADIOCORE == processor_id) {
 			/* Radiocore */
 			return SUIT_PLAT_SUCCESS;
