@@ -19,6 +19,12 @@
 #define STACKSIZE	(1024)
 #endif
 
+#ifdef CONFIG_COVERAGE
+#define MAX_CALCULATIONS	(6)
+#else
+#define MAX_CALCULATIONS	(65535)
+#endif
+
 static const struct gpio_dt_spec pin_send =
 	GPIO_DT_SPEC_GET_OR(DT_NODELABEL(ipc_send_pin), gpios, {0});
 static const struct gpio_dt_spec pin_recv =
@@ -38,6 +44,8 @@ struct k_thread check_task_data;
 
 static uint32_t payload_data[(CONFIG_APP_IPC_SERVICE_MESSAGE_LEN + 3)/4];
 static struct payload *p_payload = (struct payload *) payload_data;
+
+static uint32_t run_counter = 0;
 
 static void ep_bound(void *priv)
 {
@@ -82,7 +90,7 @@ static void check_task(void *arg1, void *arg2, void *arg3)
 	unsigned long last_cnt = p_payload->cnt;
 	unsigned long delta;
 
-	while (1) {
+	while (run_counter < MAX_CALCULATIONS) {
 		k_sleep(K_MSEC(1000));
 
 		delta = p_payload->cnt - last_cnt;
@@ -91,6 +99,7 @@ static void check_task(void *arg1, void *arg2, void *arg3)
 			delta, p_payload->size, delta * CONFIG_APP_IPC_SERVICE_MESSAGE_LEN * 8);
 
 		last_cnt = p_payload->cnt;
+		run_counter++;
 	}
 }
 
@@ -136,7 +145,7 @@ int main(void)
 		NULL, NULL, NULL,
 		-1, 0, K_NO_WAIT);
 
-	while (true) {
+	while (run_counter < MAX_CALCULATIONS) {
 		if (pin_send.port) {
 			gpio_pin_set_dt(&pin_send, 1);
 		}
@@ -160,6 +169,12 @@ int main(void)
 			k_usleep(CONFIG_APP_IPC_SERVICE_SEND_INTERVAL);
 		}
 	}
+
+	while (k_thread_join(&check_task_data, K_MSEC(100)) != 0) {
+		k_sleep(K_MSEC(100));
+	}
+
+	printk("IPC-service demo has comleted\n");
 
 	return 0;
 }
