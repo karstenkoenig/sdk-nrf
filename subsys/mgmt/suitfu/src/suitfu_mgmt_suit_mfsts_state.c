@@ -119,6 +119,24 @@ int suitfu_mgmt_suit_manifest_state_read(struct smp_streamer *ctx)
 		return MGMT_ERR_EMSGSIZE;
 	}
 
+	ok = zcbor_tstr_put_term(zse, "downgrade_prevention_policy") &&
+		 zcbor_uint32_put(zse, class_info.downgrade_prevention_policy);
+	if (!ok) {
+		return MGMT_ERR_EMSGSIZE;
+	}
+
+	ok = zcbor_tstr_put_term(zse, "independent_updateability_policy") &&
+		 zcbor_uint32_put(zse, class_info.independent_updateability_policy);
+	if (!ok) {
+		return MGMT_ERR_EMSGSIZE;
+	}
+
+	ok = zcbor_tstr_put_term(zse, "signature_verification_policy") &&
+		 zcbor_uint32_put(zse, class_info.signature_verification_policy);
+	if (!ok) {
+		return MGMT_ERR_EMSGSIZE;
+	}
+
 	digest.mem = digest_buf;
 	digest.size = sizeof(digest_buf);
 
