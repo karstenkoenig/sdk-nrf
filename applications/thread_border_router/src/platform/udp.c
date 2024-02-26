@@ -60,8 +60,8 @@ static void udp_received_cb(struct net_context *context, struct net_pkt *pkt,
 	msg_settings.mLinkSecurityEnabled = false;
 	msg_settings.mPriority = OT_MESSAGE_PRIORITY_NORMAL;
 
-	net_ipaddr_copy(msg_info.mSockAddr.mFields.m8, ip_hdr->ipv6->dst);
-	net_ipaddr_copy(msg_info.mPeerAddr.mFields.m8, ip_hdr->ipv6->src);
+	memcpy(msg_info.mSockAddr.mFields.m8, ip_hdr->ipv6->dst, NET_IPV6_ADDR_SIZE);
+	memcpy(msg_info.mPeerAddr.mFields.m8, ip_hdr->ipv6->src, NET_IPV6_ADDR_SIZE);
 
 	msg_info.mPeerPort = ntohs(proto_hdr->udp->src_port);
 	msg_info.mSockPort = ntohs(proto_hdr->udp->dst_port);
@@ -89,6 +89,7 @@ static void udp_received_cb(struct net_context *context, struct net_pkt *pkt,
 	} while (len && error == OT_ERROR_NONE && res == 0);
 
 	if (error == OT_ERROR_NONE) {
+		LOG_DBG("udp_received_ch() - passing message to OT stack");
 		socket->mHandler(socket->mContext, msg, &msg_info);
 	}
 

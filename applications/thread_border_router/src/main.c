@@ -39,6 +39,9 @@ LOG_MODULE_REGISTER(nrf_tbr, CONFIG_NRF_TBR_LOG_LEVEL);
 
 #define WIFI_MGMT_EVENTS (NET_EVENT_WIFI_CONNECT_RESULT)
 
+#define SUBSCRIBED_NET_EVENTS NET_EVENT_IPV6_DAD_SUCCEED | NET_EVENT_IPV6_ADDR_ADD | \
+			      NET_EVENT_IPV6_ADDR_DEL
+
 #define MAC_IPV6_MCAST_BYTE0 0x33
 #define MAC_IPV6_MCAST_BYTE1 0x33
 
@@ -124,16 +127,33 @@ static bool filter_mcast_loopback(struct npf_test *test, struct net_pkt *pkt)
 
 #endif /* defined(CONFIG_WIFI_NRF700X) */
 
+static inline void handle_dad_succeed(void)
+{
+	struct in6_addr *addr = net_if_ipv6_get_ll(context->backbone_iface, NET_ADDR_PREFERRED);
+
+	if (addr) {
+		LOG_DBG("IPv6 Link-Local address ready");
+		context->ll_addr = addr;
+		k_sem_give(&ll_addr_wait);
+	}
+}
+
 static void net_ev_cb_handler(struct net_mgmt_event_callback *cb,
 			      uint32_t mgmt_event, struct net_if *iface)
 {
 	if (context->backbone_iface == iface) {
-		struct in6_addr *addr = net_if_ipv6_get_ll(iface, NET_ADDR_PREFERRED);
-
-		if (addr) {
-			LOG_DBG("IPv6 Link-Local address ready");
-			context->ll_addr = addr;
-			k_sem_give(&ll_addr_wait);
+		switch(mgmt_event) {
+		case NET_EVENT_IPV6_DAD_SUCCEED:
+			handle_dad_succeed();
+			break;
+		case NET_EVENT_IPV6_ADDR_ADD:
+			border_agent_handle_address_event((const struct in6_addr *)cb->info, true);
+			break;
+		case NET_EVENT_IPV6_ADDR_DEL:
+			border_agent_handle_address_event((const struct in6_addr *)cb->info, false);
+			break;
+		default:
+			break;
 		}
 	}
 }
@@ -212,11 +232,10 @@ static int init_application(void)
 	infra_if_init();
 	mdns_server_init();
 	dns_sd_init();
+	border_agent_init();
 	backbone_agent_init();
 
-	net_mgmt_init_event_callback(&net_event_cb,
-				     net_ev_cb_handler,
-				     NET_EVENT_IPV6_DAD_SUCCEED);
+	net_mgmt_init_event_callback(&net_event_cb, net_ev_cb_handler, SUBSCRIBED_NET_EVENTS);
 	net_mgmt_add_event_callback(&net_event_cb);
 
 	return init_backbone_iface();
@@ -320,7 +339,7 @@ int main(void)
 		LOG_ERR("Failed to start mDNS sever: %d", err);
 	}
 
-	border_agent_init();
+	border_agent_start();
 
 	/* Let Border Routing Manager controls when SRP server
 	 * should be enabled or disabled.

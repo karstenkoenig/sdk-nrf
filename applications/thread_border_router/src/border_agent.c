@@ -5,7 +5,7 @@
  */
 
 /** @file
- * @brief nRF Thread Border Router's main function
+ * @brief nRF Thread Border Router's Border Agent's functions
  */
 
 #include <string.h>
@@ -16,14 +16,17 @@
 #include <openthread/thread.h>
 
 #include <zephyr/net/net_config.h>
-#include <zephyr/net/socket.h>
 #include <zephyr/net/openthread.h>
+#include <zephyr/net/socket.h>
 #include <zephyr/sys/byteorder.h>
 
 #include "backbone/backbone_agent.h"
-#include "mdns_publisher.h"
+#include "net/dns_sd.h"
+#include "tbr.h"
 
 LOG_MODULE_DECLARE(nrf_tbr, CONFIG_NRF_TBR_LOG_LEVEL);
+
+#define TXT_BUFFER_SIZE 255
 
 #define UPDATE_MESHCOP_FLAGS OT_CHANGED_THREAD_ROLE \
 	| OT_CHANGED_THREAD_EXT_PANID		    \
@@ -34,22 +37,24 @@ LOG_MODULE_DECLARE(nrf_tbr, CONFIG_NRF_TBR_LOG_LEVEL);
 #define BA_VENDOR_NAME  CONFIG_NRF_TBR_VENDOR_NAME
 #define BA_PRODUCT_NAME CONFIG_NRF_TBR_PRODUCT_NAME
 #define BA_SERVICE      "_meshcop"
-#define BA_PROTO        "_udp"
-#define BA_DOMAIN       "local"
+#define BA_SERVICE_TTL  120
 #define BA_DUMMY_PORT   0
 
 #define BA_INSTANCE_NAME BA_VENDOR_NAME "-" BA_PRODUCT_NAME
+
+#define BA_AAAA_RECORD_NAME BA_INSTANCE_NAME ".local"
+#define BA_MAX_AAAA_RECORDS CONFIG_NRF_TBR_MAX_BORDER_AGENT_AAAA_RECORDS
 
 #define OT_THREAD_VERSION_1_1 2
 #define OT_THREAD_VERSION_1_2 3
 #define OT_THREAD_VERSION_1_3 4
 
-#define INVALID_FD -1
-
 #define OT_INSTANCE openthread_get_default_instance()
 
 #define TIMESTAMP_TICKS_POS     1
 #define TIMESTAMP_SEC_POS       16
+
+#define ACCESS_TIMEOUT 500
 
 /* For ot-br-posix compatibility:
  *   -----------------------------------
@@ -72,10 +77,19 @@ LOG_MODULE_DECLARE(nrf_tbr, CONFIG_NRF_TBR_LOG_LEVEL);
 #define FLAG_SET_IFACE_STATUS(_f, _s)        (_f |= ((_s & BIT_MASK(2)) << IFACE_STATUS_POS))
 #define FLAG_SET_AVAILABILITY(_f, _a)        (_f |= ((_a & BIT_MASK(2)) << AVAILABILITY_POS))
 
-static int service_fd;
-static struct mdns_publisher_rec *service_rec;
-
 typedef int (*value_encoder)(char *, size_t);
+
+struct tbr_address_info {
+	const struct in6_addr *address;
+	struct mdns_record_handle *record;
+};
+
+static struct tbr_address_info addr_infos[BA_MAX_AAAA_RECORDS];
+static size_t addr_info_count;
+
+K_MUTEX_DEFINE(ba_mutex);
+
+static struct dns_sd_service_handle *ba_service;
 
 enum {
 	CONNECTION_MODE_DISABLED        = 0,
@@ -95,41 +109,6 @@ enum {
 	AVAILABILITY_INFREQUENT = 0,
 	AVAILABILITY_HIGH       = 1
 };
-
-static void handle_port_update()
-{
-	static struct sockaddr server_addr;
-	char addrstr[INET_ADDRSTRLEN];
-	int r;
-
-	net_sin(&server_addr)->sin_family = AF_INET;
-	net_sin(&server_addr)->sin_addr.s_addr = INADDR_ANY;
-	net_sin(&server_addr)->sin_port = service_rec->port;
-
-	r = socket(server_addr.sa_family, SOCK_DGRAM, IPPROTO_UDP);
-
-	if (r == -1) {
-		LOG_DBG("socket() failed (%s)", strerror(errno));
-		return;
-	}
-
-	service_fd = r;
-
-	r = bind(service_fd, &server_addr, sizeof(server_addr));
-
-	if (r == -1) {
-		LOG_DBG("bind() failed (%s)", strerror(errno));
-		close(service_fd);
-		return;
-	}
-
-	service_rec->port = net_sin(&server_addr)->sin_port;
-
-	inet_ntop(server_addr.sa_family, &net_sin(&server_addr)->sin_addr,
-		  addrstr, sizeof(addrstr));
-	LOG_DBG("bound to [%s]:%u",
-		addrstr, ntohs(net_sin(&server_addr)->sin_port));
-}
 
 static int encode_value(char *buffer, size_t max, const char *key,
 			size_t key_len, const char *value, size_t value_len)
@@ -216,10 +195,7 @@ static int encode_state(char *buffer, size_t max)
 {
 	uint32_t flags = 0;
 	int if_status;
-
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 	otBackboneRouterState bbr_state = otBackboneRouterGetState(OT_INSTANCE);
-#endif
 
 	switch (otThreadGetDeviceRole(OT_INSTANCE)) {
 	case OT_DEVICE_ROLE_DISABLED:
@@ -236,12 +212,10 @@ static int encode_state(char *buffer, size_t max)
 	FLAG_SET_IFACE_STATUS(flags, if_status);
 	FLAG_SET_AVAILABILITY(flags, AVAILABILITY_HIGH);
 
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 	flags |= (if_status == INTERFACE_STATUS_ACTIVE &&
 		  bbr_state != OT_BACKBONE_ROUTER_STATE_DISABLED) << BBR_ACTIVE_POS;
 	flags |= (if_status == INTERFACE_STATUS_ACTIVE &&
 		  bbr_state == OT_BACKBONE_ROUTER_STATE_PRIMARY) << BBR_PRIMARY_POS;
-#endif
 
 	flags = sys_cpu_to_be32(flags);
 
@@ -272,7 +246,6 @@ static int encode_active_timestamp(char *buffer, size_t max)
 			    sizeof(active_ts));
 }
 
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 static int encode_bbr_entries(char *buffer, size_t max)
 {
 	int res;
@@ -280,7 +253,7 @@ static int encode_bbr_entries(char *buffer, size_t max)
 	otBackboneRouterConfig config;
 	const char *name;
 	size_t val_len;
-	uint16_t port = htons(BACKBONE_AGENT_BBR_PORT);
+	uint16_t port = htons(TBR_BACKBONE_AGENT_BBR_PORT);
 	otBackboneRouterState state = otBackboneRouterGetState(OT_INSTANCE);
 
 	if (state != OT_BACKBONE_ROUTER_STATE_DISABLED) {
@@ -321,8 +294,6 @@ static int encode_bbr_entries(char *buffer, size_t max)
 	return encoded + res;
 }
 
-#endif
-
 static int encode_omr_entry(char *buffer, size_t max)
 {
 	otIp6Prefix omrPrefix;
@@ -344,18 +315,20 @@ static int encode_omr_entry(char *buffer, size_t max)
 
 static void update_meshcop_service()
 {
-	char buff[MDNS_PUBLISHER_TXT_LEN];
+	char buff[TXT_BUFFER_SIZE];
 	int n = 0;
 	int res = 0;
-	uint16_t port = BA_DUMMY_PORT;
+	struct dns_sd_service_info_in service_info;
 
-	if (!service_rec) {
-		mdns_publisher_record_alloc(&service_rec);
+	/* There are no backbone IPv6 addresses to be advertised */
+	if (addr_info_count == 0) {
+		return;
+	}
 
-		if (!service_rec) {
-			LOG_ERR("Failed to allocate mDNS record");
-			return;
-		}
+	memset(&service_info, 0, sizeof(struct dns_sd_service_info_in));
+
+	if (ba_service) {
+		dns_sd_service_unpublish(ba_service, K_FOREVER);
 	}
 
 	/* encode elements: */
@@ -368,16 +341,13 @@ static void update_meshcop_service()
 		encode_ext_address,
 		encode_state,
 		encode_active_timestamp,
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 		encode_bbr_entries,
-#endif
 		encode_omr_entry,
 		NULL,
 	};
 
 	for (size_t i = 0; encoders[i] != NULL; ++i) {
-		res = encoders[i](&buff[n], MDNS_PUBLISHER_TXT_LEN - n);
-
+		res = encoders[i](&buff[n], sizeof(buff) - n);
 		if (res < 0) {
 			LOG_ERR("Failed to encode TXT record, encoder: %p", &encoders[i]);
 			return;
@@ -386,23 +356,100 @@ static void update_meshcop_service()
 		n += res;
 	}
 
+	service_info.ttl = BA_SERVICE_TTL;
+	service_info.instance = BA_INSTANCE_NAME;
+	service_info.service = BA_SERVICE;
+	service_info.subtype = NULL;
+	service_info.proto = DNS_SD_SERVICE_PROTO_UDP;
+	service_info.weight = 0;
+	service_info.priority = 0;
+	service_info.port = BA_DUMMY_PORT;
+	service_info.txt_data = buff;
+	service_info.txt_data_len = n;
+	service_info.target = addr_infos[0].record;
+
 	/* When Thread interface is disabled we keep using dummy port so service
 	 * status can be advertised
 	 */
 	if (otBorderAgentGetState(OT_INSTANCE) != OT_BORDER_AGENT_STATE_STOPPED) {
-		port = otBorderAgentGetUdpPort(OT_INSTANCE);
+		service_info.port = otBorderAgentGetUdpPort(OT_INSTANCE);
 	}
 
-	/* If the port differs we need to bind the new and close the previous
-	 * one. The port must be bound or the mDNS responder will drop requests.
-	 */
-	if (port != service_rec->port || port == 0) {
-		handle_port_update();
-		port = service_rec->port;
+	if (dns_sd_service_publish(&service_info, K_FOREVER, &ba_service) < 0) {
+		LOG_ERR("Failed to publish Border Agent service");
+	}
+}
+
+static struct tbr_address_info *find_address_info(const struct in6_addr *addr)
+{
+	struct in6_addr rec_addr;
+
+	for (int i = 0; i < addr_info_count; ++i) {
+		if (mdns_record_get_rdata_aaaa(addr_infos[i].record, &rec_addr, K_FOREVER) < 0) {
+			LOG_WRN("Failed to read mDNS record info");
+
+			return NULL;
+		}
+
+		if (memcmp(addr, &rec_addr, sizeof(struct in6_addr)) == 0) {
+			return &addr_infos[i];
+		}
 	}
 
-	mdns_publisher_record_update(service_rec, BA_INSTANCE_NAME, BA_SERVICE,
-				     BA_PROTO, BA_DOMAIN, buff, n, port);
+	return NULL;
+}
+
+static void add_address_info(const struct in6_addr *addr)
+{
+	struct tbr_address_info *info;
+	int err;
+	char addr_str[INET6_ADDRSTRLEN];
+
+	if (addr_info_count == BA_MAX_AAAA_RECORDS) {
+		LOG_WRN("Reached maximum number of the records");
+		return;
+	}
+
+	info = &addr_infos[addr_info_count];
+	info->address = addr;
+
+	err = mdns_record_add_aaaa(BA_AAAA_RECORD_NAME, sizeof(BA_AAAA_RECORD_NAME) - 1,
+				   BA_SERVICE_TTL, addr, K_FOREVER, &info->record);
+
+	inet_ntop(AF_INET6, addr, addr_str, sizeof(addr_str));
+
+	if (err < 0) {
+		LOG_DBG("Failed to allocate mDNS record for addr: %s, err: %d", addr_str, err);
+		return;
+	}
+
+	LOG_DBG("Added AAAA record for addr: %s (%p)", addr_str, addr);
+
+	if (addr_info_count > 0) {
+		mdns_link_records(addr_infos[addr_info_count - 1].record, info->record, K_FOREVER);
+	}
+
+	addr_info_count++;
+}
+
+static void remove_address_info(struct tbr_address_info *info)
+{
+	int res;
+
+	res = mdns_record_remove(info->record, K_FOREVER);
+
+	/* If we cannot remove the record with K_FOREVER we are facing something really bad */
+	__ASSERT(res == 0, "Failed to remove mDNS record");
+
+	/* If there are any other address infos swap it with the last one */
+	if (addr_info_count > 1) {
+		memcpy(info, &addr_infos[addr_info_count], sizeof(struct tbr_address_info));
+		memset(&addr_infos[addr_info_count], 0, sizeof(struct tbr_address_info));
+	} else {
+		memset(info, 0, sizeof(struct tbr_address_info));
+	}
+
+	addr_info_count--;
 }
 
 static void on_thread_state_changed(otChangedFlags flags, struct openthread_context *ot_context,
@@ -417,14 +464,50 @@ static struct openthread_state_changed_cb ot_state_chaged_cb = {
 	.state_changed_cb = on_thread_state_changed
 };
 
+void border_agent_handle_address_event(const struct in6_addr *addr, bool is_added)
+{
+	struct tbr_address_info *info;
+
+	if (net_ipv6_is_ll_addr(addr)) {
+		/* Link-Local addresses are ignored */
+		return;
+	}
+
+	k_mutex_lock(&ba_mutex, K_FOREVER);
+
+	info = find_address_info(addr);
+
+	if (!info && is_added) {
+		add_address_info(addr);
+	} else if (info && !is_added) {
+		remove_address_info(info);
+	}
+
+	k_mutex_unlock(&ba_mutex);
+}
+
 void border_agent_init(void)
 {
-	service_fd = INVALID_FD;
-	service_rec = NULL;
+	addr_info_count = 0;
+	ba_service = NULL;
 
-	mdns_publisher_init();
+	memset(addr_infos, 0, sizeof(addr_infos));
+}
+
+void border_agent_start(void)
+{
+	const struct tbr_context *ctx = tbr_get_context();
+	struct net_if_addr *addresses = ctx->backbone_iface->config.ip.ipv6->unicast;
+
+	for (int i = 0; i < NET_IF_MAX_IPV6_ADDR; ++i) {
+		if (addresses[i].address.family == AF_INET6 &&
+		    addresses[i].addr_state == NET_ADDR_PREFERRED && addresses[i].is_used) {
+			border_agent_handle_address_event(&addresses[i].address.in6_addr, true);
+		}
+	}
+
 	update_meshcop_service();
 	openthread_state_changed_cb_register(openthread_get_default_context(), &ot_state_chaged_cb);
 
-	LOG_INF("Border Agent initialized");
+	LOG_INF("Border Agent started");
 }

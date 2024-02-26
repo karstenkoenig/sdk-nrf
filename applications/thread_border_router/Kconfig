@@ -75,6 +75,12 @@ config NRF_TBR_ND_PROXY_ENTRY_COUNT
     help
       Maximum number of addresses that can be handled by ND Proxy module
 
+config NRF_TBR_MAX_BORDER_AGENT_AAAA_RECORDS
+    int "Maximum number of Border Agent's AAAA records"
+    default 4
+    help
+       Maximum number of AAAA records that can be allocated by Thread Border Agent
+
 source "${ZEPHYR_BASE}/../nrf/applications/thread_border_router/Kconfig.defaults"
 
 menu "Zephyr Kernel"
