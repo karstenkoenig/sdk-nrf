@@ -108,33 +108,33 @@ typedef suit_uuid_t suit_manifest_class_id_t;
 /** Downgrade prevention policy for the manifest */
 typedef enum {
 	/** No downgrade prevention. */
-	SUIT_DOWNGRADE_PREVENTION_DISABLED = 0,
+	SUIT_DOWNGRADE_PREVENTION_DISABLED = 1,
 	/** Update forbidden if candidate version is lower than installed version */
-	SUIT_DOWNGRADE_PREVENTION_ENABLED = 1,
+	SUIT_DOWNGRADE_PREVENTION_ENABLED = 2,
 	/** Unknown downgrade prevention policy */
-	SUIT_DOWNGRADE_PREVENTION_UNKNOWN = 2,
+	SUIT_DOWNGRADE_PREVENTION_UNKNOWN = 3,
 } suit_downgrade_prevention_policy_t;
 
 /** Policy determining if the manifest can be updated independently from its parent */
 typedef enum {
 	/** Independent update is forbidden. */
-	SUIT_INDEPENDENT_UPDATE_DENIED = 0,
+	SUIT_INDEPENDENT_UPDATE_DENIED = 1,
 	/** Independent update is allowed. */
-	SUIT_INDEPENDENT_UPDATE_ALLOWED = 1,
+	SUIT_INDEPENDENT_UPDATE_ALLOWED = 2,
 	/** Unknown independent updateability policy. */
-	SUIT_INDEPENDENT_UPDATE_UNKNOWN = 2,
+	SUIT_INDEPENDENT_UPDATE_UNKNOWN = 3,
 } suit_independent_updateability_policy_t;
 
 /** Manifest signature verification policy */
 typedef enum {
 	/** Do not verify the manifest signature */
-	SUIT_SIGNATURE_CHECK_DISABLED = 0,
+	SUIT_SIGNATURE_CHECK_DISABLED = 1,
 	/** Verify the manifest signature only when performing update */
-	SUIT_SIGNATURE_CHECK_ENABLED_ON_UPDATE = 1,
+	SUIT_SIGNATURE_CHECK_ENABLED_ON_UPDATE = 2,
 	/** Verify the manifest signature only both when performing update and when booting */
-	SUIT_SIGNATURE_CHECK_ENABLED_ON_UPDATE_AND_BOOT = 2,
+	SUIT_SIGNATURE_CHECK_ENABLED_ON_UPDATE_AND_BOOT = 3,
 	/** Unknown signature verification policy */
-	SUIT_SIGNATURE_CHECK_UNKNOWN = 3,
+	SUIT_SIGNATURE_CHECK_UNKNOWN = 4,
 } suit_signature_verification_policy_t;
 
 typedef struct {
