@@ -60,6 +60,36 @@ bool suit_memory_global_address_is_in_nvm(uintptr_t address);
 bool suit_memory_global_address_range_is_in_nvm(uintptr_t address, size_t size);
 
 /**
+ * @brief Check if global address pointer is in RAM region.
+ *
+ * @param address Global address pointer.
+ *
+ * @return True if global address pointer belongs to RAM region, false otherwise.
+ */
+bool suit_memory_global_address_is_in_ram(uintptr_t address);
+
+/**
+ * @brief Convert global address to RAM address.
+ *
+ * This function is relevant only on simulated platforms. Otherwise its an identity.
+ *
+ * @param address Global address pointer.
+ *
+ * @return RAM address.
+ */
+uintptr_t suit_memory_global_address_to_ram_address(uintptr_t address);
+
+/**
+ * @brief Check if global address range is in the same RAM region.
+ *
+ * @param address Global address pointer.
+ * @param size Region size.
+ *
+ * @return True if global address pointer belongs to RAM region, false otherwise.
+ */
+bool suit_memory_global_address_range_is_in_ram(uintptr_t address, size_t size);
+
+/**
  * @brief Check if global address is in external memory region.
  *
  * @param address Global address pointer.

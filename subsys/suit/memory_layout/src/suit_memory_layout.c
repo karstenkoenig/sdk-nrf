@@ -54,6 +54,46 @@ static const struct nvm_area nvm_area_map[] = {
 	},
 };
 
+struct ram_area {
+	uintptr_t ra_start;
+	size_t ra_size;
+};
+
+/* List of RAM memories accessible for ram_sink */
+static struct ram_area ram_area_map[] = {
+#if (DT_NODE_EXISTS(DT_NODELABEL(ram0x))) /* nrf54H20 */
+	{
+		.ra_start = DT_REG_ADDR(DT_NODELABEL(ram0x)),
+		.ra_size = DT_REG_SIZE(DT_NODELABEL(ram0x)),
+	},
+#endif					  /* ram0x */
+#if (DT_NODE_EXISTS(DT_NODELABEL(ram20))) /* nrf54H20 */
+	{
+		.ra_start = DT_REG_ADDR(DT_NODELABEL(ram20)),
+		.ra_size = DT_REG_SIZE(DT_NODELABEL(ram20)),
+	},
+#endif					  /* ram20 */
+#if (DT_NODE_EXISTS(DT_NODELABEL(sram0))) /* nrf52 or simulator */
+	{
+		.ra_start = DT_REG_ADDR(DT_NODELABEL(sram0)),
+		.ra_size = DT_REG_SIZE(DT_NODELABEL(sram0)),
+	},
+#endif /* sram0 */
+};
+
+/* In case of tests on native_posix RAM emulation is used and visible below
+ * mem_for_sim_ram is used as the buffer for emulation. It is here to allow not only
+ * write but also read operations with emulated RAM. Address is translated to point to
+ * the buffer. Size is taken from dts so it is required that the sram0 node is defined.
+ */
+#if (DT_NODE_EXISTS(DT_NODELABEL(sram0))) && defined(CONFIG_BOARD_NATIVE_POSIX)
+#define SIM_RAM_SIZE DT_REG_SIZE(DT_NODELABEL(sram0))
+#else
+#define SIM_RAM_SIZE 0
+#endif
+
+static uint8_t mem_for_sim_ram[SIM_RAM_SIZE];
+
 static uintptr_t area_address_get(const struct nvm_area *area)
 {
 	if (IS_ENABLED(CONFIG_FLASH_SIMULATOR)) {
@@ -77,6 +117,18 @@ static const struct nvm_area *find_area(uintptr_t address)
 		if (address_in_area(address, area_address_get(&nvm_area_map[i]),
 				    nvm_area_map[i].na_size)) {
 			return &nvm_area_map[i];
+		}
+	}
+
+	return NULL;
+}
+
+static const struct ram_area *find_ram_area(uintptr_t address)
+{
+	for (int i = 0; i < ARRAY_SIZE(ram_area_map); i++) {
+		if (address_in_area(address, (uintptr_t)ram_area_map[i].ra_start,
+				    ram_area_map[i].ra_size)) {
+			return &ram_area_map[i];
 		}
 	}
 
@@ -131,6 +183,40 @@ bool suit_memory_global_address_range_is_in_nvm(uintptr_t address, size_t size)
 {
 	const struct nvm_area *start = find_area(address);
 	const struct nvm_area *end = find_area(address + size);
+
+	return start != NULL && start == end;
+}
+
+bool suit_memory_global_address_is_in_ram(uintptr_t address)
+{
+	if (IS_ENABLED(CONFIG_BOARD_NATIVE_POSIX)) {
+		return !suit_memory_global_address_is_in_nvm(address);
+	}
+
+	return find_ram_area(address) != NULL;
+}
+
+uintptr_t suit_memory_global_address_to_ram_address(uintptr_t address)
+{
+	if (IS_ENABLED(CONFIG_BOARD_NATIVE_POSIX) && DT_NODE_EXISTS(DT_NODELABEL(sram0))) {
+		const struct ram_area *area = find_ram_area(address);
+		if (area) {
+			uintptr_t offset = address - area->ra_start;
+			return (uintptr_t)mem_for_sim_ram + offset;
+		}
+	}
+
+	return address;
+}
+
+bool suit_memory_global_address_range_is_in_ram(uintptr_t address, size_t size)
+{
+	if (IS_ENABLED(CONFIG_BOARD_NATIVE_POSIX)) {
+		return !suit_memory_global_address_range_is_in_nvm(address, size);
+	}
+
+	const struct ram_area *start = find_ram_area(address);
+	const struct ram_area *end = find_ram_area(address + size);
 
 	return start != NULL && start == end;
 }

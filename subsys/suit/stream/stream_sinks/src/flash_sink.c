@@ -7,7 +7,6 @@
 #include <zephyr/logging/log.h>
 #include <flash_sink.h>
 #include <zephyr/drivers/flash.h>
-#include <suit_plat_mem_util.h>
 #include <suit_memory_layout.h>
 
 #if defined(CONFIG_SOC_FLASH_NRF_MRAM_ONE_BYTE_WRITE_ACCESS)

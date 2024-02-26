@@ -89,30 +89,3 @@ uint8_t *suit_plat_mem_nvm_ptr_get(uintptr_t offset)
 
 	return suit_plat_mem_ptr_get(address);
 }
-
-
-/* In case of tests on native_posix RAM emulation is used and visible below
- * mem_for_sim_ram is used as the buffer for emulation. It is here to allow not only
- * write but also read operations with emulated RAM. Address is translated to point to
- * the buffer. Size is taken from dts so it is required that the sram0 node is defined.
- */
-#if (DT_NODE_EXISTS(DT_NODELABEL(sram0))) && defined(CONFIG_BOARD_NATIVE_POSIX)
-uint8_t mem_for_sim_ram[DT_REG_SIZE(DT_NODELABEL(sram0))];
-#endif
-
-uint8_t *suit_plat_mem_ram_address_get(uint8_t *address)
-{
-#if (DT_NODE_EXISTS(DT_NODELABEL(sram0))) && defined(CONFIG_BOARD_NATIVE_POSIX)
-	if (((uintptr_t)address >= (DT_REG_ADDR(DT_NODELABEL(sram0)))) &&
-			((uintptr_t)address < (DT_REG_ADDR(DT_NODELABEL(sram0)) +
-											DT_REG_SIZE(DT_NODELABEL(sram0))))) {
-		uintptr_t offset = (uintptr_t)address - DT_REG_ADDR(DT_NODELABEL(sram0));
-
-		return (uint8_t *)(mem_for_sim_ram + offset);
-	}
-
-	return NULL;
-#else
-	return (uint8_t *)address;
-#endif
-}

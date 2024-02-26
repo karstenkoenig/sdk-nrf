@@ -10,7 +10,6 @@
 #include <errno.h>
 #include <dfu_cache_rw.h>
 #include <zephyr/drivers/flash.h>
-#include <suit_plat_mem_util.h>
 
 LOG_MODULE_REGISTER(suit_cache_sink, CONFIG_SUIT_LOG_LEVEL);
 
