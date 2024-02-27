@@ -171,7 +171,13 @@ bool suit_memory_nvm_address_to_global_address(struct nvm_address *address, uint
 
 	const struct nvm_area *area = find_area_by_device(address->fdev);
 
-	return area_address_get(area) + address->offset;
+	if (area == NULL) {
+		return false;
+	}
+
+	*result = area_address_get(area) + address->offset;
+
+	return true;
 }
 
 bool suit_memory_global_address_is_in_nvm(uintptr_t address)
