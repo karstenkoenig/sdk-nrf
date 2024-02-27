@@ -8,6 +8,7 @@
 #include <suit_storage_mpi.h>
 #include <suit_execution_mode.h>
 #include <lcs.h>
+#include <zephyr/logging/log.h>
 
 #define MANIFEST_PUBKEY_NRF_TOP_GEN0		0x4000BB00
 #define MANIFEST_PUBKEY_SYSCTRL_GEN0		0x40082100
@@ -15,6 +16,8 @@
 #define MANIFEST_PUBKEY_APPLICATION_GEN0	0x40022100
 #define MANIFEST_PUBKEY_RADIO_GEN0			0x40032100
 #define MANIFEST_PUBKEY_GEN_RANGE 			2
+
+LOG_MODULE_REGISTER(suit_mci_nrf54h20, CONFIG_SUIT_LOG_LEVEL);
 
 mci_err_t suit_mci_supported_manifest_class_ids_get(suit_manifest_class_info_t *class_info,
 						    size_t *size)
@@ -129,18 +132,8 @@ mci_err_t suit_mci_manifest_class_id_validate(const suit_manifest_class_id_t *cl
 	return SUIT_PLAT_SUCCESS;
 }
 
-mci_err_t suit_mci_signing_key_id_validate(const suit_manifest_class_id_t *class_id,
-					   uint32_t key_id)
+static bool skip_validation(suit_manifest_role_t role)
 {
-	if (NULL == class_id) {
-		return SUIT_PLAT_ERR_INVAL;
-	}
-
-	suit_manifest_role_t role = SUIT_MANIFEST_UNKNOWN;
-	if (SUIT_PLAT_SUCCESS != suit_storage_mpi_role_get(class_id, &role)) {
-		return MCI_ERR_MANIFESTCLASSID;
-	}
-
 #ifdef CONFIG_SDFW_LCS
 	/* Read the domain-specific LCS value. */
 	enum lcs current_lcs = LCS_DISCARDED;
@@ -149,6 +142,14 @@ mci_err_t suit_mci_signing_key_id_validate(const suit_manifest_class_id_t *class
 	case SUIT_MANIFEST_SEC_SDFW:
 	case SUIT_MANIFEST_SEC_SYSCTRL:
 		current_lcs = lcs_get(LCS_DOMAIN_ID_SECURE);
+
+		/* TODO:
+		 * NCSDK-26255
+		 * Once keys are provisioned, validation skip for Secure domain should be disabled.
+		 * return false;
+		 */
+
+		LOG_WRN("SUIT: Validation skip is enabled for Secure domain.");
 		break;
 
 	case SUIT_MANIFEST_APP_ROOT:
@@ -166,20 +167,35 @@ mci_err_t suit_mci_signing_key_id_validate(const suit_manifest_class_id_t *class
 		break;
 
 	default:
-		break;
+		return false;
+	}
+
+	if ((current_lcs == LCS_ROT) ||
+		 (current_lcs == LCS_ROT_DEBUG) ||
+		 (current_lcs == LCS_EMPTY)) {
+		return true;
 	}
 #endif /* CONFIG_SDFW_LCS */
 
+	return false;
+}
+
+mci_err_t suit_mci_signing_key_id_validate(const suit_manifest_class_id_t *class_id,
+					   uint32_t key_id)
+{
+	if (NULL == class_id) {
+		return SUIT_PLAT_ERR_INVAL;
+	}
+
+	suit_manifest_role_t role = SUIT_MANIFEST_UNKNOWN;
+	if (SUIT_PLAT_SUCCESS != suit_storage_mpi_role_get(class_id, &role)) {
+		return MCI_ERR_MANIFESTCLASSID;
+	}
+
 	if (key_id == 0) {
-#ifdef CONFIG_SDFW_LCS
-		/* Check if LCS requires to skip signature check.
-		 * Temporarily skip signature verification in LCS_ROT and LCS_ROT_DEBUG.
-		 * Condition to be described and implemented in NCSDK-25998.
-		 */
-		if ((current_lcs == LCS_ROT) || (current_lcs == LCS_ROT_DEBUG)) {
+		if (skip_validation(role)) {
 			return SUIT_PLAT_SUCCESS;
 		}
-#endif /* CONFIG_SDFW_LCS */
 
 		suit_storage_mpi_t *mpi;
 		if (SUIT_PLAT_SUCCESS != suit_storage_mpi_get(class_id, &mpi)) {
