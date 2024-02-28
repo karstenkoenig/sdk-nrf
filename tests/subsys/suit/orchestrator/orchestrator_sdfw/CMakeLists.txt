@@ -9,7 +9,12 @@ cmake_minimum_required(VERSION 3.20.0)
 find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 
 project(integration_test_suit_orchestrator)
-include(../cmake/test_template.cmake)
+include(../../cmake/test_template.cmake)
+
+FILE(GLOB manifest_sources ../manifest/src/*.c)
+target_sources(app PRIVATE
+  ${manifest_sources}
+  )
 
 # Link with the CMake target, that includes SUIT platform internal APIs header
 zephyr_library_link_libraries(suit)
