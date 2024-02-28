@@ -75,7 +75,7 @@ bool suit_memory_global_address_is_in_external_memory(uintptr_t address);
  *
  * @return True if address range is in external memory region, false otherwise.
  */
-bool suit_memory_global_address_range_is_in_external_memory(uintptr_t addres, size_t size);
+bool suit_memory_global_address_range_is_in_external_memory(uintptr_t address, size_t size);
 
 /**
  * @brief Check if address points to a region readable through regular bus transactions.
