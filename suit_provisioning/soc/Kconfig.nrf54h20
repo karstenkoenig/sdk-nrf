@@ -124,6 +124,7 @@ manifest-mpi-address=0xe1e8030
 
 menuconfig  SUIT_MPI_$(manifest)
 	bool "Radio local (1) manifest configuration"
+	default y
 
 rsource "Kconfig.template.manifest_config"
 
