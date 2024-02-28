@@ -13,10 +13,11 @@
 #include <zephyr/drivers/flash.h>
 #include <zephyr/storage/flash_map.h>
 #include <suit_plat_mem_util.h>
+#include <suit_memory_layout.h>
 
 #define DFU_PARTITION_OFFSET  FIXED_PARTITION_OFFSET(dfu_partition)
 #define FLASH_WRITE_ADDR (suit_plat_mem_nvm_ptr_get(DFU_PARTITION_OFFSET))
-#define RAM_WRITE_ADDR (suit_plat_mem_ram_address_get((uint8_t *)(0x2003EC00)))
+#define RAM_WRITE_ADDR ((uint8_t*)suit_memory_global_address_to_ram_address(0x2003EC00))
 
 static uint8_t test_data[] = {0xDE, 0xAD, 0xBE, 0xEF };
 
