@@ -12,6 +12,8 @@ declare -A envelopes=(
   ["../orchestrator/manifest/sample_zero.yaml"]="../orchestrator/manifest/src/manifest_zero_size.c"
   ["../fetch_integrated_payload_flash/manifest/manifest_52.yaml"]="../fetch_integrated_payload_flash/src/manifest_52.c"
   ["../fetch_integrated_payload_flash/manifest/manifest_54.yaml"]="../fetch_integrated_payload_flash/src/manifest_54.c"
+  ["../orchestrator/manifest/sample_valid_root_payload_fetch.yaml"]="../orchestrator/manifest/src/manifest_valid_payload_fetch.c"
+  ["../orchestrator/manifest/sample_valid_app_payload_fetch.yaml"]="../orchestrator/manifest/src/manifest_valid_payload_fetch_app.c"
 )
 
 declare -A envelopes_v2=(

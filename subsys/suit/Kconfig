@@ -79,7 +79,7 @@ config SUIT_DFU_CANDIDATE_PROCESSING_FULL
 	imply SUIT_PLATFORM
 	imply SUIT_PROCESSOR
 	imply SUIT_MPI_GENERATE
-	imply SUIT_SINK_SELECTOR # For now This should work, the only usage is for fetch_integrated returning memptr_sink - but shouldn't be needed if verify_and_get_sink is used instead?
+	imply SUIT_SINK_SELECTOR
 
 config SUIT_DFU_CANDIDATE_PROCESSING_NONE
 	bool "Disable any processing of the SUIT candidate envelope"
