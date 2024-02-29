@@ -148,30 +148,17 @@ static bool translate_partition_start_address(struct dfu_cache_partition_ext *pa
 
 static bool setup_partition_addresses(void)
 {
-	static bool initialized = false;
-
-	if (!translate_partition_start_address(&dfu_partitions_ext[0])) {
-		return false;
-	}
-
-	if (!initialized) {
-		for (size_t i = 1; i < ARRAY_SIZE(dfu_partitions_ext); i++) {
-			if (!translate_partition_start_address(&dfu_partitions_ext[i])) {
-				return false;
-			}
+	for (size_t i = 0; i < ARRAY_SIZE(dfu_partitions_ext); i++) {
+		if (!translate_partition_start_address(&dfu_partitions_ext[i])) {
+			return false;
 		}
 	}
 
-	initialized = true;
 	return true;
 }
 
 suit_plat_err_t suit_dfu_cache_rw_initialize(void *addr, size_t size)
 {
-	if (!setup_partition_addresses()) {
-		return SUIT_PLAT_ERR_OUT_OF_BOUNDS;
-	}
-
 	suit_plat_err_t ret = cache_0_update(addr, size);
 
 	if (ret != SUIT_PLAT_SUCCESS) {
@@ -231,6 +218,9 @@ suit_plat_err_t suit_dfu_cache_rw_deinitialize(void)
 	/* Reset cache pool 0 to its initial state */
 	dfu_partitions_ext[0].address = (uint8_t *)FIXED_PARTITION_OFFSET(dfu_partition);
 	dfu_partitions_ext[0].size = FIXED_PARTITION_SIZE(dfu_partition);
+	if (!translate_partition_start_address(&dfu_partitions_ext[0])) {
+		return SUIT_PLAT_ERR_OUT_OF_BOUNDS;
+	}
 
 	return ret;
 }
@@ -798,3 +788,15 @@ suit_plat_err_t suit_dfu_cache_rw_slot_drop(struct suit_cache_slot *slot)
 	LOG_ERR("Invalid argument. NULL pointer.");
 	return SUIT_PLAT_ERR_INVAL;
 }
+
+static int preinitialize(void)
+{
+	if(!setup_partition_addresses())
+	{
+		return -EIO;
+	}
+
+	return 0;
+}
+
+SYS_INIT(preinitialize, POST_KERNEL, CONFIG_KERNEL_INIT_PRIORITY_DEVICE);
