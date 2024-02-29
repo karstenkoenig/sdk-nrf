@@ -16,14 +16,14 @@
 /delete-node/ &ppr_code_partition;
 
 &mram0 {
-    reg = <0xe0a6000 DT_SIZE_K(1092)>;
+    reg = <0xe0a6000 DT_SIZE_K(1040)>;
     partitions {
         compatible = "fixed-partitions";
         #address-cells = < 0x1 >;
         #size-cells = < 0x1 >;
         slot0_partition: partition@a6000 {
             label = "image-0";
-            reg = < 0xa6000 DT_SIZE_K(1092) >;
+            reg = < 0xa6000 DT_SIZE_K(1040) >;
         };
     };
 };
