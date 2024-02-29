@@ -12,6 +12,7 @@
 #include <suit_memptr_storage.h>
 #include <generic_address_streamer.h>
 #include <digest_sink.h>
+#include <suit.h>
 
 #include <psa/crypto.h>
 
@@ -144,6 +145,40 @@ static int suit_plat_check_image_match_soc_spec(struct zcbor_string *component_i
 	return err;
 }
 
+static int suit_plat_check_image_match_mfst(suit_component_t component,
+						enum suit_cose_alg alg_id,
+						struct zcbor_string *digest)
+{
+	int ret = SUIT_ERR_UNSUPPORTED_COMPONENT_ID;
+
+	uint8_t *envelope_str;
+	size_t envelope_len;
+	struct zcbor_string manifest_digest;
+	enum suit_cose_alg alg;
+
+	ret = suit_plat_retrieve_manifest(component, &envelope_str, &envelope_len);
+	if (ret != SUIT_SUCCESS) {
+		LOG_ERR("Failed to check image digest: unable to retrieve manifest contents (handle: %p)\r\n", (void *)component);
+		return ret;
+	}
+
+	ret = suit_processor_get_manifest_metadata(envelope_str, envelope_len, false, NULL, &manifest_digest, &alg, NULL);
+	if (ret != SUIT_SUCCESS) {
+		LOG_ERR("Failed to check image digest: unable to read manifest digest (handle: %p)\r\n", (void *)component);
+		return ret;
+	}
+
+	if (alg_id != alg) {
+		LOG_ERR("Manifest digest check failed: digest algorithm does not match (handle: %p)\r\n", (void *)component);
+		ret = SUIT_FAIL_CONDITION;
+	} else if (!suit_compare_zcbor_strings(digest, &manifest_digest)) {
+		LOG_ERR("Manifest digest check failed: digest values does not match (handle: %p)\r\n", (void *)component);
+		ret = SUIT_FAIL_CONDITION;
+	}
+
+	return ret;
+}
+
 int suit_plat_check_image_match(suit_component_t component, enum suit_cose_alg alg_id,
 				struct zcbor_string *digest)
 {
@@ -183,6 +218,9 @@ int suit_plat_check_image_match(suit_component_t component, enum suit_cose_alg a
 	}
 	case SUIT_COMPONENT_TYPE_CAND_MFST:
 	case SUIT_COMPONENT_TYPE_INSTLD_MFST:
+		err = suit_plat_check_image_match_mfst(component, alg_id, digest);
+		break;
+
 	case SUIT_COMPONENT_TYPE_CACHE_POOL:
 	default: {
 		LOG_ERR("Unhandled component type: %d", component_type);

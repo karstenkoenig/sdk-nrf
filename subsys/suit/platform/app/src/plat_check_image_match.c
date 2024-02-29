@@ -154,11 +154,11 @@ int suit_plat_check_image_match(suit_component_t component, enum suit_cose_alg a
 		break;
 	}
 	case SUIT_COMPONENT_TYPE_CAND_IMG:
+	case SUIT_COMPONENT_TYPE_CAND_MFST:
 #ifdef CONFIG_SUIT_STREAM_SINK_DIGEST
 		err = suit_plat_check_image_match_mem_mapped(component, alg_id, digest);
 		break;
 #endif /* CONFIG_SUIT_STREAM_SINK_DIGEST */
-	case SUIT_COMPONENT_TYPE_CAND_MFST:
 	case SUIT_COMPONENT_TYPE_CACHE_POOL:
 	default: {
 		LOG_ERR("Unhandled component type: %d", component_type);

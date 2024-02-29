@@ -7,4 +7,8 @@
 # Include and define MOCK_* Kconfigs
 rsource "../mocks/Kconfig"
 
+config CHECK_IMAGE_MATCH_TEST
+	bool "Define and set to true to disable suit_plat_check_image_match fake"
+	default true
+
 source "Kconfig.zephyr"

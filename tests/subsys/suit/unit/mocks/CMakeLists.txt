@@ -85,3 +85,18 @@ if (CONFIG_MOCK_SUIT_PLATFORM_INTERNAL)
   target_compile_options(test_interface INTERFACE -DCONFIG_SUIT_PLATFORM)
   target_include_directories(testbinary PRIVATE ${SUIT_SUBSYS_DIR}/platform/include)
 endif()
+
+if (CONFIG_MOCK_SUIT_PLATFORM)
+  target_compile_options(test_interface INTERFACE -DCONFIG_SUIT_PLATFORM)
+  target_include_directories(testbinary PRIVATE ${SUIT_SUBSYS_DIR}/platform/include)
+endif()
+
+if (CONFIG_MOCK_DIGEST_SINK)
+  target_compile_options(test_interface INTERFACE -DCONFIG_SUIT_STREAM)
+  target_include_directories(testbinary PRIVATE ${SUIT_SUBSYS_DIR}/stream/stream_sinks/include)
+endif()
+
+if (CONFIG_MOCK_GENERIC_ADDRESS_STREAMER)
+  target_compile_options(test_interface INTERFACE -DCONFIG_SUIT_STREAM)
+  target_include_directories(testbinary PRIVATE ${SUIT_SUBSYS_DIR}/stream/stream_sources/include)
+endif()

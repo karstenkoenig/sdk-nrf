@@ -60,3 +60,12 @@ config MOCK_SUIT_MEMPTR_STORAGE
 
 config MOCK_SUIT_PLATFORM_INTERNAL
 	bool "Mock suit_platform_internal"
+
+config MOCK_SUIT_PLATFORM
+	bool "Mock suit_plat_retrieve_manifest"
+
+config MOCK_DIGEST_SINK
+	bool "Mock stream sinks"
+
+config MOCK_GENERIC_ADDRESS_STREAMER
+	bool "Mock stream sources"

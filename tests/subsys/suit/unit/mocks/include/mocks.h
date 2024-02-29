@@ -50,6 +50,18 @@
 #include <mock_suit_memptr_storage.h>
 #endif /* CONFIG_MOCK_SUIT_MEMPTR_STORAGE */
 
+#ifdef CONFIG_MOCK_SUIT_PLATFORM
+#include <mock_suit_platform.h>
+#endif /* CONFIG_MOCK_SUIT_PLATFORM */
+
+#ifdef CONFIG_MOCK_DIGEST_SINK
+#include <mock_digest_sink.h>
+#endif /* CONFIG_MOCK_DIGEST_SINK */
+
+#ifdef CONFIG_MOCK_GENERIC_ADDRESS_STREAMER
+#include <mock_generic_address_streamer.h>
+#endif /* CONFIG_MOCK_GENERIC_ADDRESS_STREAMER */
+
 static inline void mocks_reset(void)
 {
 #ifdef CONFIG_MOCK_SUIT_PROCESSOR
@@ -91,5 +103,17 @@ static inline void mocks_reset(void)
 #ifdef CONFIG_MOCK_SUIT_MEMPTR_STORAGE
 	mock_suit_memptr_storage_reset();
 #endif
+
+#ifdef CONFIG_MOCK_SUIT_PLATFORM
+	mock_suit_platform_reset();
+#endif /* CONFIG_MOCK_SUIT_PLATFORM */
+
+#ifdef CONFIG_MOCK_DIGEST_SINK
+	mock_digest_sink_reset();
+#endif /* CONFIG_MOCK_DIGEST_SINK */
+
+#ifdef CONFIG_MOCK_GENERIC_ADDRESS_STREAMER
+	mock_generic_address_streamer_reset();
+#endif /* CONFIG_MOCK_GENERIC_ADDRESS_STREAMER */
 }
 #endif /* MOCK_H__ */
