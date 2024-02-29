@@ -18,7 +18,7 @@ int suit_plat_sequence_completed(enum suit_command_sequence seq_name,
 				 struct zcbor_string *manifest_component_id,
 				 const uint8_t *envelope_str, size_t envelope_len)
 {
-	suit_manifest_class_id_t *class_id;
+	suit_manifest_class_id_t *class_id = NULL;
 	suit_plat_err_t err = SUIT_PLAT_SUCCESS;
 
 	if ((manifest_component_id == NULL) || (manifest_component_id->value == NULL)) {
@@ -58,7 +58,7 @@ int suit_plat_authorize_sequence_num(enum suit_command_sequence seq_name,
 	uint8_t *envelope_addr;
 	size_t envelope_size;
 	uint32_t current_seq_num;
-	suit_manifest_class_id_t *class_id;
+	suit_manifest_class_id_t *class_id = NULL;
 	suit_downgrade_prevention_policy_t policy;
 	suit_plat_err_t ret = SUIT_PLAT_ERR_CRASH;
 

@@ -19,7 +19,7 @@ int suit_plat_authenticate_manifest(struct zcbor_string *manifest_component_id,
 {
 	psa_algorithm_t psa_alg;
 	psa_key_id_t public_key_id = 0;
-	suit_manifest_class_id_t *class_id;
+	suit_manifest_class_id_t *class_id = NULL;
 
 	switch (alg_id) {
 	case suit_cose_es256:
@@ -86,7 +86,7 @@ int suit_plat_authenticate_manifest(struct zcbor_string *manifest_component_id,
 
 int suit_plat_authorize_unsigned_manifest(struct zcbor_string *manifest_component_id)
 {
-	suit_manifest_class_id_t *class_id;
+	suit_manifest_class_id_t *class_id = NULL;
 
 	if ((manifest_component_id == NULL) ||
 		(manifest_component_id->value == NULL) ||
@@ -123,7 +123,7 @@ int suit_plat_authorize_unsigned_manifest(struct zcbor_string *manifest_componen
 int suit_plat_authorize_component_id(struct zcbor_string *manifest_component_id,
 				     struct zcbor_string *component_id)
 {
-	suit_manifest_class_id_t *class_id;
+	suit_manifest_class_id_t *class_id = NULL;
 
 	if ((manifest_component_id == NULL) || (component_id == NULL) ||
 	    (manifest_component_id->value == NULL) || (manifest_component_id->len == 0) ||
