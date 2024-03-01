@@ -8,10 +8,10 @@
 #include <zephyr/logging/log_ctrl.h>
 #include <zephyr/sys/reboot.h>
 #include <psa/crypto.h>
-#include <mram.h>
+#include <sdfw/mram.h>
 
 #include <sdfw_sink.h>
-#include <sdfw_update.h>
+#include <sdfw/sdfw_update.h>
 #include <suit_plat_mem_util.h>
 
 #include <digest_sink.h>

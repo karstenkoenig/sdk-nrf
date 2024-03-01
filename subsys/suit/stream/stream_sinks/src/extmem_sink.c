@@ -10,7 +10,7 @@
 #include <string.h>
 #include <extmem_sink.h>
 #include <zephyr/sys/bitarray.h>
-#include <extmem_service.h>
+#include <sdfw/sdfw_services/extmem_service.h>
 #include <suit_memory_layout.h>
 
 #define SUIT_MAX_EXTMEM_COMPONENTS 1

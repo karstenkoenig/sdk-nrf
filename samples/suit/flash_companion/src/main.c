@@ -5,7 +5,7 @@
  */
 
 #include <zephyr/kernel.h>
-#include <extmem_remote.h>
+#include <sdfw/sdfw_services/extmem_remote.h>
 
 int main(void)
 {

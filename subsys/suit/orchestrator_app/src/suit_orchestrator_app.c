@@ -15,7 +15,7 @@
 #if CONFIG_SUIT_PROCESSOR
 #include <suit.h>
 #endif
-#include <sdfw_services/suit_service.h>
+#include <sdfw/sdfw_services/suit_service.h>
 #include <suit_envelope_info.h>
 #include <suit_plat_mem_util.h>
 #if CONFIG_SUIT_CACHE_RW

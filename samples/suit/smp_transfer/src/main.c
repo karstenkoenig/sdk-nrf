@@ -13,7 +13,7 @@
 #include "common.h"
 
 #ifdef CONFIG_SSF_SUIT_SERVICE_ENABLED
-#include <sdfw_services/suit_service.h>
+#include <sdfw/sdfw_services/suit_service.h>
 #endif /* CONFIG_SSF_SUIT_SERVICE_ENABLED */
 
 #define DFU_PARTITION_OFFSET  FIXED_PARTITION_OFFSET(dfu_partition)

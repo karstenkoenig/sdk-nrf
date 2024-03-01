@@ -6,7 +6,7 @@
 
 #include <memptr_streamer.h>
 #include <zephyr/logging/log.h>
-#include <extmem_service.h>
+#include <sdfw/sdfw_services/extmem_service.h>
 #include <suit_memory_layout.h>
 
 LOG_MODULE_REGISTER(suit_extmem_streamer, CONFIG_SUIT_LOG_LEVEL);

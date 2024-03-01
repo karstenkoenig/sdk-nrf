@@ -8,10 +8,10 @@
 #include <zephyr/logging/log.h>
 #include <suit_platform_internal.h>
 #include <drivers/nrfx_common.h>
-#include <vprs.h>
+#include <sdfw/vprs.h>
 
 #ifdef CONFIG_SDFW_RESET_HANDLING_ENABLED
-#include <reset_mgr.h>
+#include <sdfw/reset_mgr.h>
 #endif /* CONFIG_SDFW_RESET_HANDLING_ENABLED */
 
 LOG_MODULE_REGISTER(suit_plat_run, CONFIG_SUIT_LOG_LEVEL);

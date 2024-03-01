@@ -12,7 +12,7 @@
 #include <zephyr/ztest.h>
 #include <zephyr/fff.h>
 
-#include <sdfw_services/suit_service.h>
+#include <sdfw/sdfw_services/suit_service.h>
 #include <suit_plat_mem_util.h>
 
 #define FIXED_PARTITION_WRITE_BLOCK_SIZE(label) \

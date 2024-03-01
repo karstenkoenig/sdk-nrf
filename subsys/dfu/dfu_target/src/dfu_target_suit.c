@@ -10,7 +10,7 @@
 #include <dfu/dfu_target_stream.h>
 #include <zephyr/devicetree.h>
 #ifdef CONFIG_SSF_SUIT_SERVICE_ENABLED
-#include <sdfw_services/suit_service.h>
+#include <sdfw/sdfw_services/suit_service.h>
 #endif /* CONFIG_SSF_SUIT_SERVICE_ENABLED */
 #include <suit_plat_mem_util.h>
 

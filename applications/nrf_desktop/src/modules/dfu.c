@@ -96,7 +96,7 @@ LOG_MODULE_REGISTER(MODULE, CONFIG_DESKTOP_CONFIG_CHANNEL_DFU_LOG_LEVEL);
 		     "SUIT DFU is supported only without Partition Manager");
 	BUILD_ASSERT(DT_NODE_EXISTS(DT_NODELABEL(dfu_partition)),
 		     "DFU partition must be defined in devicetree");
-	#include <sdfw_services/suit_service.h>
+	#include <sdfw/sdfw_services/suit_service.h>
 	#include <suit_plat_mem_util.h>
 	#define BOOTLOADER_NAME	"SUIT"
 	#define DFU_SLOT_ID		FIXED_PARTITION_ID(dfu_partition)

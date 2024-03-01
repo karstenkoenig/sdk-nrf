@@ -8,7 +8,7 @@
 #include <suit_platform_internal.h>
 #include <suit_plat_decode_util.h>
 #include <suit_plat_error_convert.h>
-#include <sdfw_services/suit_service.h>
+#include <sdfw/sdfw_services/suit_service.h>
 
 #ifdef CONFIG_SUIT_STREAM_SINK_DIGEST
 #include <suit_memptr_storage.h>

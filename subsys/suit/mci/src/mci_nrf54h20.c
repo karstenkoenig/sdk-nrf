@@ -7,7 +7,7 @@
 #include <drivers/nrfx_common.h>
 #include <suit_storage_mpi.h>
 #include <suit_execution_mode.h>
-#include <lcs.h>
+#include <sdfw/lcs.h>
 #include <zephyr/logging/log.h>
 
 #define MANIFEST_PUBKEY_NRF_TOP_GEN0		0x4000BB00

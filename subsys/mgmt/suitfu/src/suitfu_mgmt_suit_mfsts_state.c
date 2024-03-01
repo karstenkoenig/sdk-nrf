@@ -14,7 +14,7 @@
 #include <mgmt/mcumgr/util/zcbor_bulk.h>
 
 #ifdef CONFIG_SSF_SUIT_SERVICE_ENABLED
-#include <sdfw_services/suit_service.h>
+#include <sdfw/sdfw_services/suit_service.h>
 #endif /* CONFIG_SSF_SUIT_SERVICE_ENABLED */
 
 #include <zephyr/mgmt/mcumgr/mgmt/mgmt.h>

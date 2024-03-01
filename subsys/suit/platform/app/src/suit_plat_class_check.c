@@ -12,7 +12,7 @@
 #include <suit_plat_decode_util.h>
 #include <suit_metadata.h>
 #include <suit_plat_decode_util.h>
-#include <sdfw_services/suit_service.h>
+#include <sdfw/sdfw_services/suit_service.h>
 #include <zephyr/logging/log.h>
 
 LOG_MODULE_REGISTER(suit_plat_class_check, CONFIG_SUIT_LOG_LEVEL);
