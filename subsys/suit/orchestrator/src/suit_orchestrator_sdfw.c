@@ -320,10 +320,6 @@ int suit_orchestrator_init(void)
 
 int suit_orchestrator_entry(void)
 {
-#ifdef CONFIG_SUIT_LOG_SECDOM_VERSION
-	LOG_INF("Secdom version: %s", CONFIG_SUIT_SECDOM_VERSION);
-#endif /* CONFIG_SUIT_LOG_SECDOM_VERSION */
-
 	const suit_plat_mreg_t *update_regions = NULL;
 	size_t update_regions_len = 0;
 
@@ -362,5 +358,8 @@ int suit_orchestrator_entry(void)
 		return SUIT_PLAT_ERR_TO_ZEPHYR_ERR(err);
 	}
 
+#ifdef CONFIG_SUIT_LOG_SECDOM_VERSION
+	LOG_INF("Secdom version: %s", CONFIG_SUIT_SECDOM_VERSION);
+#endif /* CONFIG_SUIT_LOG_SECDOM_VERSION */
 	return ret;
 }
