@@ -443,7 +443,7 @@ mci_err_t suit_mci_manifest_parent_child_declaration_validate(const suit_manifes
 
 	if ((parent_role == SUIT_MANIFEST_APP_ROOT) &&
 		(((child_role >= SUIT_MANIFEST_APP_LOCAL_1) && (child_role <= SUIT_MANIFEST_APP_LOCAL_3)) ||
-		 ((child_role >= SUIT_MANIFEST_RAD_LOCAL_1) && (child_role >= SUIT_MANIFEST_RAD_LOCAL_2)) ||
+		 ((child_role >= SUIT_MANIFEST_RAD_LOCAL_1) && (child_role <= SUIT_MANIFEST_RAD_LOCAL_2)) ||
 		 (child_role == SUIT_MANIFEST_SEC_TOP))) {
 		return SUIT_PLAT_SUCCESS;
 	}
@@ -457,7 +457,7 @@ mci_err_t suit_mci_manifest_parent_child_declaration_validate(const suit_manifes
 	if ((parent_role == SUIT_MANIFEST_APP_RECOVERY) &&
 		((child_role == SUIT_MANIFEST_RAD_RECOVERY) ||
 		((child_role >= SUIT_MANIFEST_APP_LOCAL_1) && (child_role <= SUIT_MANIFEST_APP_LOCAL_3)) ||
-		((child_role >= SUIT_MANIFEST_RAD_LOCAL_1) && (child_role >= SUIT_MANIFEST_RAD_LOCAL_2)))) {
+		((child_role >= SUIT_MANIFEST_RAD_LOCAL_1) && (child_role <= SUIT_MANIFEST_RAD_LOCAL_2)))) {
 			return SUIT_PLAT_SUCCESS;
 		}
 
@@ -494,7 +494,7 @@ mci_err_t suit_mci_manifest_process_dependency_validate(
 
 		if ((parent_role == SUIT_MANIFEST_APP_ROOT) &&
 			(((child_role >= SUIT_MANIFEST_APP_LOCAL_1) && (child_role <= SUIT_MANIFEST_APP_LOCAL_3)) ||
-			 ((child_role >= SUIT_MANIFEST_RAD_LOCAL_1) && (child_role >= SUIT_MANIFEST_RAD_LOCAL_2)))) {
+			 ((child_role >= SUIT_MANIFEST_RAD_LOCAL_1) && (child_role <= SUIT_MANIFEST_RAD_LOCAL_2)))) {
 			return SUIT_PLAT_SUCCESS;
 		}
 		break;
@@ -508,7 +508,7 @@ mci_err_t suit_mci_manifest_process_dependency_validate(
 
 		if ((parent_role == SUIT_MANIFEST_APP_ROOT) &&
 		(((child_role >= SUIT_MANIFEST_APP_LOCAL_1) && (child_role <= SUIT_MANIFEST_APP_LOCAL_3)) ||
-		 ((child_role >= SUIT_MANIFEST_RAD_LOCAL_1) && (child_role >= SUIT_MANIFEST_RAD_LOCAL_2)) ||
+		 ((child_role >= SUIT_MANIFEST_RAD_LOCAL_1) && (child_role <= SUIT_MANIFEST_RAD_LOCAL_2)) ||
 		 (child_role == SUIT_MANIFEST_SEC_TOP))) {
 			return SUIT_PLAT_SUCCESS;
 		}
@@ -529,7 +529,7 @@ mci_err_t suit_mci_manifest_process_dependency_validate(
 		if ((parent_role == SUIT_MANIFEST_APP_RECOVERY) &&
 			((child_role == SUIT_MANIFEST_RAD_RECOVERY) ||
 			((child_role >= SUIT_MANIFEST_APP_LOCAL_1) && (child_role <= SUIT_MANIFEST_APP_LOCAL_3)) ||
-			((child_role >= SUIT_MANIFEST_RAD_LOCAL_1) && (child_role >= SUIT_MANIFEST_RAD_LOCAL_2)))) {
+			((child_role >= SUIT_MANIFEST_RAD_LOCAL_1) && (child_role <= SUIT_MANIFEST_RAD_LOCAL_2)))) {
 			return SUIT_PLAT_SUCCESS;
 		}
 		break;

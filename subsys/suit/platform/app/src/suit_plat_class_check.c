@@ -234,7 +234,7 @@ int suit_plat_authorize_process_dependency(struct zcbor_string *parent_component
 	    (((child_role >= SUIT_MANIFEST_APP_LOCAL_1) &&
 	      (child_role <= SUIT_MANIFEST_APP_LOCAL_3)) ||
 	     ((child_role >= SUIT_MANIFEST_RAD_LOCAL_1) &&
-	      (child_role >= SUIT_MANIFEST_RAD_LOCAL_2)) ||
+	      (child_role <= SUIT_MANIFEST_RAD_LOCAL_2)) ||
 	     (child_role == SUIT_MANIFEST_SEC_TOP))) {
 		return SUIT_SUCCESS;
 	}
