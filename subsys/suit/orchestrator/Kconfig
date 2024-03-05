@@ -20,6 +20,11 @@ config SUIT_UPDATE_REBOOT_ENABLED
 	default y if IS_SECURE_DOMAIN_FW
 	depends on REBOOT
 
+config SUIT_BOOT_RECOVERY_REBOOT_ENABLED
+	bool "Reboot the system after unsuccessful execution of the boot path"
+	default y if IS_SECURE_DOMAIN_FW
+	depends on REBOOT
+
 config APP_LINK_WITH_SUIT_ORCHESTRATOR_INTERFACE
 	bool
 	default y

@@ -106,8 +106,8 @@ ZTEST(orchestrator_tests, test_boot_path_empty_storage)
 	int err = suit_orchestrator_entry();
 
 	/* THEN emergency recovery is triggered... */
-	/* ... and orchestrator exits without an error */
-	zassert_equal(0, err, "Unexpected error code");
+	/* ... and orchestrator exits with an error */
+	zassert_equal(-ENOTSUP, err, "Unexpected error code");
 }
 
 ZTEST(orchestrator_tests, test_update_path_successful_update)
@@ -183,8 +183,8 @@ ZTEST(orchestrator_tests, test_update_path_size_zero)
 	suit_plat_err_t ret = suit_storage_update_cand_get(&regions, &len);
 	zassert_equal(SUIT_PLAT_ERR_NOT_FOUND, ret, "Update candidate presence not cleared");
 
-	/* ... and orchestrator returns success */
-	zassert_equal(0, err, "Unexpected error code");
+	/* ... and orchestrator returns error code */
+	zassert_equal(-EACCES, err, "Unexpected error code");
 }
 
 ZTEST(orchestrator_tests, test_update_path_manipulated_envelope)
@@ -205,8 +205,8 @@ ZTEST(orchestrator_tests, test_update_path_manipulated_envelope)
 	suit_plat_err_t ret = suit_storage_update_cand_get(&regions, &len);
 	zassert_equal(SUIT_PLAT_ERR_NOT_FOUND, ret, "Update candidate presence not cleared");
 
-	/* ... and orchestrator returns success */
-	zassert_equal(0, err, "Unexpected error code");
+	/* ... and orchestrator returns error code */
+	zassert_equal(-EACCES, err, "Unexpected error code");
 }
 
 ZTEST(orchestrator_tests, test_update_path_candidate_invalid_address_and_size)
@@ -230,8 +230,8 @@ ZTEST(orchestrator_tests, test_update_path_candidate_invalid_address_and_size)
 	suit_plat_err_t ret = suit_storage_update_cand_get(&regions, &len);
 	zassert_equal(SUIT_PLAT_ERR_NOT_FOUND, ret, "Update candidate presence not cleared");
 
-	/* ... and orchestrator returns success */
-	zassert_equal(0, err, "Unexpected error code");
+	/* ... and orchestrator returns error code */
+	zassert_equal(-EFAULT, err, "Unexpected error code");
 }
 
 ZTEST(orchestrator_tests, test_update_path_candidate_empty_size)
@@ -255,8 +255,8 @@ ZTEST(orchestrator_tests, test_update_path_candidate_empty_size)
 	suit_plat_err_t ret = suit_storage_update_cand_get(&regions, &len);
 	zassert_equal(SUIT_PLAT_ERR_NOT_FOUND, ret, "Update candidate presence not cleared");
 
-	/* ... and orchestrator returns success */
-	zassert_equal(0, err, "Unexpected error code");
+	/* ... and orchestrator returns error code */
+	zassert_equal(-EFAULT, err, "Unexpected error code");
 }
 
 ZTEST(orchestrator_tests, test_update_path_unsupported_component)
@@ -277,8 +277,8 @@ ZTEST(orchestrator_tests, test_update_path_unsupported_component)
 	suit_plat_err_t ret = suit_storage_update_cand_get(&regions, &len);
 	zassert_equal(SUIT_PLAT_ERR_NOT_FOUND, ret, "Update candidate presence not cleared");
 
-	/* ... and orchestrator returns success */
-	zassert_equal(0, err, "Unexpected error code");
+	/* ... and orchestrator returns error code */
+	zassert_equal(-EACCES, err, "Unexpected error code");
 }
 
 ZTEST(orchestrator_tests, test_update_path_wrong_manifest_version)
@@ -299,8 +299,8 @@ ZTEST(orchestrator_tests, test_update_path_wrong_manifest_version)
 	suit_plat_err_t ret = suit_storage_update_cand_get(&regions, &len);
 	zassert_equal(SUIT_PLAT_ERR_NOT_FOUND, ret, "Update candidate presence not cleared");
 
-	/* ... and orchestrator returns success */
-	zassert_equal(0, err, "Unexpected error code");
+	/* ... and orchestrator returns error code */
+	zassert_equal(-EACCES, err, "Unexpected error code");
 }
 
 ZTEST(orchestrator_tests, test_update_path_signed_with_different_key)
@@ -321,6 +321,6 @@ ZTEST(orchestrator_tests, test_update_path_signed_with_different_key)
 	suit_plat_err_t ret = suit_storage_update_cand_get(&regions, &len);
 	zassert_equal(SUIT_PLAT_ERR_NOT_FOUND, ret, "Update candidate presence not cleared");
 
-	/* ... and orchestrator returns success */
-	zassert_equal(0, err, "Unexpected error code");
+	/* ... and orchestrator returns error code */
+	zassert_equal(-EACCES, err, "Unexpected error code");
 }

@@ -10,12 +10,12 @@
 #include <sdfw/lcs.h>
 #include <zephyr/logging/log.h>
 
-#define MANIFEST_PUBKEY_NRF_TOP_GEN0		0x4000BB00
-#define MANIFEST_PUBKEY_SYSCTRL_GEN0		0x40082100
-#define MANIFEST_PUBKEY_OEM_ROOT_GEN0		0x4000AA00
-#define MANIFEST_PUBKEY_APPLICATION_GEN0	0x40022100
-#define MANIFEST_PUBKEY_RADIO_GEN0			0x40032100
-#define MANIFEST_PUBKEY_GEN_RANGE 			2
+#define MANIFEST_PUBKEY_NRF_TOP_GEN0	 0x4000BB00
+#define MANIFEST_PUBKEY_SYSCTRL_GEN0	 0x40082100
+#define MANIFEST_PUBKEY_OEM_ROOT_GEN0	 0x4000AA00
+#define MANIFEST_PUBKEY_APPLICATION_GEN0 0x40022100
+#define MANIFEST_PUBKEY_RADIO_GEN0	 0x40032100
+#define MANIFEST_PUBKEY_GEN_RANGE	 2
 
 LOG_MODULE_REGISTER(suit_mci_nrf54h20, CONFIG_SUIT_LOG_LEVEL);
 
@@ -45,21 +45,25 @@ mci_err_t suit_mci_invoke_order_get(const suit_manifest_class_id_t **class_id, s
 
 	switch (execution_mode) {
 	case EXECUTION_MODE_INVOKE:
-		if(SUIT_PLAT_SUCCESS != suit_storage_mpi_class_get(SUIT_MANIFEST_SEC_TOP, &class_id[0])) {
+		if (SUIT_PLAT_SUCCESS !=
+		    suit_storage_mpi_class_get(SUIT_MANIFEST_SEC_TOP, &class_id[0])) {
 			return SUIT_PLAT_ERR_NOT_FOUND;
 		}
- 
-		if(SUIT_PLAT_SUCCESS != suit_storage_mpi_class_get(SUIT_MANIFEST_APP_ROOT, &class_id[1])) {
+
+		if (SUIT_PLAT_SUCCESS !=
+		    suit_storage_mpi_class_get(SUIT_MANIFEST_APP_ROOT, &class_id[1])) {
 			return SUIT_PLAT_ERR_NOT_FOUND;
 		}
 		break;
 
 	case EXECUTION_MODE_INVOKE_RECOVERY:
-		if(SUIT_PLAT_SUCCESS != suit_storage_mpi_class_get(SUIT_MANIFEST_SEC_TOP, &class_id[0])) {
+		if (SUIT_PLAT_SUCCESS !=
+		    suit_storage_mpi_class_get(SUIT_MANIFEST_SEC_TOP, &class_id[0])) {
 			return SUIT_PLAT_ERR_NOT_FOUND;
 		}
 
-		if(SUIT_PLAT_SUCCESS != suit_storage_mpi_class_get(SUIT_MANIFEST_APP_RECOVERY, &class_id[1])) {
+		if (SUIT_PLAT_SUCCESS !=
+		    suit_storage_mpi_class_get(SUIT_MANIFEST_APP_RECOVERY, &class_id[1])) {
 			return SUIT_PLAT_ERR_NOT_FOUND;
 		}
 		break;
@@ -97,13 +101,18 @@ mci_err_t suit_mci_downgrade_prevention_policy_get(const suit_manifest_class_id_
 mci_err_t suit_mci_independent_update_policy_get(const suit_manifest_class_id_t *class_id,
 						 suit_independent_updateability_policy_t *policy)
 {
+	suit_storage_mpi_t *mpi = NULL;
+	suit_manifest_role_t role = SUIT_MANIFEST_UNKNOWN;
+
 	if (NULL == class_id || NULL == policy) {
 		return SUIT_PLAT_ERR_INVAL;
 	}
 
-	suit_storage_mpi_t *mpi;
-
 	if (SUIT_PLAT_SUCCESS != suit_storage_mpi_get(class_id, &mpi)) {
+		return MCI_ERR_MANIFESTCLASSID;
+	}
+
+	if (SUIT_PLAT_SUCCESS != suit_storage_mpi_role_get(class_id, &role)) {
 		return MCI_ERR_MANIFESTCLASSID;
 	}
 
@@ -111,6 +120,24 @@ mci_err_t suit_mci_independent_update_policy_get(const suit_manifest_class_id_t 
 		mpi->independent_updateability_policy);
 	if (SUIT_INDEPENDENT_UPDATE_UNKNOWN == *policy) {
 		return SUIT_PLAT_ERR_OUT_OF_BOUNDS;
+	}
+
+	/* Override independent updateability policy in recovery scenarios:
+	 * If the update candidate was delivered by the recovery firmware,
+	 * it must not update the recovery firmware.
+	 * Invoke modes included, so the recovery firmware may reject the incorrect
+	 * update candidate before resetting the SoC.
+	 */
+	switch (suit_execution_mode_get()) {
+	case EXECUTION_MODE_INVOKE_RECOVERY:
+	case EXECUTION_MODE_INSTALL_RECOVERY:
+	case EXECUTION_MODE_POST_INVOKE_RECOVERY:
+		if ((role == SUIT_MANIFEST_APP_RECOVERY) || (role == SUIT_MANIFEST_RAD_RECOVERY)) {
+			*policy = SUIT_INDEPENDENT_UPDATE_DENIED;
+		}
+		break;
+	default:
+		break;
 	}
 
 	return SUIT_PLAT_SUCCESS;
@@ -170,9 +197,8 @@ static bool skip_validation(suit_manifest_role_t role)
 		return false;
 	}
 
-	if ((current_lcs == LCS_ROT) ||
-		 (current_lcs == LCS_ROT_DEBUG) ||
-		 (current_lcs == LCS_EMPTY)) {
+	if ((current_lcs == LCS_ROT) || (current_lcs == LCS_ROT_DEBUG) ||
+	    (current_lcs == LCS_EMPTY)) {
 		return true;
 	}
 #endif /* CONFIG_SDFW_LCS */
@@ -204,10 +230,13 @@ mci_err_t suit_mci_signing_key_id_validate(const suit_manifest_class_id_t *class
 
 		if (mpi->signature_verification_policy == SUIT_MPI_SIGNATURE_CHECK_DISABLED) {
 			return SUIT_PLAT_SUCCESS;
-		} else if (mpi->signature_verification_policy ==
-			SUIT_MPI_SIGNATURE_CHECK_ENABLED_ON_UPDATE &&
-			EXECUTION_MODE_INVOKE == suit_execution_mode_get()) {
-				return SUIT_PLAT_SUCCESS;
+		} else if ((mpi->signature_verification_policy ==
+			    SUIT_MPI_SIGNATURE_CHECK_ENABLED_ON_UPDATE) &&
+			   (EXECUTION_MODE_INVOKE == suit_execution_mode_get())) {
+			/* By allowing key_id == 0 in the invoke path, the platform will verify
+			 * the signature only during updates.
+			 */
+			return SUIT_PLAT_SUCCESS;
 		}
 
 		return MCI_ERR_WRONGKEYID;
@@ -217,21 +246,21 @@ mci_err_t suit_mci_signing_key_id_validate(const suit_manifest_class_id_t *class
 	case SUIT_MANIFEST_SEC_TOP:
 	case SUIT_MANIFEST_SEC_SDFW:
 		if (key_id >= MANIFEST_PUBKEY_NRF_TOP_GEN0 &&
-			key_id <= MANIFEST_PUBKEY_NRF_TOP_GEN0 + MANIFEST_PUBKEY_GEN_RANGE) {
+		    key_id <= MANIFEST_PUBKEY_NRF_TOP_GEN0 + MANIFEST_PUBKEY_GEN_RANGE) {
 			return SUIT_PLAT_SUCCESS;
 		}
 		break;
 
 	case SUIT_MANIFEST_SEC_SYSCTRL:
 		if (key_id >= MANIFEST_PUBKEY_SYSCTRL_GEN0 &&
-			key_id <= MANIFEST_PUBKEY_SYSCTRL_GEN0 + MANIFEST_PUBKEY_GEN_RANGE) {
+		    key_id <= MANIFEST_PUBKEY_SYSCTRL_GEN0 + MANIFEST_PUBKEY_GEN_RANGE) {
 			return SUIT_PLAT_SUCCESS;
 		}
 		break;
 
 	case SUIT_MANIFEST_APP_ROOT:
 		if (key_id >= MANIFEST_PUBKEY_OEM_ROOT_GEN0 &&
-			key_id <= MANIFEST_PUBKEY_OEM_ROOT_GEN0 + MANIFEST_PUBKEY_GEN_RANGE) {
+		    key_id <= MANIFEST_PUBKEY_OEM_ROOT_GEN0 + MANIFEST_PUBKEY_GEN_RANGE) {
 			return SUIT_PLAT_SUCCESS;
 		}
 		break;
@@ -241,7 +270,7 @@ mci_err_t suit_mci_signing_key_id_validate(const suit_manifest_class_id_t *class
 	case SUIT_MANIFEST_APP_LOCAL_2:
 	case SUIT_MANIFEST_APP_LOCAL_3:
 		if (key_id >= MANIFEST_PUBKEY_APPLICATION_GEN0 &&
-			key_id <= MANIFEST_PUBKEY_APPLICATION_GEN0 + MANIFEST_PUBKEY_GEN_RANGE) {
+		    key_id <= MANIFEST_PUBKEY_APPLICATION_GEN0 + MANIFEST_PUBKEY_GEN_RANGE) {
 			return SUIT_PLAT_SUCCESS;
 		}
 		break;
@@ -250,7 +279,7 @@ mci_err_t suit_mci_signing_key_id_validate(const suit_manifest_class_id_t *class
 	case SUIT_MANIFEST_RAD_LOCAL_1:
 	case SUIT_MANIFEST_RAD_LOCAL_2:
 		if (key_id >= MANIFEST_PUBKEY_RADIO_GEN0 &&
-			key_id <= MANIFEST_PUBKEY_RADIO_GEN0 + MANIFEST_PUBKEY_GEN_RANGE) {
+		    key_id <= MANIFEST_PUBKEY_RADIO_GEN0 + MANIFEST_PUBKEY_GEN_RANGE) {
 			return SUIT_PLAT_SUCCESS;
 		}
 		break;
@@ -339,22 +368,22 @@ mci_err_t suit_mci_memory_access_rights_validate(const suit_manifest_class_id_t 
 
 	case SUIT_MANIFEST_SEC_TOP:
 		/* Nordic top manifest - ability to operate on memory ranges intentionally blocked
-		*/
+		 */
 		return MCI_ERR_NOACCESS;
 
 	case SUIT_MANIFEST_SEC_SDFW:
 		/* Sec manifest - TODO - implement checks based on UICR/SICR
-		*/
+		 */
 		return SUIT_PLAT_SUCCESS;
 
 	case SUIT_MANIFEST_SEC_SYSCTRL:
 		/* Sysctrl manifest - TODO - implement checks based on UICR/SICR
-		*/
+		 */
 		return SUIT_PLAT_SUCCESS;
 
 	case SUIT_MANIFEST_APP_ROOT:
 		/* Root manifest - ability to operate on memory ranges intentionally blocked
-		*/
+		 */
 		return MCI_ERR_NOACCESS;
 
 	case SUIT_MANIFEST_APP_RECOVERY:
@@ -362,14 +391,14 @@ mci_err_t suit_mci_memory_access_rights_validate(const suit_manifest_class_id_t 
 	case SUIT_MANIFEST_APP_LOCAL_2:
 	case SUIT_MANIFEST_APP_LOCAL_3:
 		/* App manifest - TODO - implement checks based on UICR
-		*/
+		 */
 		return SUIT_PLAT_SUCCESS;
 
 	case SUIT_MANIFEST_RAD_RECOVERY:
 	case SUIT_MANIFEST_RAD_LOCAL_1:
 	case SUIT_MANIFEST_RAD_LOCAL_2:
 		/* Rad manifest - TODO - implement checks based on UICR
-		*/
+		 */
 		return SUIT_PLAT_SUCCESS;
 
 	default:
@@ -413,7 +442,7 @@ mci_err_t suit_mci_vendor_id_for_manifest_class_id_get(const suit_manifest_class
 	if (NULL == class_id || NULL == vendor_id) {
 		return SUIT_PLAT_ERR_INVAL;
 	}
- 
+
 	suit_storage_mpi_t *mpi;
 	if (SUIT_PLAT_SUCCESS != suit_storage_mpi_get(class_id, &mpi)) {
 		return MCI_ERR_MANIFESTCLASSID;
@@ -424,8 +453,9 @@ mci_err_t suit_mci_vendor_id_for_manifest_class_id_get(const suit_manifest_class
 	return SUIT_PLAT_SUCCESS;
 }
 
-mci_err_t suit_mci_manifest_parent_child_declaration_validate(const suit_manifest_class_id_t *parent_class_id,
-						  const suit_manifest_class_id_t *child_class_id)
+mci_err_t
+suit_mci_manifest_parent_child_declaration_validate(const suit_manifest_class_id_t *parent_class_id,
+						    const suit_manifest_class_id_t *child_class_id)
 {
 	if ((parent_class_id == NULL) || (child_class_id == NULL)) {
 		return SUIT_PLAT_ERR_INVAL;
@@ -442,31 +472,34 @@ mci_err_t suit_mci_manifest_parent_child_declaration_validate(const suit_manifes
 	}
 
 	if ((parent_role == SUIT_MANIFEST_APP_ROOT) &&
-		(((child_role >= SUIT_MANIFEST_APP_LOCAL_1) && (child_role <= SUIT_MANIFEST_APP_LOCAL_3)) ||
-		 ((child_role >= SUIT_MANIFEST_RAD_LOCAL_1) && (child_role <= SUIT_MANIFEST_RAD_LOCAL_2)) ||
-		 (child_role == SUIT_MANIFEST_SEC_TOP))) {
+	    (((child_role >= SUIT_MANIFEST_APP_LOCAL_1) &&
+	      (child_role <= SUIT_MANIFEST_APP_LOCAL_3)) ||
+	     ((child_role >= SUIT_MANIFEST_RAD_LOCAL_1) &&
+	      (child_role <= SUIT_MANIFEST_RAD_LOCAL_2)) ||
+	     (child_role == SUIT_MANIFEST_SEC_TOP))) {
 		return SUIT_PLAT_SUCCESS;
 	}
 
 	if ((parent_role == SUIT_MANIFEST_SEC_TOP) &&
-		((child_role == SUIT_MANIFEST_SEC_SYSCTRL) ||
-		 (child_role == SUIT_MANIFEST_SEC_SDFW))) {
+	    ((child_role == SUIT_MANIFEST_SEC_SYSCTRL) || (child_role == SUIT_MANIFEST_SEC_SDFW))) {
 		return SUIT_PLAT_SUCCESS;
 	}
 
 	if ((parent_role == SUIT_MANIFEST_APP_RECOVERY) &&
-		((child_role == SUIT_MANIFEST_RAD_RECOVERY) ||
-		((child_role >= SUIT_MANIFEST_APP_LOCAL_1) && (child_role <= SUIT_MANIFEST_APP_LOCAL_3)) ||
-		((child_role >= SUIT_MANIFEST_RAD_LOCAL_1) && (child_role <= SUIT_MANIFEST_RAD_LOCAL_2)))) {
-			return SUIT_PLAT_SUCCESS;
-		}
+	    ((child_role == SUIT_MANIFEST_RAD_RECOVERY) ||
+	     ((child_role >= SUIT_MANIFEST_APP_LOCAL_1) &&
+	      (child_role <= SUIT_MANIFEST_APP_LOCAL_3)) ||
+	     ((child_role >= SUIT_MANIFEST_RAD_LOCAL_1) &&
+	      (child_role <= SUIT_MANIFEST_RAD_LOCAL_2)))) {
+		return SUIT_PLAT_SUCCESS;
+	}
 
 	return MCI_ERR_NOACCESS;
 }
 
-mci_err_t suit_mci_manifest_process_dependency_validate(
-						const suit_manifest_class_id_t *parent_class_id,
-						const suit_manifest_class_id_t *child_class_id)
+mci_err_t
+suit_mci_manifest_process_dependency_validate(const suit_manifest_class_id_t *parent_class_id,
+					      const suit_manifest_class_id_t *child_class_id)
 {
 	if ((parent_class_id == NULL) || (child_class_id == NULL)) {
 		return SUIT_PLAT_ERR_INVAL;
@@ -484,52 +517,75 @@ mci_err_t suit_mci_manifest_process_dependency_validate(
 		return MCI_ERR_MANIFESTCLASSID;
 	}
 
-	switch(execution_mode) {
+	switch (execution_mode) {
 	case EXECUTION_MODE_INVOKE:
 		if ((parent_role == SUIT_MANIFEST_SEC_TOP) &&
-			((child_role == SUIT_MANIFEST_SEC_SYSCTRL) ||
-			 (child_role == SUIT_MANIFEST_SEC_SDFW))) {
+		    ((child_role == SUIT_MANIFEST_SEC_SYSCTRL) ||
+		     (child_role == SUIT_MANIFEST_SEC_SDFW))) {
 			return SUIT_PLAT_SUCCESS;
 		}
 
 		if ((parent_role == SUIT_MANIFEST_APP_ROOT) &&
-			(((child_role >= SUIT_MANIFEST_APP_LOCAL_1) && (child_role <= SUIT_MANIFEST_APP_LOCAL_3)) ||
-			 ((child_role >= SUIT_MANIFEST_RAD_LOCAL_1) && (child_role <= SUIT_MANIFEST_RAD_LOCAL_2)))) {
+		    (((child_role >= SUIT_MANIFEST_APP_LOCAL_1) &&
+		      (child_role <= SUIT_MANIFEST_APP_LOCAL_3)) ||
+		     ((child_role >= SUIT_MANIFEST_RAD_LOCAL_1) &&
+		      (child_role <= SUIT_MANIFEST_RAD_LOCAL_2)))) {
 			return SUIT_PLAT_SUCCESS;
 		}
 		break;
 
 	case EXECUTION_MODE_INSTALL:
 		if ((parent_role == SUIT_MANIFEST_SEC_TOP) &&
-			((child_role == SUIT_MANIFEST_SEC_SYSCTRL) ||
-			 (child_role == SUIT_MANIFEST_SEC_SDFW))) {
+		    ((child_role == SUIT_MANIFEST_SEC_SYSCTRL) ||
+		     (child_role == SUIT_MANIFEST_SEC_SDFW))) {
 			return SUIT_PLAT_SUCCESS;
 		}
 
 		if ((parent_role == SUIT_MANIFEST_APP_ROOT) &&
-		(((child_role >= SUIT_MANIFEST_APP_LOCAL_1) && (child_role <= SUIT_MANIFEST_APP_LOCAL_3)) ||
-		 ((child_role >= SUIT_MANIFEST_RAD_LOCAL_1) && (child_role <= SUIT_MANIFEST_RAD_LOCAL_2)) ||
-		 (child_role == SUIT_MANIFEST_SEC_TOP))) {
+		    (((child_role >= SUIT_MANIFEST_APP_LOCAL_1) &&
+		      (child_role <= SUIT_MANIFEST_APP_LOCAL_3)) ||
+		     ((child_role >= SUIT_MANIFEST_RAD_LOCAL_1) &&
+		      (child_role <= SUIT_MANIFEST_RAD_LOCAL_2)) ||
+		     (child_role == SUIT_MANIFEST_SEC_TOP))) {
 			return SUIT_PLAT_SUCCESS;
 		}
 
 		if ((parent_role == SUIT_MANIFEST_APP_RECOVERY) &&
-			 (child_role == SUIT_MANIFEST_RAD_RECOVERY)) {
+		    (child_role == SUIT_MANIFEST_RAD_RECOVERY)) {
+			return SUIT_PLAT_SUCCESS;
+		}
+		break;
+
+	case EXECUTION_MODE_INSTALL_RECOVERY:
+		if ((parent_role == SUIT_MANIFEST_SEC_TOP) &&
+		    ((child_role == SUIT_MANIFEST_SEC_SYSCTRL) ||
+		     (child_role == SUIT_MANIFEST_SEC_SDFW))) {
+			return SUIT_PLAT_SUCCESS;
+		}
+
+		if ((parent_role == SUIT_MANIFEST_APP_ROOT) &&
+		    (((child_role >= SUIT_MANIFEST_APP_LOCAL_1) &&
+		      (child_role <= SUIT_MANIFEST_APP_LOCAL_3)) ||
+		     ((child_role >= SUIT_MANIFEST_RAD_LOCAL_1) &&
+		      (child_role <= SUIT_MANIFEST_RAD_LOCAL_2)) ||
+		     (child_role == SUIT_MANIFEST_SEC_TOP))) {
 			return SUIT_PLAT_SUCCESS;
 		}
 		break;
 
 	case EXECUTION_MODE_INVOKE_RECOVERY:
 		if ((parent_role == SUIT_MANIFEST_SEC_TOP) &&
-			((child_role == SUIT_MANIFEST_SEC_SYSCTRL) ||
-			(child_role == SUIT_MANIFEST_SEC_SDFW))) {
+		    ((child_role == SUIT_MANIFEST_SEC_SYSCTRL) ||
+		     (child_role == SUIT_MANIFEST_SEC_SDFW))) {
 			return SUIT_PLAT_SUCCESS;
 		}
 
 		if ((parent_role == SUIT_MANIFEST_APP_RECOVERY) &&
-			((child_role == SUIT_MANIFEST_RAD_RECOVERY) ||
-			((child_role >= SUIT_MANIFEST_APP_LOCAL_1) && (child_role <= SUIT_MANIFEST_APP_LOCAL_3)) ||
-			((child_role >= SUIT_MANIFEST_RAD_LOCAL_1) && (child_role <= SUIT_MANIFEST_RAD_LOCAL_2)))) {
+		    ((child_role == SUIT_MANIFEST_RAD_RECOVERY) ||
+		     ((child_role >= SUIT_MANIFEST_APP_LOCAL_1) &&
+		      (child_role <= SUIT_MANIFEST_APP_LOCAL_3)) ||
+		     ((child_role >= SUIT_MANIFEST_RAD_LOCAL_1) &&
+		      (child_role <= SUIT_MANIFEST_RAD_LOCAL_2)))) {
 			return SUIT_PLAT_SUCCESS;
 		}
 		break;
