@@ -131,3 +131,41 @@ tests:
     platform_allow: nrf54h20dk_nrf54h20_cpuapp@soc1
     build_only: true
     tags: suit bluetooth fpga
+
+  subsys.suit.smp_transfer.full.v1:
+    extra_configs:
+      - CONFIG_APP_VERSION=1
+      - CONFIG_SUIT_ENVELOPE_EDITABLE_TEMPLATES_LOCATION="./"
+      - CONFIG_SUIT_DFU_CANDIDATE_PROCESSING_FULL=y
+    platform_allow: nrf54h20dk_nrf54h20_cpuapp@soc1 nrf54h20dk_nrf54h20_cpuapp
+    build_only: true
+    tags: suit
+
+  subsys.suit.smp_transfer.full.v2:
+    extra_configs:
+      - CONFIG_APP_VERSION=2
+      - CONFIG_SUIT_ENVELOPE_EDITABLE_TEMPLATES_LOCATION="./"
+      - CONFIG_SUIT_DFU_CANDIDATE_PROCESSING_FULL=y
+    platform_allow: nrf54h20dk_nrf54h20_cpuapp@soc1 nrf54h20dk_nrf54h20_cpuapp
+    build_only: true
+    tags: suit
+
+  subsys.suit.smp_transfer.full.bt.v1:
+    extra_args: OVERLAY_CONFIG="overlay-bt.conf"
+    extra_configs:
+      - CONFIG_APP_VERSION=1
+      - CONFIG_SUIT_ENVELOPE_EDITABLE_TEMPLATES_LOCATION="./"
+      - CONFIG_SUIT_DFU_CANDIDATE_PROCESSING_FULL=y
+    platform_allow: nrf54h20dk_nrf54h20_cpuapp@soc1 nrf54h20dk_nrf54h20_cpuapp
+    build_only: true
+    tags: suit bluetooth
+
+  subsys.suit.smp_transfer.full.bt.v2:
+    extra_args: OVERLAY_CONFIG="overlay-bt.conf"
+    extra_configs:
+      - CONFIG_APP_VERSION=2
+      - CONFIG_SUIT_ENVELOPE_EDITABLE_TEMPLATES_LOCATION="./"
+      - CONFIG_SUIT_DFU_CANDIDATE_PROCESSING_FULL=y
+    platform_allow: nrf54h20dk_nrf54h20_cpuapp@soc1 nrf54h20dk_nrf54h20_cpuapp
+    build_only: true
+    tags: suit bluetooth

@@ -86,6 +86,9 @@
     - subsys.suit.smp_transfer.bt.v2
     - subsys.suit.smp_transfer.bt.nrf54h20.fpga.v1
     - subsys.suit.smp_transfer.bt.nrf54h20.fpga.v2
+    - subsys.suit.smp_transfer.full.v2
+    - subsys.suit.smp_transfer.full.v1
+    - subsys.suit.smp_transfer.full.bt.v2
   platforms:
     - nrf54h20dk_nrf54h20_cpuapp@soc1
   comment: "Configurations excluded to limit resources usage in integration builds"
