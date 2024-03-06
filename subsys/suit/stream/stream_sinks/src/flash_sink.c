@@ -134,9 +134,6 @@ suit_plat_err_t suit_flash_sink_get(struct stream_sink *sink, uint8_t *dst, size
 				return SUIT_PLAT_ERR_HW_NOT_READY;
 			}
 
-			LOG_DBG("flash_sink requested area: offset: 0x%lX; size: 0x%X",
-				nvm_address.offset, size);
-
 			if (!device_is_ready(nvm_address.fdev)) {
 				LOG_ERR("Flash device not ready.");
 				return SUIT_PLAT_ERR_HW_NOT_READY;

@@ -60,12 +60,12 @@ const struct stream_iface ifaces[] = {
 
 suit_address_streamer suit_address_streamer_select_by_address(const uint8_t *address)
 {
-	LOG_DBG("Searching stream source for address %p", (void *)address);
 	for (int i = 0; i < ARRAY_SIZE(ifaces); i++) {
 		if (ifaces[i].address_check((uint8_t *)address)) {
 			return ifaces[i].stream;
 		}
 	}
+	LOG_ERR("No streamer found for address %p", (void*) address);
 
 	return NULL;
 }
