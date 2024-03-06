@@ -9,6 +9,7 @@
 #include <suit_platform.h>
 #include <suit_platform_internal.h>
 #include <suit_plat_component_compatibility.h>
+#include <suit_plat_decode_util.h>
 #include <suit_metadata.h>
 #include <suit_service.h>
 #include <zephyr/logging/log.h>
