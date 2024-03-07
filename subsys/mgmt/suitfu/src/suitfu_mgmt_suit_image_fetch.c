@@ -17,7 +17,7 @@
 #include <sdfw_services/suit_service.h>
 #endif /* CONFIG_SSF_SUIT_SERVICE_ENABLED */
 
-#include <fetch_source_mgr.h>
+#include "dfu/suit_dfu_fetch_source.h"
 
 #include <zephyr/mgmt/mcumgr/mgmt/mgmt.h>
 #include <zephyr/mgmt/mcumgr/mgmt/handlers.h>
@@ -44,7 +44,7 @@ typedef struct {
 	const uint8_t *uri;
 	size_t uri_length;
 	uint32_t session_id;
-	struct stream_sink *sink;
+	uint32_t fetch_src_session_id;
 
 	int64_t last_notify_ts;
 	suit_plat_err_t return_code;
@@ -55,7 +55,7 @@ typedef struct {
 static stream_session_t stream_session;
 
 static suit_plat_err_t suitfu_mgmt_suit_missing_image_request(const uint8_t *uri, size_t uri_length,
-							      struct stream_sink *sink)
+							      uint32_t session_id)
 {
 	static uint32_t last_session_id;
 	stream_session_t *session = &stream_session;
@@ -83,7 +83,7 @@ static suit_plat_err_t suitfu_mgmt_suit_missing_image_request(const uint8_t *uri
 	session->uri = uri;
 	session->uri_length = uri_length;
 	session->session_id = last_session_id;
-	session->sink = sink;
+	session->fetch_src_session_id = session_id;
 	session->last_notify_ts = current_ts;
 	session->return_code = SUIT_PLAT_ERR_TIME;
 	session->transfer_completed_cvar = &transfer_completed_cvar;
@@ -114,7 +114,7 @@ static suit_plat_err_t suitfu_mgmt_suit_missing_image_request(const uint8_t *uri
 	session->uri = NULL;
 	session->uri_length = 0;
 	session->session_id = 0;
-	session->sink = NULL;
+	session->fetch_src_session_id = 0;
 	session->last_notify_ts = 0;
 	session->return_code = SUIT_PLAT_SUCCESS;
 	session->transfer_completed_cvar = NULL;
@@ -192,25 +192,11 @@ int suitfu_mgmt_suit_missing_image_upload(struct smp_streamer *ctx)
 		last = true;
 	}
 
-	write_ptr sink_write = NULL;
-	seek_ptr sink_seek = NULL;
-	void *sink_ctx = NULL;
 	size_t chunk_size = req.img_data.len;
 
 	component_lock();
-	if (session->sink && session->transfer_completed_cvar && session->uri &&
+	if (session->transfer_completed_cvar && session->uri &&
 	    session->uri_length && session->session_id == req.stream_session_id) {
-
-		sink_write = session->sink->write;
-		sink_seek = session->sink->seek;
-		sink_ctx = session->sink->ctx;
-
-		if (sink_write == NULL || sink_seek == NULL) {
-			session->return_code = SUIT_PLAT_ERR_IO;
-			k_condvar_signal(session->transfer_completed_cvar);
-			component_unlock();
-			return MGMT_ERR_EUNKNOWN;
-		}
 
 		session->last_notify_ts = k_uptime_get();
 
@@ -220,20 +206,21 @@ int suitfu_mgmt_suit_missing_image_upload(struct smp_streamer *ctx)
 		return MGMT_ERR_EBADSTATE;
 	}
 
-	rc = sink_seek(sink_ctx, req.off);
+	rc = suit_dfu_fetch_source_seek(session->fetch_src_session_id, req.off);
 
-	if (rc == SUIT_PLAT_SUCCESS) {
-		rc = sink_write(sink_ctx, (uint8_t *)req.img_data.value, &chunk_size);
+	if (rc == 0) {
+		rc = suit_dfu_fetch_source_write_fetched_data(session->fetch_src_session_id, req.img_data.value,
+							      chunk_size);
 	}
 
-	if (rc == SUIT_PLAT_SUCCESS) {
+	if (rc == 0) {
 		req.off += req.img_data.len;
 	}
 
 	component_lock();
-	if (session->sink && session->transfer_completed_cvar && session->uri &&
+	if (session->transfer_completed_cvar && session->uri &&
 	    session->uri_length && session->session_id == req.stream_session_id) {
-		if (rc != SUIT_PLAT_SUCCESS) {
+		if (rc != 0) {
 			session->return_code = SUIT_PLAT_ERR_IO;
 			k_condvar_signal(session->transfer_completed_cvar);
 			component_unlock();
@@ -294,5 +281,5 @@ int suitfu_mgmt_suit_missing_image_state_read(struct smp_streamer *ctx)
 
 void suitfu_mgmt_suit_image_fetch_init(void)
 {
-	suit_fetch_source_register(suitfu_mgmt_suit_missing_image_request);
+	suit_dfu_fetch_source_register(suitfu_mgmt_suit_missing_image_request);
 }

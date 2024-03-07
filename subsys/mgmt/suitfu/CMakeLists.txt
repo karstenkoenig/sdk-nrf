@@ -14,11 +14,6 @@ if(CONFIG_SSF_SUIT_SERVICE_ENABLED)
   zephyr_library_link_libraries(suit_utils)
 endif()
 
-if(CONFIG_SUIT_STREAM_FETCH_SOURCE_MGR)
-  zephyr_library_link_libraries(suit_stream_sources_interface)
-  zephyr_library_link_libraries(suit_stream_sinks_interface)
-endif()
-
 zephyr_library_sources(
   src/suitfu_mgmt.c
 )
