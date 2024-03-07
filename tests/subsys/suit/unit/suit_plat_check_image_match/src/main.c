@@ -559,9 +559,9 @@ ZTEST(suit_plat_check_image_match_tests, test_mem_OK)
 	zassert_equal(suit_plat_component_id_get_fake.call_count, 1, "Incorrect number of suit_plat_component_id_get() calls");
 	zassert_equal(suit_plat_decode_component_type_fake.call_count, 1, "Incorrect number of suit_plat_decode_component_type() calls");
 	zassert_equal(suit_plat_component_impl_data_get_fake.call_count, 1, "Incorrect number of suit_plat_component_impl_data_get() calls");
-	zassert_equal(suit_memptr_storage_ptr_get_fake.call_count, 1, "Incorrect numbe of suit_memptr_storage_ptr_get() calls");
+	zassert_equal(suit_memptr_storage_ptr_get_fake.call_count, 1, "Incorrect number of suit_memptr_storage_ptr_get() calls");
 	zassert_equal(suit_digest_sink_get_fake.call_count, 1, "Incorrect number of suit_digest_sink_get() calls");
-	zassert_equal(suit_generic_address_streamer_stream_fake.call_count, 1, "Incorrect numbe of suit_generic_address_streamer_stream() calls");
+	zassert_equal(suit_generic_address_streamer_stream_fake.call_count, 1, "Incorrect number of suit_generic_address_streamer_stream() calls");
 	zassert_equal(suit_digest_sink_digest_match_fake.call_count, 1, "Incorrect number of suit_digest_sink_digest_match() calls");
 }
 
@@ -583,9 +583,9 @@ ZTEST(suit_plat_check_image_match_tests, test_mem_sink_digest_match_fail)
 	zassert_equal(suit_plat_component_id_get_fake.call_count, 1, "Incorrect number of suit_plat_component_id_get() calls");
 	zassert_equal(suit_plat_decode_component_type_fake.call_count, 1, "Incorrect number of suit_plat_decode_component_type() calls");
 	zassert_equal(suit_plat_component_impl_data_get_fake.call_count, 1, "Incorrect number of suit_plat_component_impl_data_get() calls");
-	zassert_equal(suit_memptr_storage_ptr_get_fake.call_count, 1, "Incorrect numbe of suit_memptr_storage_ptr_get() calls");
+	zassert_equal(suit_memptr_storage_ptr_get_fake.call_count, 1, "Incorrect number of suit_memptr_storage_ptr_get() calls");
 	zassert_equal(suit_digest_sink_get_fake.call_count, 1, "Incorrect number of suit_digest_sink_get() calls");
-	zassert_equal(suit_generic_address_streamer_stream_fake.call_count, 1, "Incorrect numbe of suit_generic_address_streamer_stream() calls");
+	zassert_equal(suit_generic_address_streamer_stream_fake.call_count, 1, "Incorrect number of suit_generic_address_streamer_stream() calls");
 	zassert_equal(suit_digest_sink_digest_match_fake.call_count, 1, "Incorrect number of suit_digest_sink_digest_match() calls");
 }
 
@@ -607,9 +607,9 @@ ZTEST(suit_plat_check_image_match_tests, test_mem_generic_address_streamer_strea
 	zassert_equal(suit_plat_component_id_get_fake.call_count, 1, "Incorrect number of suit_plat_component_id_get() calls");
 	zassert_equal(suit_plat_decode_component_type_fake.call_count, 1, "Incorrect number of suit_plat_decode_component_type() calls");
 	zassert_equal(suit_plat_component_impl_data_get_fake.call_count, 1, "Incorrect number of suit_plat_component_impl_data_get() calls");
-	zassert_equal(suit_memptr_storage_ptr_get_fake.call_count, 1, "Incorrect numbe of suit_memptr_storage_ptr_get() calls");
+	zassert_equal(suit_memptr_storage_ptr_get_fake.call_count, 1, "Incorrect number of suit_memptr_storage_ptr_get() calls");
 	zassert_equal(suit_digest_sink_get_fake.call_count, 1, "Incorrect number of suit_digest_sink_get() calls");
-	zassert_equal(suit_generic_address_streamer_stream_fake.call_count, 1, "Incorrect numbe of suit_generic_address_streamer_stream() calls");
+	zassert_equal(suit_generic_address_streamer_stream_fake.call_count, 1, "Incorrect number of suit_generic_address_streamer_stream() calls");
 	zassert_equal(suit_digest_sink_digest_match_fake.call_count, 0, "Incorrect number of suit_digest_sink_digest_match() calls");
 }
 
@@ -631,9 +631,9 @@ ZTEST(suit_plat_check_image_match_tests, test_mem_digest_sink_get_fail)
 	zassert_equal(suit_plat_component_id_get_fake.call_count, 1, "Incorrect number of suit_plat_component_id_get() calls");
 	zassert_equal(suit_plat_decode_component_type_fake.call_count, 1, "Incorrect number of suit_plat_decode_component_type() calls");
 	zassert_equal(suit_plat_component_impl_data_get_fake.call_count, 1, "Incorrect number of suit_plat_component_impl_data_get() calls");
-	zassert_equal(suit_memptr_storage_ptr_get_fake.call_count, 1, "Incorrect numbe of suit_memptr_storage_ptr_get() calls");
+	zassert_equal(suit_memptr_storage_ptr_get_fake.call_count, 1, "Incorrect number of suit_memptr_storage_ptr_get() calls");
 	zassert_equal(suit_digest_sink_get_fake.call_count, 1, "Incorrect number of suit_digest_sink_get() calls");
-	zassert_equal(suit_generic_address_streamer_stream_fake.call_count, 0, "Incorrect numbe of suit_generic_address_streamer_stream() calls");
+	zassert_equal(suit_generic_address_streamer_stream_fake.call_count, 0, "Incorrect number of suit_generic_address_streamer_stream() calls");
 	zassert_equal(suit_digest_sink_digest_match_fake.call_count, 0, "Incorrect number of suit_digest_sink_digest_match() calls");
 }
 
@@ -655,9 +655,9 @@ ZTEST(suit_plat_check_image_match_tests, test_mem_memptr_storage_ptr_get_fail)
 	zassert_equal(suit_plat_component_id_get_fake.call_count, 1, "Incorrect number of suit_plat_component_id_get() calls");
 	zassert_equal(suit_plat_decode_component_type_fake.call_count, 1, "Incorrect number of suit_plat_decode_component_type() calls");
 	zassert_equal(suit_plat_component_impl_data_get_fake.call_count, 1, "Incorrect number of suit_plat_component_impl_data_get() calls");
-	zassert_equal(suit_memptr_storage_ptr_get_fake.call_count, 1, "Incorrect numbe of suit_memptr_storage_ptr_get() calls");
+	zassert_equal(suit_memptr_storage_ptr_get_fake.call_count, 1, "Incorrect number of suit_memptr_storage_ptr_get() calls");
 	zassert_equal(suit_digest_sink_get_fake.call_count, 0, "Incorrect number of suit_digest_sink_get() calls");
-	zassert_equal(suit_generic_address_streamer_stream_fake.call_count, 0, "Incorrect numbe of suit_generic_address_streamer_stream() calls");
+	zassert_equal(suit_generic_address_streamer_stream_fake.call_count, 0, "Incorrect number of suit_generic_address_streamer_stream() calls");
 	zassert_equal(suit_digest_sink_digest_match_fake.call_count, 0, "Incorrect number of suit_digest_sink_digest_match() calls");
 }
 
@@ -679,8 +679,8 @@ ZTEST(suit_plat_check_image_match_tests, test_mem_component_impl_data_get_fail)
 	zassert_equal(suit_plat_component_id_get_fake.call_count, 1, "Incorrect number of suit_plat_component_id_get() calls");
 	zassert_equal(suit_plat_decode_component_type_fake.call_count, 1, "Incorrect number of suit_plat_decode_component_type() calls");
 	zassert_equal(suit_plat_component_impl_data_get_fake.call_count, 1, "Incorrect number of suit_plat_component_impl_data_get() calls");
-	zassert_equal(suit_memptr_storage_ptr_get_fake.call_count, 0, "Incorrect numbe of suit_memptr_storage_ptr_get() calls");
+	zassert_equal(suit_memptr_storage_ptr_get_fake.call_count, 0, "Incorrect number of suit_memptr_storage_ptr_get() calls");
 	zassert_equal(suit_digest_sink_get_fake.call_count, 0, "Incorrect number of suit_digest_sink_get() calls");
-	zassert_equal(suit_generic_address_streamer_stream_fake.call_count, 0, "Incorrect numbe of suit_generic_address_streamer_stream() calls");
+	zassert_equal(suit_generic_address_streamer_stream_fake.call_count, 0, "Incorrect number of suit_generic_address_streamer_stream() calls");
 	zassert_equal(suit_digest_sink_digest_match_fake.call_count, 0, "Incorrect number of suit_digest_sink_digest_match() calls");
 }
