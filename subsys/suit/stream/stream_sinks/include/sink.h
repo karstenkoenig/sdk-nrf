@@ -42,9 +42,9 @@ struct stream_sink {
 
 /**
  * @brief Helper function for releasing sink
- * 
+ *
  * @param sink Sink to be released
- * @return suit_plat_err_t 
+ * @return suit_plat_err_t
  */
 static inline suit_plat_err_t release_sink(struct stream_sink *sink)
 {
