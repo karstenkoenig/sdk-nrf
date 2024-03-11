@@ -3,8 +3,9 @@
  *
  * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
  */
+#include "fetch_source_streamer.h"
 #include <zephyr/kernel.h>
-#include "fetch_source_mgr.h"
+#include <dfu/suit_dfu_fetch_source.h>
 #include <suit_plat_err.h>
 
 typedef enum {
@@ -14,8 +15,7 @@ typedef enum {
 } session_stage_t;
 
 typedef struct {
-	fetch_source_mgr_fetch_request_fn request_fn;
-
+	suit_dfu_fetch_source_request_fn request_fn;
 } fetch_source_t;
 
 typedef struct {
@@ -87,42 +87,47 @@ static stream_session_t *find_session(uint32_t session_id)
 	return session;
 }
 
-static suit_plat_err_t write_proxy(void *ctx, uint8_t *buf, size_t *size)
+int suit_dfu_fetch_source_write_fetched_data(uint32_t session_id, const uint8_t *data, size_t len)
 {
-	uint32_t session_id = (uintptr_t)ctx;
-
 	component_lock();
 	stream_session_t *session = find_session(session_id);
 
 	if (NULL == session) {
 		component_unlock();
-		return SUIT_PLAT_ERR_INCORRECT_STATE;
+		return -ENOENT;
 	}
 
 	if (STAGE_PENDING_FIRST_RESPONSE == session->stage) {
 		session->stage = STAGE_IN_PROGRESS;
 	}
 
-	suit_plat_err_t (*client_write_fn)(void *ctx, uint8_t *buf, size_t *size) 
+	suit_plat_err_t (*client_write_fn)(void *ctx, uint8_t *buf, size_t *size)
 			= session->client_sink.write;
 	void *client_ctx = session->client_sink.ctx;
 
-	suit_plat_err_t err = client_write_fn(client_ctx, buf, size);
+	int err = client_write_fn(client_ctx, buf, size);
+
+	if (err == SUIT_PLAT_SUCCESS)
+	{
+		err = 0;
+	}
+	else
+	{
+		err = -EIO;
+	}
 
 	component_unlock();
 	return err;
 }
 
-static suit_plat_err_t seek_proxy(void *ctx, size_t offset)
+int suit_dfu_fetch_source_seek(uint32_t session_id, size_t offset)
 {
-	uint32_t session_id = (uintptr_t)ctx;
-
 	component_lock();
 	stream_session_t *session = find_session(session_id);
 
 	if (NULL == session) {
 		component_unlock();
-		return SUIT_PLAT_ERR_INCORRECT_STATE;
+		return -ENOENT;
 	}
 
 	if (STAGE_PENDING_FIRST_RESPONSE == session->stage) {
@@ -131,15 +136,30 @@ static suit_plat_err_t seek_proxy(void *ctx, size_t offset)
 
 	suit_plat_err_t (*client_seek_fn)(void *ctx, size_t offset)
 				= session->client_sink.seek;
+
+	if ( client_seek_fn == NULL)
+	{
+		return -EACCES;
+	}
+
 	void *client_ctx = session->client_sink.ctx;
 
 	suit_plat_err_t err = client_seek_fn(client_ctx, offset);
 
+
+	if (err == SUIT_PLAT_SUCCESS)
+	{
+		err = 0;
+	}
+	else
+	{
+		err = -EIO;
+	}
 	component_unlock();
 	return err;
 }
 
-suit_plat_err_t suit_fetch_source_register(fetch_source_mgr_fetch_request_fn request_fn)
+int suit_dfu_fetch_source_register(suit_dfu_fetch_source_request_fn request_fn)
 {
 	component_lock();
 
@@ -169,38 +189,26 @@ suit_plat_err_t suit_fetch_source_stream(const uint8_t *uri, size_t uri_length,
 		return SUIT_PLAT_ERR_INCORRECT_STATE;
 	}
 
-	struct stream_sink session_sink = {.write = write_proxy,
-					   .seek = NULL,
-					   .flush = NULL,
-					   .used_storage = NULL,
-					   .release = NULL,
-					   .ctx = 0};
-
-	if (NULL != sink->seek) {
-		session_sink.seek = seek_proxy;
-	}
-
 	for (int i = 0; i < sizeof(sources) / sizeof(fetch_source_t); i++) {
 
 		component_lock();
 
 		fetch_source_t *source = &sources[i];
-		fetch_source_mgr_fetch_request_fn request_fn = source->request_fn;
+		suit_dfu_fetch_source_request_fn request_fn = source->request_fn;
 
 		if (0 == ++last_used_session_id) {
 			++last_used_session_id;
 		}
 
-		session_sink.ctx = (void *)(uintptr_t)last_used_session_id;
 		session->session_id = last_used_session_id;
 
 		component_unlock();
 
 		if (NULL != request_fn) {
 
-			suit_plat_err_t err = request_fn(uri, uri_length, &session_sink);
+			int err = request_fn(uri, uri_length, last_used_session_id);
 
-			if (SUIT_PLAT_SUCCESS == err) {
+			if (0 == err) {
 				close_session(session);
 				return SUIT_PLAT_SUCCESS;
 

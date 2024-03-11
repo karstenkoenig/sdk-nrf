@@ -21,7 +21,7 @@
 #endif /* CONFIG_SUIT_STREAM_SOURCE_CACHE */
 
 #ifdef CONFIG_SUIT_STREAM_FETCH_SOURCE_MGR
-#include "fetch_source_mgr.h"
+#include "fetch_source_streamer.h"
 #endif /* CONFIG_SUIT_STREAM_FETCH_SOURCE_MGR */
 
 #ifdef CONFIG_SUIT_STREAM_SINK_MEMPTR

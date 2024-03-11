@@ -6,7 +6,7 @@
 #include <zephyr/kernel.h>
 #include <string.h>
 #include <ipc_streamer.h>
-#include <fetch_source_mgr.h>
+#include <fetch_source_streamer.h>
 
 #define IMG_REQUEST_THREAD_STACK_SIZE 2048
 #define IMG_REQUEST_THREAD_PRIORITY   5
