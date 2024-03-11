@@ -35,7 +35,6 @@
 };
 
 &spi131 {
-	compatible = "nordic,nrf-spim";
 	status = "okay";
 	cs-gpios = <&gpio0 6 GPIO_ACTIVE_LOW>;
 	pinctrl-0 = <&spi131_default>;

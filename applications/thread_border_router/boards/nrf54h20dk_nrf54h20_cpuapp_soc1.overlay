@@ -98,10 +98,10 @@
 
 	enc424j600_link_board_eth: enc424j600@0 {
 		compatible = "microchip,enc424j600";
-		spi-max-frequency = < 0xd59f80 >;
-		int-gpios = < &gpio1 0x2 0x1 >;
+		spi-max-frequency = <DT_FREQ_M(8)>;
+		int-gpios = <&gpio1 0x2 0x1>;
 		status = "okay";
-		reg = < 0x0 >;
+		reg = <0x0>;
 	};
 };
 
