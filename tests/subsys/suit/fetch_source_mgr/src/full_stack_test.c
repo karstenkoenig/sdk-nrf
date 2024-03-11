@@ -6,7 +6,7 @@
 #include <zephyr/ztest.h>
 #include <zephyr/kernel.h>
 #include <ipc_streamer.h>
-#include <fetch_source_mgr.h>
+#include <dfu/suit_dfu_fetch_source.h>
 
 static uint32_t received_bytes = 0;
 static uint32_t received_checksum = 0;
@@ -44,14 +44,11 @@ typedef struct {
 
 } access_pattern_t;
 
-static suit_plat_err_t fetch_request_fn(const uint8_t *uri, size_t uri_length,
-					struct stream_sink *sink)
+int  fetch_request_fn(const uint8_t *uri, size_t uri_length,
+				     uint32_t session_id)
 {
 	zassert_equal(uri_length, strlen(requested_resource_id), "uri_length (%d)", uri_length);
 	zassert_mem_equal(uri, requested_resource_id, strlen(requested_resource_id));
-
-	zassert_not_null(sink);
-	zassert_not_null(sink->write);
 
 	access_pattern_t ap_table[] = {
 		{.chunk_size = 16000, .sleep_ms = 40}, {.chunk_size = 3, .sleep_ms = 10},
@@ -59,7 +56,7 @@ static suit_plat_err_t fetch_request_fn(const uint8_t *uri, size_t uri_length,
 		{.chunk_size = 8192, .sleep_ms = 100}, {.chunk_size = 4096, .sleep_ms = 200},
 		{.chunk_size = 4096, .sleep_ms = 10},  {.chunk_size = 4096, .sleep_ms = 10}};
 
-	suit_plat_err_t rc = SUIT_PLAT_SUCCESS;
+	int rc = 0;
 	int pattern_idx = 0;
 
 	for (int buf_iter = 0; buf_iter < ITERATIONS; buf_iter++) {
@@ -74,9 +71,11 @@ static suit_plat_err_t fetch_request_fn(const uint8_t *uri, size_t uri_length,
 				to_be_copied = ap->chunk_size;
 			}
 
-			rc = sink->write(sink->ctx, test_buf + offset_in_buffer, &to_be_copied);
-			if (rc != SUIT_PLAT_SUCCESS) {
-				return rc;
+			rc = suit_dfu_fetch_source_write_fetched_data(session_id,
+								      test_buf + offset_in_buffer,
+								      to_be_copied);
+			if (rc != 0) {
+				return SUIT_PLAT_ERR_CRASH;
 			}
 
 			offset_in_buffer += to_be_copied;
@@ -90,7 +89,7 @@ static suit_plat_err_t fetch_request_fn(const uint8_t *uri, size_t uri_length,
 		}
 	}
 
-	return SUIT_PLAT_SUCCESS;
+	return 0;
 }
 
 void test_full_stack(void)
@@ -116,7 +115,7 @@ void test_full_stack(void)
 	rc = suit_ipc_streamer_provider_init();
 	zassert_equal(rc, SUIT_PLAT_SUCCESS, "suit_ipc_streamer_provider_init returned (%d)", rc);
 
-	rc = suit_fetch_source_register(fetch_request_fn);
+	rc = suit_dfu_fetch_source_register(fetch_request_fn);
 	zassert_equal(rc, SUIT_PLAT_SUCCESS, "fetch_source_register returned (%d)", rc);
 
 	struct stream_sink test_sink = {

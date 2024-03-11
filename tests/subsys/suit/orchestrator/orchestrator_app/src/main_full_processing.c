@@ -9,7 +9,7 @@
 #include <dfu/suit_dfu.h>
 #include <suit_plat_err.h>
 #include <suit_types.h>
-#include <fetch_source_mgr.h>
+#include <dfu/suit_dfu_fetch_source.h>
 #include <dfu_cache_rw.h>
 #include <dfu_cache.h>
 #include <suit_metadata.h>
@@ -80,15 +80,13 @@ static const suit_uuid_t sample_app_class_id = {{0x08, 0xc1, 0xb5, 0x99, 0x55, 0
 #define MAX_UPDATE_REGIONS 10
 suit_plat_mreg_t requested_update_regions[MAX_UPDATE_REGIONS];
 
-static suit_plat_err_t fetch_source_fn(const uint8_t *uri, size_t uri_length,
-					struct stream_sink *sink)
+static int fetch_source_fn(const uint8_t *uri, size_t uri_length,
+			   uint32_t session_id)
 {
 	const uint8_t *data = NULL;
 	size_t len = 0;
 
 	zassert_not_null(uri);
-	zassert_not_null(sink);
-	zassert_not_null(sink->write);
 
 	if (memcmp(uri, "app.suit", MIN(sizeof("app.suit"), uri_length)) == 0)
 	{
@@ -113,10 +111,10 @@ static suit_plat_err_t fetch_source_fn(const uint8_t *uri, size_t uri_length,
 	}
 	else
 	{
-		return SUIT_PLAT_ERR_NOT_FOUND;
+		return -1;
 	}
 
-	return sink->write(sink->ctx, (uint8_t*) data, &len);
+	return suit_dfu_fetch_source_write_fetched_data(session_id, data, len);
 }
 
 suit_ssf_err_t suit_get_supported_manifest_roles_custom_fake(suit_manifest_role_t* roles,
@@ -172,7 +170,7 @@ static void *setup_suite(void)
 
 	zassert_true(device_is_ready(DFU_PARTITION_DEVICE), "Flash device not ready");
 
-	zassert_equal(SUIT_PLAT_SUCCESS, suit_fetch_source_register(fetch_source_fn),
+	zassert_equal(SUIT_PLAT_SUCCESS, suit_dfu_fetch_source_register(fetch_source_fn),
 		      "Failed to register fetch source");
 
 	return NULL;

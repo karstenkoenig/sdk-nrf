@@ -28,6 +28,8 @@ extern "C" {
  *        Fetch source callbacks are registered via suit_dfu_fetch_source_register.
  *        Multiple such callbacks can be registered. The callbacks are called from inside
  *        the SUIT processor until one of them succeeds.
+ *        Iteration will be broken if one of registered fetch sources starts to call
+ *        @ref suit_dfu_fetch_source_write_fetched_data or @ref suit_dfu_fetch_source_seek.
  *
  *        The role of the callback is to fetch data from the provided URI and pass it to SUIT
  *        via @ref suit_dfu_fetch_source_write_fetched_data - the data does not have to be passed
@@ -40,9 +42,6 @@ extern "C" {
  *        the data is fetched.
  *        If the function fails to fetch the data from the given URI it must return a negative
  *        error code.
- *        If any function call to @ref suit_dfu_fetch_source_write_fetched_data or
- *        @ref suit_dfu_fetch_source_seek fails the state of the DFU is unrecoverable. In this
- *        case the function should return 0, so that the iteration over the stream sources stops.
  *
  * @param[in]   uri URI from which the data should be fetched. Fetch source interprets it.
  *                  In case if fetch source is unable to retrieve requested resource, i.e. due to
@@ -57,9 +56,8 @@ extern "C" {
  *                         and @ref suit_dfu_fetch_source_seek made by this function,
  *
  *
- * @return 0 if iterating over fetch sources should be stopped - data fetching from URI succeeded
- *         or an unrecoverable error occured.
- *         Negative error code otherwise (URI not found or other error when fetching from URI).
+ * @return 0 on success - if fetching from the URI is possible and writing the data succeeded
+ *         Negative error code otherwise (URI not found or other error).
  */
 typedef int (*suit_dfu_fetch_source_request_fn)(const uint8_t *uri, size_t uri_length,
 						uint32_t session_id);

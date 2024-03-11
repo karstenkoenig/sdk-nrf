@@ -105,7 +105,7 @@ int suit_dfu_fetch_source_write_fetched_data(uint32_t session_id, const uint8_t 
 			= session->client_sink.write;
 	void *client_ctx = session->client_sink.ctx;
 
-	int err = client_write_fn(client_ctx, buf, size);
+	int err = client_write_fn(client_ctx, (uint8_t*) data, &len);
 
 	if (err == SUIT_PLAT_SUCCESS)
 	{
