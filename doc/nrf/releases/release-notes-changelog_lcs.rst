@@ -89,6 +89,8 @@ See `Zigbee samples`_ for the list of changes for the Zigbee samples.
 ESB
 ---
 
+* Added fast switching between radio states for the nRF54H20 SoC.
+
 nRF IEEE 802.15.4 radio driver
 ------------------------------
 
