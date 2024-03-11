@@ -8,6 +8,7 @@
 #include <zephyr/logging/log.h>
 #include <suit_platform_internal.h>
 #include <drivers/nrfx_common.h>
+#include <vprs.h>
 
 #ifdef CONFIG_SDFW_RESET_HANDLING_ENABLED
 #include <reset_mgr.h>
@@ -34,8 +35,8 @@ int suit_plat_cpu_run(uint8_t cpu_id, intptr_t run_address)
 	} break;
 
 	case NRF_PROCESSOR_SYSCTRL: { /* SysCtrl */
-		LOG_ERR("No implementation for CysCtrl invoke");
-		return SUIT_ERR_UNSUPPORTED_PARAMETER;
+		LOG_INF("Starting SysCtrl from address 0x%lx", run_address);
+		return vprs_sysctrl_start((uintptr_t)run_address);
 	} break;
 
 	case NRF_PROCESSOR_PPR:	   /* PPR(VPR) */
