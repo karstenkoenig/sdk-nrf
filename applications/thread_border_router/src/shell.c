@@ -255,7 +255,7 @@ static void print_rdata(const struct shell *sh, struct mdns_record_handle *handl
 	}
 }
 
-static void print_record(struct mdns_record_handle *handle, void *user_data) {
+static enum net_verdict print_record(struct mdns_record_handle *handle, void *user_data) {
 	const struct shell *sh = (const struct shell *)user_data;
 	size_t read = 0;
 	enum mdns_record_type type;
@@ -266,19 +266,19 @@ static void print_record(struct mdns_record_handle *handle, void *user_data) {
 
 	if (read < 0) {
 		shell_warn(sh, "failed to read the name");
-		return;
+		return NET_CONTINUE;
 	}
 
 	buf[read] = '\0';
 
 	if (mdns_record_get_type(handle, K_NO_WAIT, &type)) {
 		shell_warn(sh, "failed to get the type");
-		return;
+		return NET_CONTINUE;
 	}
 
 	if (mdns_record_get_ttl(handle, K_NO_WAIT, &ttl)) {
 		shell_warn(sh, "failed to get the TTL");
-		return;
+		return NET_CONTINUE;
 	}
 
 	type_str = type_to_cstr(type);
@@ -290,6 +290,9 @@ static void print_record(struct mdns_record_handle *handle, void *user_data) {
 	print_rdata(sh, handle);
 
 	shell_print(sh, "");
+
+	/* Process next record. */
+	return NET_CONTINUE;
 }
 
 static int cmd_tbr_mdns_records_show(const struct shell *sh, size_t argc, char *argv[])

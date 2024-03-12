@@ -13,6 +13,7 @@
 #include "backbone/backbone_agent.h"
 #include "platform/infra_if.h"
 #include "net/mdns_server.h"
+#include "net/dns_sd.h"
 
 #include <ipv6.h>
 
@@ -210,6 +211,7 @@ static int init_application(void)
 
 	infra_if_init();
 	mdns_server_init();
+	dns_sd_init();
 	backbone_agent_init();
 
 	net_mgmt_init_event_callback(&net_event_cb,

@@ -73,12 +73,12 @@ static bool domain_is_valid(const char *dname, uint8_t len)
 	}
 
 	return (label_len == DOMAIN_LOCAL_STR_LEN &&
-	        strcmp(&dname[last_label_pos + 1], DOMAIN_LOCAL_STR) == 0) ||
+		strncmp(&dname[last_label_pos + 1], DOMAIN_LOCAL_STR, DOMAIN_LOCAL_STR_LEN) == 0) ||
 	       (label_len == DOMAIN_ARPA_STR_LEN &&
-	        strcmp(&dname[last_label_pos + 1], DOMAIN_ARPA_STR) == 0);
+		strncmp(&dname[last_label_pos + 1], DOMAIN_ARPA_STR, DOMAIN_ARPA_STR_LEN) == 0);
 }
 
-static void remove_additional_rr(struct mdns_record_handle *handle, void *user_data)
+static enum net_verdict remove_additional_rr(struct mdns_record_handle *handle, void *user_data)
 {
 	struct mdns_record *current = FROM_HANDLE(handle);
 	struct mdns_record *removed = (struct mdns_record *)user_data;
@@ -86,6 +86,9 @@ static void remove_additional_rr(struct mdns_record_handle *handle, void *user_d
 	if (current->next_add_rr == removed) {
 		current->next_add_rr = removed->next_add_rr;
 	}
+
+	/* Process each record. */
+	return NET_CONTINUE;
 }
 
 int free_mdns_record(struct mdns_record *record)
@@ -174,10 +177,15 @@ int iterate_mdns_records(mdns_record_cb_t callback, void *user_data)
 	int res = 0;
 
 	SYS_SLIST_FOR_EACH_CONTAINER_SAFE(&records_list, current, next, node) {
-		callback(TO_HANDLE(current), user_data);
+		enum net_verdict verdict = callback(TO_HANDLE(current), user_data);
+
 		res++;
+		if (verdict == NET_OK) {
+			goto done;
+		}
 	}
 
+done:
 	return res;
 }
 

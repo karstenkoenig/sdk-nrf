@@ -24,10 +24,16 @@ struct mdns_record_handle;
 /**
  * @brief Record iteration callback
  *
- * Function pointer to be provided as @ref mdns_records_for_each() argument. It
- * is invoked for each currently allocated record.
+ * Function pointer to be provided as @ref mdns_records_for_each() and @ref iterate_mdns_records()
+ * argument.
+ *
+ * Depends the @ref mdns_records_for_each() or @ref iterate_mdns_records() purpose
+ * the callback returns:
+ *  - NET_CONTINUE if next records should be handled (e.g. if required to handle
+ *    all records one by one).
+ *  - NET_OK in case when needs to interrupt (e.g. record is found)
  */
-typedef void (*mdns_record_cb_t)(struct mdns_record_handle *handle, void *user_data);
+typedef enum net_verdict (*mdns_record_cb_t)(struct mdns_record_handle *handle, void *user_data);
 
 /** Supported mDNS record types */
 enum mdns_record_type {

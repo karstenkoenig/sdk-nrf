@@ -216,7 +216,7 @@ struct mdns_record *alloc_mdns_record(const char* name, uint8_t name_len, int32_
 				      const char *dname, uint8_t dname_len);
 
 /**
- * @brief Iterate over mDNS recods
+ * @brief Iterate over mDNS records
  *
  * Invoke a callback for each allocated mDNS record providing a record's handle.
  *
@@ -227,7 +227,7 @@ struct mdns_record *alloc_mdns_record(const char* name, uint8_t name_len, int32_
  * @param callback Callback to be called for each active record
  * @param user_data User data supplied by a caller
  *
- * @returns number of iterated records
+ * @returns 0 when no mDNS records otherwise number of records handled by the callback.
  */
 int iterate_mdns_records(mdns_record_cb_t callback, void *user_data);
 

@@ -51,6 +51,21 @@ static size_t comp_entry_count;
 
 static K_MUTEX_DEFINE(listeners_mutex);
 
+static int read_and_decode_to_lower(struct net_pkt *pkt, uint8_t *data, uint8_t length)
+{
+	int res = net_pkt_read(pkt, data, length);
+
+	if (res < 0) {
+		return res;
+	}
+
+	for (int it = 0; it < length; it++) {
+		data[it] = tolower(data[it]);
+	}
+
+	return 0;
+}
+
 /* Passing the 'void *' let us avoid unaligned access warning */
 static inline void unaligned_swap_u16(void *val)
 {
@@ -483,19 +498,21 @@ static bool compare_lowercased(const struct net_buf *buf, uint8_t *data, size_t 
 }
 
 /* Callback function that compares a given record with a question */
-static void match_record(struct mdns_record_handle *handle, void *user_data)
+static enum net_verdict match_record(struct mdns_record_handle *handle, void *user_data)
 {
 	struct mdns_record *record = FROM_HANDLE(handle);
-	struct match_opts *opts = (struct match_opts*)user_data;
+	struct match_opts *opts = (struct match_opts *)user_data;
 
 	if ((opts->type != MDNS_RECORD_TYPE_ANY && (record->type != opts->type)) ||
-	     (record->name_len != opts->name_len)) {
-		return;
+	    (record->name_len != opts->name_len)) {
+		return NET_CONTINUE;
 	}
 
 	if (compare_lowercased(record->name, opts->name, opts->name_len)) {
 		process_matched(record, opts);
 	}
+
+	return NET_CONTINUE;
 }
 
 /* Append all items from additional records chain that were not yet added to a given response */
@@ -518,7 +535,7 @@ static size_t append_additional_rrs(struct mdns_record *record, struct net_pkt *
 }
 
 /* Callback function for preparing record for matching */
-static void prepare_records(struct mdns_record_handle *handle, void *user_data)
+static enum net_verdict prepare_records(struct mdns_record_handle *handle, void *user_data)
 {
 	ARG_UNUSED(user_data);
 
@@ -526,10 +543,13 @@ static void prepare_records(struct mdns_record_handle *handle, void *user_data)
 
 	record->in_mcast_response = false;
 	record->in_unicast_response = false;
+
+	/* Process each record. */
+	return NET_CONTINUE;
 }
 
 /* Callback function for appending all additional records if needed */
-static void process_additional_rrs(struct mdns_record_handle *handle, void *user_data)
+static enum net_verdict process_additional_rrs(struct mdns_record_handle *handle, void *user_data)
 {
 	struct mdns_record *record = FROM_HANDLE(handle);
 	struct match_opts *opts = (struct match_opts*)user_data;
@@ -553,6 +573,9 @@ static void process_additional_rrs(struct mdns_record_handle *handle, void *user
 			opts->mcast_resp.header.additional_rrs += appended;
 		}
 	}
+
+	/* Process each record. */
+	return NET_CONTINUE;
 }
 
 /**
@@ -601,7 +624,7 @@ static bool process_question(struct net_pkt *pkt, struct net_pkt_cursor *qstart,
 		} else {
 			name[name_pos++] = label_len;
 
-			if (net_pkt_read(pkt, &name[name_pos], label_len) < 0) {
+			if (read_and_decode_to_lower(pkt, &name[name_pos], label_len) < 0) {
 				return false;
 			}
 

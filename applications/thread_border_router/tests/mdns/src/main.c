@@ -233,9 +233,10 @@ NET_DEVICE_INIT_INSTANCE(net_iface1_test,
 			 _ETH_L2_CTX_TYPE,
 			 127);
 
-static void remove_record(struct mdns_record_handle *handle, void *user_data)
+static enum net_verdict remove_record(struct mdns_record_handle *handle, void *user_data)
 {
 	mdns_record_remove(handle, K_NO_WAIT);
+	return NET_CONTINUE;
 }
 
 static void *test_setup(void)
