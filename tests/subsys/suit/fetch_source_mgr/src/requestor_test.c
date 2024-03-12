@@ -247,11 +247,11 @@ static void injector_entry_point(void *stream_session_id, void *p2, void *p3)
 }
 
 static K_SEM_DEFINE(delay_simulator_sem, 0, 1);
-static suit_plat_err_t ipc_stream_write_chunk(void *ctx, uint8_t *buf, size_t *size)
+static suit_plat_err_t ipc_stream_write_chunk(void *ctx, const uint8_t *buf, size_t size)
 {
-	received_bytes += *size;
+	received_bytes += size;
 
-	for (int i = 0; i < *size; ++i) {
+	for (int i = 0; i < size; ++i) {
 		received_checksum += buf[i];
 	}
 

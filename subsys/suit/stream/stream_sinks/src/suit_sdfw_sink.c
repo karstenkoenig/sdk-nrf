@@ -53,7 +53,7 @@ static digest_sink_err_t verify_digest(uint8_t *buf, size_t buf_size, psa_algori
 		return err;
 	}
 
-	err = digest_sink.write(digest_sink.ctx, buf, &buf_size);
+	err = digest_sink.write(digest_sink.ctx, buf, buf_size);
 	if (err != SUIT_PLAT_SUCCESS) {
 		LOG_ERR("Failed to write to stream: %d", err);
 		return err;
@@ -86,7 +86,7 @@ static suit_plat_err_t clear_urot_update_status(void)
 	}
 }
 
-static suit_plat_err_t schedule_sdfw_update(uint8_t *buf, size_t size)
+static suit_plat_err_t schedule_sdfw_update(const uint8_t *buf, size_t size)
 {
 	int err = 0;
 
@@ -121,7 +121,7 @@ static suit_plat_err_t schedule_sdfw_update(uint8_t *buf, size_t size)
 	return SUIT_PLAT_SUCCESS;
 }
 
-static sdf_sink_err_t check_update_candidate(uint8_t *buf, size_t size)
+static sdf_sink_err_t check_update_candidate(const uint8_t *buf, size_t size)
 {
 	uint8_t *candidate_binary_start =
 		(uint8_t *)(buf + CONFIG_SUIT_SDFW_UPDATE_FIRMWARE_OFFSET);
@@ -180,7 +180,7 @@ static void reboot_to_continue(void)
 	}
 }
 
-static suit_plat_err_t check_urot_none(uint8_t *buf, size_t size)
+static suit_plat_err_t check_urot_none(const uint8_t *buf, size_t size)
 {
 	/* Detect update candidate. */
 	/* It is enough to check Public Key Size field which occupies first 4B of Signed Manifest.
@@ -208,7 +208,7 @@ static suit_plat_err_t check_urot_none(uint8_t *buf, size_t size)
 	}
 }
 
-static suit_plat_err_t check_urot_activated(uint8_t *buf, size_t size)
+static suit_plat_err_t check_urot_activated(const uint8_t *buf, size_t size)
 {
 	uint8_t *candidate_binary_start =
 		(uint8_t *)(buf + CONFIG_SUIT_SDFW_UPDATE_FIRMWARE_OFFSET);
@@ -234,15 +234,15 @@ static suit_plat_err_t check_urot_activated(uint8_t *buf, size_t size)
 
 /* NOTE: Size means size of the SDFW binary to be updated,
  * excluding Signed Manifest preceding it within update candidate */
-static suit_plat_err_t write(void *ctx, uint8_t *buf, size_t *size)
+static suit_plat_err_t write(void *ctx, const uint8_t *buf, size_t size)
 {
-	if (NULL == ctx || NULL == buf || NULL == size) {
+	if (NULL == ctx || NULL == buf || 0 == size) {
 		LOG_ERR("NULL argument");
 		return SUIT_PLAT_ERR_INVAL;
 	}
 
 	LOG_DBG("buf: %p", (void *)buf);
-	LOG_DBG("size: %d", *size);
+	LOG_DBG("size: %d", size);
 
 	struct sdfw_sink_context *context = (struct sdfw_sink_context *)ctx;
 	if (context->write_called) {
@@ -257,14 +257,14 @@ static suit_plat_err_t write(void *ctx, uint8_t *buf, size_t *size)
 
 	switch (NRF_SICR->UROT.UPDATE.STATUS) {
 	case SICR_UROT_UPDATE_STATUS_CODE_None: {
-		err = check_urot_none(buf, *size);
+		err = check_urot_none(buf, size);
 		/* Potential start of update process - SecROM needs the registers to be set */
 		clear_registers = false;
 		break;
 	}
 
 	case SICR_UROT_UPDATE_STATUS_CODE_UROTActivated: {
-		err = check_urot_activated(buf, *size);
+		err = check_urot_activated(buf, size);
 		clear_registers = true;
 		break;
 	}

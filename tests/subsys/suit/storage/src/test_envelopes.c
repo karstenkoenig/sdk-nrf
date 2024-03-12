@@ -85,7 +85,7 @@ ZTEST_SUITE(suit_storage_envelopes_tests, NULL, NULL, test_suite_before, NULL, N
 
 ZTEST(suit_storage_envelopes_tests, test_empty_envelope_get)
 {
-	uint8_t *addr;
+	const uint8_t *addr;
 	size_t size;
 	int rc = 0;
 
@@ -127,7 +127,7 @@ ZTEST(suit_storage_envelopes_tests, test_empty_envelope_get)
 
 ZTEST(suit_storage_envelopes_tests, test_empty_envelope_set)
 {
-	uint8_t *addr;
+	const uint8_t *addr;
 	size_t size;
 	int rc = 0;
 
@@ -164,7 +164,7 @@ ZTEST(suit_storage_envelopes_tests, test_empty_envelope_set)
 
 ZTEST(suit_storage_envelopes_tests, test_empty_envelope_override)
 {
-	uint8_t *addr;
+	const uint8_t *addr;
 	size_t size;
 	int rc = 0;
 
@@ -225,7 +225,7 @@ ZTEST(suit_storage_envelopes_tests, test_empty_envelope_override)
 
 ZTEST(suit_storage_envelopes_tests, test_empty_envelope_set_unsupported_classes)
 {
-	uint8_t *addr;
+	const uint8_t *addr;
 	size_t size;
 	int rc = 0;
 
@@ -259,7 +259,7 @@ ZTEST(suit_storage_envelopes_tests, test_empty_envelope_set_unsupported_classes)
 
 ZTEST(suit_storage_envelopes_tests, test_empty_envelope_set_class_mismatch)
 {
-	uint8_t *addr;
+	const uint8_t *addr;
 	size_t size;
 	int rc = 0;
 

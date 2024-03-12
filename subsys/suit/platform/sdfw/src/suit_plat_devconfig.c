@@ -55,7 +55,7 @@ int suit_plat_authorize_sequence_num(enum suit_command_sequence seq_name,
 				     struct zcbor_string *manifest_component_id,
 				     unsigned int seq_num)
 {
-	uint8_t *envelope_addr;
+	const uint8_t *envelope_addr;
 	size_t envelope_size;
 	uint32_t current_seq_num;
 	suit_manifest_class_id_t *class_id = NULL;

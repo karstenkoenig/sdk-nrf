@@ -25,7 +25,7 @@
 LOG_MODULE_REGISTER(suit_flash_sink, CONFIG_SUIT_LOG_LEVEL);
 
 static suit_plat_err_t erase(void *ctx);
-static suit_plat_err_t write(void *ctx, uint8_t *buf, size_t *size);
+static suit_plat_err_t write(void *ctx, const uint8_t *buf, size_t size);
 static suit_plat_err_t seek(void *ctx, size_t offset);
 static suit_plat_err_t flush(void *ctx);
 static suit_plat_err_t used_storage(void *ctx, size_t *size);
@@ -181,7 +181,7 @@ suit_plat_err_t suit_flash_sink_get(struct stream_sink *sink, uint8_t *dst, size
 	return SUIT_PLAT_ERR_INVAL;
 }
 
-static suit_plat_err_t write_unaligned_start(struct flash_ctx *flash_ctx, size_t *size_left, uint8_t **buf)
+static suit_plat_err_t write_unaligned_start(struct flash_ctx *flash_ctx, size_t *size_left, const uint8_t **buf)
 {
 	uint8_t edit_buffer[SWAP_BUFFER_SIZE];
 
@@ -225,7 +225,7 @@ static suit_plat_err_t write_unaligned_start(struct flash_ctx *flash_ctx, size_t
 	return SUIT_PLAT_SUCCESS;
 }
 
-static suit_plat_err_t write_aligned(struct flash_ctx *flash_ctx, size_t *size_left, uint8_t **buf,
+static suit_plat_err_t write_aligned(struct flash_ctx *flash_ctx, size_t *size_left, const uint8_t **buf,
 				     size_t write_size)
 {
 	size_t block_start = 0;
@@ -255,7 +255,7 @@ static suit_plat_err_t write_aligned(struct flash_ctx *flash_ctx, size_t *size_l
 	return SUIT_PLAT_SUCCESS;
 }
 
-static suit_plat_err_t write_remaining(struct flash_ctx *flash_ctx, size_t *size_left, uint8_t **buf)
+static suit_plat_err_t write_remaining(struct flash_ctx *flash_ctx, size_t *size_left, const uint8_t **buf)
 {
 	uint8_t edit_buffer[SWAP_BUFFER_SIZE];
 	size_t block_start = 0;
@@ -286,9 +286,9 @@ static suit_plat_err_t write_remaining(struct flash_ctx *flash_ctx, size_t *size
 	return SUIT_PLAT_ERR_IO;
 }
 
-static suit_plat_err_t write(void *ctx, uint8_t *buf, size_t *size)
+static suit_plat_err_t write(void *ctx, const uint8_t *buf, size_t size)
 {
-	size_t size_left = *size;
+	size_t size_left = size;
 
 	if ((ctx != NULL) && (buf != NULL) && (size_left > 0)) {
 		struct flash_ctx *flash_ctx = (struct flash_ctx *)ctx;

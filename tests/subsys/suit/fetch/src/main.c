@@ -95,7 +95,7 @@ ZTEST(fetch_tests, test_integrated_fetch_to_memptr_OK)
 	zassert_equal(ret, SUIT_SUCCESS, "suit_plat_component_impl_data_get failed - error %i",
 		      ret);
 
-	uint8_t *payload;
+	const uint8_t *payload;
 	size_t payload_size = 0;
 
 	ret = suit_memptr_storage_ptr_get(handle, &payload, &payload_size);
@@ -260,7 +260,7 @@ ZTEST(fetch_tests, test_integrated_fetch_to_memptr_NOK_handle_NULL)
 	ret = suit_plat_fetch_integrated(component_handle, &source);
 	zassert_equal(ret, SUIT_SUCCESS, "suit_plat_fetch failed - error %i", ret);
 
-	uint8_t *payload;
+	const uint8_t *payload;
 	size_t payload_size = 0;
 
 	ret = suit_memptr_storage_ptr_get(NULL, &payload, &payload_size);

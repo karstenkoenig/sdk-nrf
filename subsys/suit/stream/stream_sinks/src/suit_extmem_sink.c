@@ -18,7 +18,7 @@
 LOG_MODULE_REGISTER(suit_extmem_sink, CONFIG_SUIT_LOG_LEVEL);
 
 static suit_plat_err_t erase(void *ctx);
-static suit_plat_err_t write(void *ctx, uint8_t *buf, size_t *size);
+static suit_plat_err_t write(void *ctx, const uint8_t *buf, size_t size);
 static suit_plat_err_t seek(void *ctx, size_t offset);
 static suit_plat_err_t used_storage(void *ctx, size_t *size);
 static suit_plat_err_t release(void *ctx);
@@ -161,7 +161,7 @@ static suit_plat_err_t erase(void *ctx)
 	return SUIT_PLAT_SUCCESS;
 }
 
-static suit_plat_err_t write(void *ctx, uint8_t *buf, size_t *size)
+static suit_plat_err_t write(void *ctx, const uint8_t *buf, size_t size)
 {
 	if (ctx == NULL || buf == NULL || size == 0) {
 		LOG_ERR("Invalid arguments.");
@@ -170,21 +170,21 @@ static suit_plat_err_t write(void *ctx, uint8_t *buf, size_t *size)
 
 	struct extmem_ctx *extmem_ctx = (struct extmem_ctx *)ctx;
 	uintptr_t current_offset = extmem_ctx->start_offset + extmem_ctx->bytes_written;
-	uintptr_t write_end = current_offset + *size;
+	uintptr_t write_end = current_offset + size;
 
 	if (current_offset >= extmem_ctx->end_offset || write_end > extmem_ctx->end_offset) {
 		return SUIT_PLAT_ERR_OUT_OF_BOUNDS;
 	}
 
-	LOG_DBG("Writing data at offset: %lu size: %u", current_offset, *size);
-	int err = extmem_write(current_offset, buf, *size);
+	LOG_DBG("Writing data at offset: %lu size: %u", current_offset, size);
+	int err = extmem_write(current_offset, buf, size);
 
 	if (err) {
 		LOG_ERR("Could not erase external memory: %d", err);
 		return SUIT_PLAT_ERR_IO;
 	}
 
-	extmem_ctx->bytes_written += *size;
+	extmem_ctx->bytes_written += size;
 	extmem_ctx->max_storage_used = MAX(extmem_ctx->bytes_written, extmem_ctx->max_storage_used);
 
 	return SUIT_PLAT_SUCCESS;

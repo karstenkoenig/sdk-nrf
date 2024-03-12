@@ -112,7 +112,7 @@ ZTEST(orchestrator_tests, test_boot_path_empty_storage)
 
 ZTEST(orchestrator_tests, test_update_path_successful_update)
 {
-	uint8_t *addr;
+	const uint8_t *addr;
 	size_t size;
 
 	/* GIVEN valid update candidate in suit storage... */
@@ -134,9 +134,9 @@ ZTEST(orchestrator_tests, test_update_path_successful_update)
 
 ZTEST(orchestrator_tests, test_boot_path_successful_boot)
 {
-	uint8_t *addr_boot;
+	const uint8_t *addr_boot;
 	size_t size_boot;
-	uint8_t *addr_update;
+	const uint8_t *addr_update;
 	size_t size_update;
 
 	/* GIVEN valid update candidate in suit storage... */

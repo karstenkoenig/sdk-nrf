@@ -31,7 +31,7 @@ static void read_cb(void *data, uintptr_t offset, size_t data_size, void *ctx)
 		return;
 	}
 
-	extmem_ctx->result = sink->write(sink->ctx, data, &data_size);
+	extmem_ctx->result = sink->write(sink->ctx, data, data_size);
 
 	if (extmem_ctx->result != SUIT_PLAT_SUCCESS) {
 		LOG_ERR("Sink error: %d", extmem_ctx->result);

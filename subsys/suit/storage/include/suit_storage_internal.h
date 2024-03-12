@@ -231,7 +231,7 @@ suit_plat_err_t suit_storage_update_set(uint8_t *addr, size_t size, const suit_p
  * @retval SUIT_PLAT_ERR_CBOR_DECODING  if failed to decode envelope.
  */
 suit_plat_err_t suit_storage_envelope_get(const uint8_t *area_addr, size_t area_size,
-					  const suit_manifest_class_id_t *id, uint8_t **addr,
+					  const suit_manifest_class_id_t *id, const uint8_t **addr,
 					  size_t *size);
 
 /**

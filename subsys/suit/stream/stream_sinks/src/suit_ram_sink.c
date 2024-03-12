@@ -17,7 +17,7 @@
 LOG_MODULE_REGISTER(suit_ram_sink, CONFIG_SUIT_LOG_LEVEL);
 
 static suit_plat_err_t erase(void *ctx);
-static suit_plat_err_t write(void *ctx, uint8_t *buf, size_t *size);
+static suit_plat_err_t write(void *ctx, const uint8_t *buf, size_t size);
 static suit_plat_err_t seek(void *ctx, size_t offset);
 static suit_plat_err_t used_storage(void *ctx, size_t *size);
 static suit_plat_err_t release(void *ctx);
@@ -113,20 +113,20 @@ static suit_plat_err_t erase(void *ctx)
 	return SUIT_PLAT_SUCCESS;
 }
 
-static suit_plat_err_t write(void *ctx, uint8_t *buf, size_t *size)
+static suit_plat_err_t write(void *ctx, const uint8_t *buf, size_t size)
 {
-	if ((ctx != NULL) && (buf != NULL) && (*size > 0)) {
+	if ((ctx != NULL) && (buf != NULL) && (size > 0)) {
 		struct ram_ctx *ram_ctx = (struct ram_ctx *)ctx;
 
-		if ((ram_ctx->offset_limit - (size_t)ram_ctx->ptr) >= *size) {
+		if ((ram_ctx->offset_limit - (size_t)ram_ctx->ptr) >= size) {
 			uint8_t *dst = (uint8_t*)suit_memory_global_address_to_ram_address((uintptr_t)ram_ctx->ptr);
 
 			if (dst == NULL) {
 				return SUIT_PLAT_ERR_INVAL;
 			}
 
-			memcpy(dst, buf, *size);
-			ram_ctx->offset += *size;
+			memcpy(dst, buf, size);
+			ram_ctx->offset += size;
 
 			if (ram_ctx->offset > ram_ctx->size_used) {
 				ram_ctx->size_used = ram_ctx->offset;

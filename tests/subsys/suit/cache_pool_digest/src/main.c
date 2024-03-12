@@ -17,7 +17,6 @@ static uint8_t uri[] = "http://databucket.com";
 static uint8_t data[] = { 0x43, 0x60, 0x02, 0x11, 0x35, 0x85, 0x37, 0x85, 0x76,
 			 					0x44, 0x09, 0xDE, 0xAD, 0x44, 0x45, 0x42, 0x66, 0x25,
 			 					0x12, 0x36, 0x84, 0x00, 0x08, 0x61, 0x17 };
-static size_t data_size = sizeof(data);
 static uint8_t valid_digest[] = { 0x0c, 0xfd, 0xd2, 0x46, 0xb1, 0x84, 0x77, 0x9e, 0xc0,
 									0xb5, 0x0b, 0xca, 0xf1, 0xea, 0x0d, 0xaf, 0x2b, 0x18,
 									0xa5, 0xbe, 0x5b, 0x61, 0x24, 0xc2, 0x65, 0x1c, 0xa9,
@@ -71,7 +70,7 @@ ZTEST(cache_pool_digest_tests, test_cache_get_slot_ok)
 	int ret = suit_dfu_cache_sink_get(&sink, 1, uri, sizeof(uri), true);
 	zassert_equal(ret, SUIT_PLAT_SUCCESS, "Failed to get sink: %i", ret);
 
-	ret = sink.write(sink.ctx, data, &data_size);
+	ret = sink.write(sink.ctx, data, sizeof(data));
 	zassert_equal(ret, SUIT_PLAT_SUCCESS, "Failed to write to sink: %i", ret);
 
 	ret = suit_dfu_cache_sink_commit(sink.ctx);
@@ -80,16 +79,16 @@ ZTEST(cache_pool_digest_tests, test_cache_get_slot_ok)
 	ret = sink.release(sink.ctx);
 	zassert_equal(ret, SUIT_PLAT_SUCCESS, "Failed to release sink: %i", ret);
 
-	uint8_t *payload = NULL;
+	const uint8_t *payload = NULL;
 	size_t payload_size = 0;
 	const uint8_t ok_uri[] = "http://databucket.com";
 	size_t uri_size = sizeof("http://databucket.com");
 
 	ret = suit_dfu_cache_search(ok_uri, uri_size, &payload, &payload_size);
 	zassert_equal(ret, SUIT_PLAT_SUCCESS, "\nGet from cache failed: %i", ret);
-	zassert_equal(payload_size, data_size,
+	zassert_equal(payload_size, sizeof(data),
 		      "Invalid data size for retrieved payload. payload(%u) data(%u)", payload_size,
-		      data_size);
+		      sizeof(data));
 
 
 	/* Valid id value for cand_img component */

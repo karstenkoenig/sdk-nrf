@@ -13,7 +13,7 @@
 
 LOG_MODULE_REGISTER(suit_cache_sink, CONFIG_SUIT_LOG_LEVEL);
 
-static suit_plat_err_t write(void *ctx, uint8_t *buf, size_t *size);
+static suit_plat_err_t write(void *ctx, const uint8_t *buf, size_t size);
 static suit_plat_err_t seek(void *ctx, size_t offset);
 static suit_plat_err_t flush(void *ctx);
 static suit_plat_err_t used_storage(void *ctx, size_t *size);
@@ -85,21 +85,21 @@ suit_plat_err_t suit_dfu_cache_sink_get(struct stream_sink *sink, uint8_t cache_
 }
 
 /* Actual write offset = data_offset + offset */
-static suit_plat_err_t write(void *ctx, uint8_t *buf, size_t *size)
+static suit_plat_err_t write(void *ctx, const uint8_t *buf, size_t size)
 {
-	if ((ctx != NULL) && (buf != NULL) && (size != NULL)) {
+	if ((ctx != NULL) && (buf != NULL) && (size != 0)) {
 		struct cache_ctx *cache_ctx = (struct cache_ctx *)ctx;
 		struct stream_sink sink;
 
 		if (cache_ctx->write_enabled) {
 			/* Check if data will fit */
-			if ((*size + cache_ctx->offset) < cache_ctx->offset_limit) {
+			if ((size + cache_ctx->offset) < cache_ctx->offset_limit) {
 				suit_plat_err_t ret = suit_flash_sink_get(
 					&sink,
 					cache_ctx->slot.slot_address +
 								  cache_ctx->slot.data_offset +
 								  cache_ctx->offset,
-					*size);
+					size);
 				if (ret != SUIT_PLAT_SUCCESS) {
 					LOG_ERR("Getting flash_sink failed. %i", ret);
 					return SUIT_PLAT_ERR_IO;
@@ -117,7 +117,7 @@ static suit_plat_err_t write(void *ctx, uint8_t *buf, size_t *size)
 					return SUIT_PLAT_ERR_IO;
 				}
 
-				cache_ctx->offset += *size;
+				cache_ctx->offset += size;
 
 				if (sink.release(sink.ctx) != SUIT_PLAT_SUCCESS) {
 					LOG_ERR("Sink release failed");

@@ -19,7 +19,7 @@ int suit_plat_memptr_size_update(suit_component_t handle, size_t size)
 	intptr_t run_address;
 	size_t component_size;
 	void *impl_data = NULL;
-	uint8_t *payload_ptr = NULL;
+	const uint8_t *payload_ptr = NULL;
 	size_t payload_size = 0;
 
 

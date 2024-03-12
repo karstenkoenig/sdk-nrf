@@ -8,7 +8,7 @@
 
 #include <suit_digest_sink.h>
 
-static uint8_t valid_payload[] = {0xde, 0xad, 0xbe, 0xef};
+static const uint8_t valid_payload[] = {0xde, 0xad, 0xbe, 0xef};
 
 const static uint8_t valid_digest[] = {0x5f, 0x78, 0xc3, 0x32, 0x74, 0xe4, 0x3f, 0xa9,
 				       0xde, 0x56, 0x59, 0x26, 0x5c, 0x1d, 0x91, 0x7e,
@@ -78,27 +78,26 @@ ZTEST(digest_sink_tests, test_digest_sink_get_out_of_contexts)
 ZTEST(digest_sink_tests, test_digest_sink_write_NOK)
 {
 	struct stream_sink digest_sink;
-	size_t buf_size = sizeof(valid_payload);
 
 	suit_plat_err_t err = suit_digest_sink_get(&digest_sink, valid_algorithm, valid_digest);
 	zassert_equal(err, SUIT_PLAT_SUCCESS, "Unexpected error code");
 
-	err = digest_sink.write(NULL, valid_payload, &buf_size);
+	err = digest_sink.write(NULL, valid_payload, sizeof(valid_payload));
 	zassert_not_equal(err, SUIT_PLAT_SUCCESS,
 			  "digest_sink.write should have failed - ctx == NULL");
 
-	err = digest_sink.write(digest_sink.ctx, NULL, &buf_size);
+	err = digest_sink.write(digest_sink.ctx, NULL, sizeof(valid_payload));
 	zassert_not_equal(err, SUIT_PLAT_SUCCESS,
 			  "digest_sink.write should have failed - payload == NULL");
 
-	err = digest_sink.write(digest_sink.ctx, valid_payload, NULL);
+	err = digest_sink.write(digest_sink.ctx, valid_payload, 0);
 	zassert_not_equal(err, SUIT_PLAT_SUCCESS,
-			  "digest_sink.write should have failed - size == NULL");
+			  "digest_sink.write should have failed - size == 0");
 
 	err = digest_sink.release(digest_sink.ctx);
 	zassert_equal(err, SUIT_PLAT_SUCCESS, "digest_sink.release failed - error %i", err);
 
-	err = digest_sink.write(digest_sink.ctx, valid_payload, &buf_size);
+	err = digest_sink.write(digest_sink.ctx, valid_payload, sizeof(valid_payload));
 	zassert_not_equal(err, SUIT_PLAT_SUCCESS,
 			  "digest_sink.write should have failed - ctx released");
 }
@@ -106,12 +105,11 @@ ZTEST(digest_sink_tests, test_digest_sink_write_NOK)
 ZTEST(digest_sink_tests, test_digest_sink_match_OK)
 {
 	struct stream_sink digest_sink;
-	size_t buf_size = sizeof(valid_payload);
 
 	suit_plat_err_t err = suit_digest_sink_get(&digest_sink, valid_algorithm, valid_digest);
 	zassert_equal(err, SUIT_PLAT_SUCCESS, "Unexpected error code");
 
-	err = digest_sink.write(digest_sink.ctx, valid_payload, &buf_size);
+	err = digest_sink.write(digest_sink.ctx, valid_payload, sizeof(valid_payload));
 	zassert_equal(err, SUIT_PLAT_SUCCESS, "Unexpected error code");
 
 	err = suit_digest_sink_digest_match(digest_sink.ctx);
@@ -124,12 +122,11 @@ ZTEST(digest_sink_tests, test_digest_sink_match_OK)
 ZTEST(digest_sink_tests, test_digest_sink_match_NOK)
 {
 	struct stream_sink digest_sink;
-	size_t buf_size = sizeof(valid_payload);
 
 	suit_plat_err_t err = suit_digest_sink_get(&digest_sink, valid_algorithm, valid_digest);
 	zassert_equal(err, SUIT_PLAT_SUCCESS, "Unexpected error code");
 
-	err = digest_sink.write(digest_sink.ctx, valid_payload, &buf_size);
+	err = digest_sink.write(digest_sink.ctx, valid_payload, sizeof(valid_payload));
 	zassert_equal(err, SUIT_PLAT_SUCCESS, "Unexpected error code");
 
 	err = suit_digest_sink_digest_match(NULL);

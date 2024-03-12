@@ -128,7 +128,7 @@ void suit_dfu_cache_clear(struct dfu_cache *cache);
  * @param payload_size Return pointer to size of returned payload.
  * @return suit_plat_err_t SUIT_PLAT_SUCCESS in case of success, otherwise error code
  */
-suit_plat_err_t suit_dfu_cache_search(const uint8_t *uri, size_t uri_size, uint8_t **payload,
+suit_plat_err_t suit_dfu_cache_search(const uint8_t *uri, size_t uri_size, const uint8_t **payload,
 				      size_t *payload_size);
 
 #ifdef __cplusplus

@@ -67,7 +67,7 @@ ZTEST_SUITE(cache_tests, NULL, NULL, test_suite_before, test_suite_after, NULL);
 
 ZTEST(cache_tests, test_suit_dfu_cache_search_ok)
 {
-	uint8_t *payload = NULL;
+	const uint8_t *payload = NULL;
 	size_t payload_size = 0;
 	const uint8_t ok_uri[] = "http://databucket.com";
 	size_t uri_size = sizeof("http://databucket.com");
@@ -78,7 +78,7 @@ ZTEST(cache_tests, test_suit_dfu_cache_search_ok)
 
 ZTEST(cache_tests, test_suit_dfu_cache_search_hash_ok)
 {
-	uint8_t *payload = NULL;
+	const uint8_t *payload = NULL;
 	size_t payload_size = 0;
 	const uint8_t ok_uri[] = "#file.bin";
 	size_t uri_size = sizeof("#file.bin");
@@ -89,7 +89,7 @@ ZTEST(cache_tests, test_suit_dfu_cache_search_hash_ok)
 
 ZTEST(cache_tests, test_suit_dfu_cache_search_nok)
 {
-	uint8_t *payload = NULL;
+	const uint8_t *payload = NULL;
 	size_t payload_size = 0;
 	const uint8_t nok_uri[] = "http://data123.com";
 	size_t uri_size = sizeof("http://data123.com");
@@ -100,7 +100,7 @@ ZTEST(cache_tests, test_suit_dfu_cache_search_nok)
 
 ZTEST(cache_tests, test_suit_dfu_cache_search_nok_uri_null)
 {
-	uint8_t *payload = NULL;
+	const uint8_t *payload = NULL;
 	size_t payload_size = 0;
 
 	int ret = suit_dfu_cache_search(NULL, 10, &payload, &payload_size);
@@ -109,7 +109,7 @@ ZTEST(cache_tests, test_suit_dfu_cache_search_nok_uri_null)
 
 ZTEST(cache_tests, test_suit_dfu_cache_search_nok_uri_size_zero)
 {
-	uint8_t *payload = NULL;
+	const uint8_t *payload = NULL;
 	size_t payload_size = 0;
 	const uint8_t ok_uri[] = "#file.bin";
 	size_t uri_size = 0;
@@ -120,7 +120,7 @@ ZTEST(cache_tests, test_suit_dfu_cache_search_nok_uri_size_zero)
 
 ZTEST(cache_tests, test_suit_dfu_cache_search_key_is_substring)
 {
-	uint8_t *payload = NULL;
+	const uint8_t *payload = NULL;
 	size_t payload_size = 0;
 	const uint8_t ok_uri[] = "http://databucket.com/subdir/";
 	size_t uri_size = sizeof("http://databucket.com/subdir/");
@@ -131,7 +131,7 @@ ZTEST(cache_tests, test_suit_dfu_cache_search_key_is_substring)
 
 ZTEST(cache_tests, test_suit_dfu_cache_search_empty)
 {
-	uint8_t *payload = NULL;
+	const uint8_t *payload = NULL;
 	size_t payload_size = 0;
 	const uint8_t ok_uri[] = "http://databucket.com";
 	size_t uri_size = sizeof("http://databucket.com");

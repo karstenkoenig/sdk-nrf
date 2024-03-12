@@ -9,7 +9,12 @@
 #include <suit_ram_sink.h>
 #include <suit_sink.h>
 
-#define TEST_DATA_SIZE		64
+
+static uint8_t test_data[] = {0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15,
+			      16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
+			      32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
+			      48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63};
+
 #define SUIT_MAX_RAM_COMPONENTS 1 /* Currently only one component allowed */
 
 #if (DT_NODE_EXISTS(DT_NODELABEL(ram0x))) /* nrf54H20, nrf54l15(?) */
@@ -20,18 +25,13 @@
 	#if defined(CONFIG_BOARD_NATIVE_POSIX)
 		#define TEST_DST ((uint8_t *)DT_REG_ADDR(DT_NODELABEL(sram0)))
 	#else
-		uint8_t test_mem[TEST_DATA_SIZE];
+		uint8_t test_mem[sizeof(test_data)];
 		#define TEST_DST test_mem
 	#endif
 #else
 	printk("Unrecognized platform");
 	#define TEST_DST NULL
 #endif
-
-static uint8_t test_data[] = {0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15,
-			      16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
-			      32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
-			      48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63};
 
 ZTEST_SUITE(ram_sink_tests, NULL, NULL, NULL, NULL, NULL);
 
@@ -190,7 +190,7 @@ ZTEST(ram_sink_tests, test_ram_sink_write_OK)
 	int err = suit_ram_sink_get(&ram_sink, TEST_DST, sizeof(test_data));
 	zassert_equal(err, SUIT_PLAT_SUCCESS, "suit_ram_sink_get failed - error %i", err);
 
-	err = ram_sink.write(ram_sink.ctx, test_data, &input_size);
+	err = ram_sink.write(ram_sink.ctx, test_data, input_size);
 	zassert_equal(err, SUIT_PLAT_SUCCESS, "ram_sink.write failed - error %i", err);
 
 	err = ram_sink.used_storage(ram_sink.ctx, &used_storage);
@@ -204,7 +204,7 @@ ZTEST(ram_sink_tests, test_ram_sink_write_OK)
 	err = ram_sink.used_storage(ram_sink.ctx, &used_storage);
 	zassert_equal(err, SUIT_PLAT_SUCCESS, "ram_sink.use_storage failed - error %i", err);
 
-	err = ram_sink.write(ram_sink.ctx, &test_data[input_size], &input_size);
+	err = ram_sink.write(ram_sink.ctx, &test_data[input_size], input_size);
 	zassert_equal(err, SUIT_PLAT_SUCCESS, "ram_sink.write failed - error %i", err);
 
 	err = ram_sink.release(ram_sink.ctx);
@@ -214,25 +214,22 @@ ZTEST(ram_sink_tests, test_ram_sink_write_OK)
 ZTEST(ram_sink_tests, test_ram_sink_write_NOK)
 {
 	struct stream_sink ram_sink;
-	size_t input_size = 0;
 
 	int err = suit_ram_sink_get(&ram_sink, TEST_DST, sizeof(test_data));
 	zassert_equal(err, SUIT_PLAT_SUCCESS, "suit_ram_sink_get failed - error %i", err);
 
-	err = ram_sink.write(ram_sink.ctx, test_data, &input_size);
+	err = ram_sink.write(ram_sink.ctx, test_data, 0);
 	zassert_not_equal(err, SUIT_PLAT_SUCCESS, "ram_sink.write should have failed - size == 0");
 
-	input_size = 8;
-	err = ram_sink.write(NULL, test_data, &input_size);
+	err = ram_sink.write(NULL, test_data, sizeof(test_data));
 	zassert_not_equal(err, SUIT_PLAT_SUCCESS,
 			  "ram_sink.write should have failed - ctx == NULL");
 
-	err = ram_sink.write(ram_sink.ctx, NULL, &input_size);
+	err = ram_sink.write(ram_sink.ctx, NULL, sizeof(test_data));
 	zassert_not_equal(err, SUIT_PLAT_SUCCESS,
 			  "ram_sink.write should have failed - buf == NULL");
 
-	input_size = sizeof(test_data) + 1;
-	err = ram_sink.write(ram_sink.ctx, test_data, &input_size);
+	err = ram_sink.write(ram_sink.ctx, test_data, sizeof(test_data) + 1);
 	zassert_not_equal(err, SUIT_PLAT_SUCCESS,
 			  "ram_sink.write should have failed - size out of bounds");
 

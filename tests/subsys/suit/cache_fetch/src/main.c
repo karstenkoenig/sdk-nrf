@@ -74,7 +74,7 @@ ZTEST(cache_streamer_tests, test_cache_streamer_ok)
 	memptr_storage_handle_t handle = NULL;
 	const uint8_t ok_uri[] = "http://databucket.com";
 	size_t ok_uri_len = sizeof("http://databucket.com");
-	uint8_t *payload_ptr;
+	const uint8_t *payload_ptr;
 	size_t payload_size = 0;
 
 	int ret = suit_memptr_storage_get(&handle);

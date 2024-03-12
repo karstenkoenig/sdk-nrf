@@ -289,7 +289,7 @@ static void check_cache_slot_content(uint8_t cache_partition_id, const uint8_t *
 		      "Getting cache partition %d info failed", cache_partition_id);
 
 	/* Find the given slot in cache */
-	ret = suit_dfu_cache_search(uri, uri_len, (uint8_t**) &result_data, &result_len);
+	ret = suit_dfu_cache_search(uri, uri_len, &result_data, &result_len);
 	zassert_equal(SUIT_PLAT_SUCCESS, ret, "Finding slot for URI in cache failed!");
 
 	zassert_true(result_data >= partition_address

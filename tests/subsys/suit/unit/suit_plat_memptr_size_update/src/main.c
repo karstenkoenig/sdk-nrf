@@ -138,7 +138,7 @@ static suit_memptr_storage_err_t suit_memptr_storage_ptr_get_correct_fake_func(m
 
 
 static suit_memptr_storage_err_t suit_memptr_storage_ptr_store_invalid_fake_func(memptr_storage_handle_t handle,
-																			uint8_t *payload_ptr,
+																			const uint8_t *payload_ptr,
 																			size_t payload_size)
 {
 	zassert_equal(handle, TEST_MEMPTR_STORAGE_HANDLE, "Unexpected memory storage handle value");
@@ -149,7 +149,7 @@ static suit_memptr_storage_err_t suit_memptr_storage_ptr_store_invalid_fake_func
 }
 
 static suit_memptr_storage_err_t suit_memptr_storage_ptr_store_correct_fake_func(memptr_storage_handle_t handle,
-																			uint8_t *payload_ptr,
+																			const uint8_t *payload_ptr,
 																			size_t payload_size)
 {
 	zassert_equal(handle, TEST_MEMPTR_STORAGE_HANDLE, "Unexpected memory storage handle value");

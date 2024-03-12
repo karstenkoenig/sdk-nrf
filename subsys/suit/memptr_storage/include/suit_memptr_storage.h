@@ -58,7 +58,7 @@ suit_memptr_storage_err_t suit_memptr_storage_release(memptr_storage_handle_t ha
  * @retval SUIT_MEMPTR_STORAGE_ERR_UNALLOCATED_RECORD Attempt to write to unallocated record.
  */
 suit_memptr_storage_err_t suit_memptr_storage_ptr_store(memptr_storage_handle_t handle,
-						        uint8_t *payload_ptr,
+						        const uint8_t *payload_ptr,
 						        size_t payload_size);
 
 /**
@@ -73,7 +73,7 @@ suit_memptr_storage_err_t suit_memptr_storage_ptr_store(memptr_storage_handle_t 
  * @retval SUIT_MEMPTR_STORAGE_ERR_UNALLOCATED_RECORD Attempt to read from unallocated record.
  */
 suit_memptr_storage_err_t suit_memptr_storage_ptr_get(memptr_storage_handle_t handle,
-						      uint8_t **payload_ptr,
+						      const uint8_t **payload_ptr,
 						      size_t *payload_size);
 
 #ifdef __cplusplus

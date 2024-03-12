@@ -217,7 +217,7 @@ static int update_path(void)
 
 static int boot_envelope(const suit_manifest_class_id_t *class_id)
 {
-	uint8_t *installed_envelope_address = NULL;
+	const uint8_t *installed_envelope_address = NULL;
 	size_t installed_envelope_size = 0;
 
 	suit_plat_err_t err = suit_storage_installed_envelope_get(

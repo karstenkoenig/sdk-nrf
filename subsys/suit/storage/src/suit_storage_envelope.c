@@ -170,7 +170,7 @@ static suit_plat_err_t save_envelope_partial_bstr(uint8_t *area_addr, size_t are
 }
 
 suit_plat_err_t suit_storage_envelope_get(const uint8_t *area_addr, size_t area_size,
-					  const suit_manifest_class_id_t *id, uint8_t **addr,
+					  const suit_manifest_class_id_t *id, const uint8_t **addr,
 					  size_t *size)
 {
 	struct SUIT_Envelope_severed envelope;
@@ -213,7 +213,7 @@ suit_plat_err_t suit_storage_envelope_install(uint8_t *area_addr, size_t area_si
 	 * Additionally change the size variable value from envelope size to
 	 * the decoded envelope size, that does not contain severable elements.
 	 */
-	err = suit_storage_decode_suit_envelope_severed((const uint8_t *)addr, size, &envelope,
+	err = suit_storage_decode_suit_envelope_severed(addr, size, &envelope,
 							&size);
 	if (err != SUIT_PLAT_SUCCESS) {
 		LOG_ERR("Unable to install envelope: decode failed (%d)", err);

@@ -9,7 +9,7 @@
 
 int suit_plat_retrieve_manifest_domain_specific(struct zcbor_string *component_id,
 						suit_component_type_t component_type,
-						uint8_t **envelope_str, size_t *envelope_len)
+						const uint8_t **envelope_str, size_t *envelope_len)
 {
 	(void) component_id;
 	(void) component_type;

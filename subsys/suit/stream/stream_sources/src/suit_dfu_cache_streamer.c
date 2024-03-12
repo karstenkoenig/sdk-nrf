@@ -17,13 +17,13 @@ suit_plat_err_t suit_dfu_cache_streamer_stream(const uint8_t *uri, size_t uri_si
 	LOG_HEXDUMP_DBG(uri, uri_size, "Running suit_dfu_cache_streamer_stream function");
 	if ((uri != NULL) && (sink != NULL) && (sink->write != NULL) && (uri_size > 0)) {
 		suit_plat_err_t err = SUIT_PLAT_SUCCESS;
-		uint8_t *payload = NULL;
+		const uint8_t *payload = NULL;
 		size_t payload_size = 0;
 
 		err = suit_dfu_cache_search(uri, uri_size, &payload, &payload_size);
 
 		if (err == SUIT_PLAT_SUCCESS) {
-			return sink->write(sink->ctx, payload, &payload_size);
+			return sink->write(sink->ctx, payload, payload_size);
 		}
 
 		return SUIT_PLAT_ERR_NOT_FOUND;

@@ -111,7 +111,7 @@ static suit_plat_err_t search_cache_pool(struct dfu_cache_pool *cache_pool,
 	return SUIT_PLAT_ERR_INVAL;
 }
 
-suit_plat_err_t suit_dfu_cache_search(const uint8_t *uri, size_t uri_size, uint8_t **payload,
+suit_plat_err_t suit_dfu_cache_search(const uint8_t *uri, size_t uri_size, const uint8_t **payload,
 				      size_t *payload_size)
 {
 	if ((uri != NULL) && (uri_size != 0)) {
@@ -123,7 +123,7 @@ suit_plat_err_t suit_dfu_cache_search(const uint8_t *uri, size_t uri_size, uint8
 				search_cache_pool(&dfu_cache.pools[i], &tmp_uri, &tmp_payload);
 
 			if (ret == SUIT_PLAT_SUCCESS) {
-				*payload = (uint8_t *)tmp_payload.value;
+				*payload = tmp_payload.value;
 				*payload_size = tmp_payload.len;
 
 				return ret;

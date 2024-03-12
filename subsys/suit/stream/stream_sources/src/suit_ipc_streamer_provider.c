@@ -224,7 +224,7 @@ static suit_plat_err_t end_of_stream(image_request_info_t *ri)
 	return SUIT_PLAT_SUCCESS;
 }
 
-static suit_plat_err_t write_proxy(void *ctx, uint8_t *source_bufer, size_t *size)
+static suit_plat_err_t write_proxy(void *ctx, const uint8_t *source_bufer, size_t size)
 {
 
 	suit_plat_err_t err = SUIT_PLAT_SUCCESS;
@@ -232,7 +232,7 @@ static suit_plat_err_t write_proxy(void *ctx, uint8_t *source_bufer, size_t *siz
 	image_request_info_t *ri = &request_info;
 
 	size_t source_offset = 0;
-	size_t source_remaining = *size;
+	size_t source_remaining = size;
 
 	while (source_remaining) {
 

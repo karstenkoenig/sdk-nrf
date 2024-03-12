@@ -20,7 +20,7 @@ extern "C" {
  */
 int suit_plat_retrieve_manifest_domain_specific(struct zcbor_string *component_id,
 						suit_component_type_t component_type,
-						uint8_t **envelope_str, size_t *envelope_len);
+						const uint8_t **envelope_str, size_t *envelope_len);
 
 
 #ifdef __cplusplus

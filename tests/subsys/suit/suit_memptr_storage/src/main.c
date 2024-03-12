@@ -109,7 +109,7 @@ ZTEST(suit_memptr_storage_tests, test_memptr_storage_save_NOK)
 ZTEST(suit_memptr_storage_tests, test_memptr_storage_get_OK)
 {
 	memptr_storage_handle_t handle = NULL;
-	uint8_t *payload_ptr;
+	const uint8_t *payload_ptr;
 	size_t payload_size;
 
 	int err = suit_memptr_storage_get(&handle);
@@ -133,7 +133,7 @@ ZTEST(suit_memptr_storage_tests, test_memptr_storage_get_OK)
 ZTEST(suit_memptr_storage_tests, test_memptr_storage_get_NOK)
 {
 	memptr_storage_handle_t handle = NULL;
-	uint8_t *payload_ptr;
+	const uint8_t *payload_ptr;
 	size_t payload_size;
 
 	int err = suit_memptr_storage_get(&handle);

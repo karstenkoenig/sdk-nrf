@@ -101,11 +101,7 @@ int suit_dfu_fetch_source_write_fetched_data(uint32_t session_id, const uint8_t 
 		session->stage = STAGE_IN_PROGRESS;
 	}
 
-	suit_plat_err_t (*client_write_fn)(void *ctx, uint8_t *buf, size_t *size)
-			= session->client_sink.write;
-	void *client_ctx = session->client_sink.ctx;
-
-	int err = client_write_fn(client_ctx, (uint8_t*) data, &len);
+	int err = session->client_sink.write(session->client_sink.ctx, data, len);
 
 	if (err == SUIT_PLAT_SUCCESS)
 	{
@@ -134,18 +130,12 @@ int suit_dfu_fetch_source_seek(uint32_t session_id, size_t offset)
 		session->stage = STAGE_IN_PROGRESS;
 	}
 
-	suit_plat_err_t (*client_seek_fn)(void *ctx, size_t offset)
-				= session->client_sink.seek;
-
-	if ( client_seek_fn == NULL)
+	if ( session->client_sink.seek == NULL)
 	{
 		return -EACCES;
 	}
 
-	void *client_ctx = session->client_sink.ctx;
-
-	suit_plat_err_t err = client_seek_fn(client_ctx, offset);
-
+	suit_plat_err_t err = session->client_sink.seek(session->client_sink.ctx, offset);
 
 	if (err == SUIT_PLAT_SUCCESS)
 	{

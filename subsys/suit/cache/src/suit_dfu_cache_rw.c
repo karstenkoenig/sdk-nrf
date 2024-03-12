@@ -257,11 +257,11 @@ suit_plat_err_t suit_dfu_cache_rw_partition_info_get(uint8_t cache_partition_id,
  * @param size Size of data to be written
  * @return suit_plat_err_t SUIT_PLAT_SUCCESS in case of success, otherwise error code
  */
-static suit_plat_err_t write_to_sink(uint8_t *address, uint8_t *data, size_t *size)
+static suit_plat_err_t write_to_sink(uint8_t *address, uint8_t *data, size_t size)
 {
 	struct stream_sink sink;
 
-	suit_plat_err_t ret = suit_flash_sink_get(&sink, address, *size);
+	suit_plat_err_t ret = suit_flash_sink_get(&sink, address, size);
 	if (ret != SUIT_PLAT_SUCCESS) {
 		LOG_ERR("Getting flash_sink failed. %i", ret);
 		return SUIT_PLAT_ERR_IO;
@@ -477,7 +477,7 @@ static suit_plat_err_t slot_in_cache_partition_allocate(const struct zcbor_strin
 		}
 
 		/* Check if uri is not a duplicate */
-		uint8_t *payload = NULL;
+		const uint8_t *payload = NULL;
 		size_t payload_size = 0;
 
 		suit_plat_err_t ret =
@@ -525,7 +525,7 @@ static suit_plat_err_t slot_in_cache_partition_allocate(const struct zcbor_strin
 			return SUIT_PLAT_ERR_NOMEM;
 		}
 
-		ret = write_to_sink(slot->slot_address, output, &encoded_size);
+		ret = write_to_sink(slot->slot_address, output, encoded_size);
 		if (ret != SUIT_PLAT_SUCCESS) {
 			LOG_ERR("Writing slot header failed. %i", ret);
 			return SUIT_PLAT_ERR_IO;
@@ -646,7 +646,7 @@ suit_plat_err_t suit_dfu_cache_rw_slot_close(struct suit_cache_slot *slot, size_
 
 		/* Update byte string size */
 		if (write_to_sink(slot->slot_address + slot->size_offset, (uint8_t *)&tmp,
-				  &tmp_size) != SUIT_PLAT_SUCCESS) {
+				  tmp_size) != SUIT_PLAT_SUCCESS) {
 			LOG_ERR("Updating cache slot size in header failed.");
 			return SUIT_PLAT_ERR_IO;
 		}
@@ -700,7 +700,7 @@ suit_plat_err_t suit_dfu_cache_rw_slot_close(struct suit_cache_slot *slot, size_
 				return SUIT_PLAT_ERR_INVAL;
 			}
 
-			if (write_to_sink((uint8_t *)end_address, header, &header_size)) {
+			if (write_to_sink((uint8_t *)end_address, header, header_size)) {
 				LOG_ERR("Writing CBOR cache slot header for padding failed.");
 				return SUIT_PLAT_ERR_IO;
 			}
@@ -710,7 +710,7 @@ suit_plat_err_t suit_dfu_cache_rw_slot_close(struct suit_cache_slot *slot, size_
 			tmp_size = 1;
 			for (size_t i = 0; i < padding_size; i++) {
 				if (write_to_sink((uint8_t *)(end_address + i), &(uint8_t){0},
-						  &tmp_size)) {
+						  tmp_size)) {
 					LOG_ERR("Writing padding byte failed.");
 					return SUIT_PLAT_ERR_IO;
 				}
@@ -724,7 +724,7 @@ suit_plat_err_t suit_dfu_cache_rw_slot_close(struct suit_cache_slot *slot, size_
 		tmp_size = 1;
 
 		/* Add indefinite map, end marker 0xFF */
-		if (write_to_sink((uint8_t *)end_address, (uint8_t *)&tmp, &tmp_size) !=
+		if (write_to_sink((uint8_t *)end_address, (uint8_t *)&tmp, tmp_size) !=
 		    SUIT_PLAT_SUCCESS) {
 			LOG_ERR("Writing CBOR map end marker to cache partition failed.");
 			return SUIT_PLAT_ERR_IO;
@@ -783,7 +783,7 @@ suit_plat_err_t suit_dfu_cache_rw_slot_drop(struct suit_cache_slot *slot)
 		if (add_map_header) {
 			LOG_DBG("Restore map header (%p)", slot->slot_address);
 			int ret = write_to_sink(erase_address, &(uint8_t){INDEFINITE_MAP_HEADER},
-						&write_size);
+						write_size);
 			if (ret != SUIT_PLAT_SUCCESS) {
 				LOG_ERR("Unable to restore slot after erase: %i", ret);
 				return SUIT_PLAT_ERR_IO;

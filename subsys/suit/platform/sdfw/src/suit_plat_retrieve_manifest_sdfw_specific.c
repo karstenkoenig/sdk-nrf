@@ -18,7 +18,7 @@ LOG_MODULE_REGISTER(suit_plat_retr_mfst_sdfw, CONFIG_SUIT_LOG_LEVEL);
 
 int suit_plat_retrieve_manifest_domain_specific(struct zcbor_string *component_id,
 						suit_component_type_t component_type,
-						uint8_t **envelope_str, size_t *envelope_len)
+						const uint8_t **envelope_str, size_t *envelope_len)
 {
 	int ret = SUIT_ERR_UNSUPPORTED_COMPONENT_ID;
 

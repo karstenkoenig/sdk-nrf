@@ -244,7 +244,7 @@ int suit_plat_override_image_size(suit_component_t handle, size_t size)
 			return err;
 		}
 
-		uint8_t *payload_ptr = NULL;
+		const uint8_t *payload_ptr = NULL;
 		size_t payload_size = 0;
 
 		err = suit_memptr_storage_ptr_get(impl_data, &payload_ptr, &payload_size);

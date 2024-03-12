@@ -16,7 +16,7 @@
 
 LOG_MODULE_REGISTER(suit_plat_retr_mfst, CONFIG_SUIT_LOG_LEVEL);
 
-int suit_plat_retrieve_manifest(suit_component_t component_handle, uint8_t **envelope_str,
+int suit_plat_retrieve_manifest(suit_component_t component_handle, const uint8_t **envelope_str,
 				size_t *envelope_len)
 {
 	suit_component_type_t component_type = SUIT_COMPONENT_TYPE_UNSUPPORTED;

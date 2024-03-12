@@ -80,7 +80,7 @@ static int suit_plat_check_image_match_mfst(suit_component_t component,
 {
 	int ret = SUIT_ERR_UNSUPPORTED_COMPONENT_ID;
 
-	uint8_t *envelope_str;
+	const uint8_t *envelope_str;
 	size_t envelope_len;
 	struct zcbor_string manifest_digest;
 	enum suit_cose_alg alg;

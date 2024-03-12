@@ -30,7 +30,7 @@ int suit_plat_check_copy(suit_component_t dst_handle, suit_component_t src_handl
 #ifdef CONFIG_SUIT_STREAM
 	struct stream_sink dst_sink;
 #ifdef CONFIG_SUIT_STREAM_SOURCE_MEMPTR
-	uint8_t *payload_ptr;
+	const uint8_t *payload_ptr;
 	size_t payload_size;
 #endif /* CONFIG_SUIT_STREAM_SOURCE_MEMPTR */
 	suit_component_type_t src_component_type = SUIT_COMPONENT_TYPE_UNSUPPORTED;
@@ -116,7 +116,7 @@ int suit_plat_copy(suit_component_t dst_handle, suit_component_t src_handle)
 #ifdef CONFIG_SUIT_STREAM
 	struct stream_sink dst_sink;
 #ifdef CONFIG_SUIT_STREAM_SOURCE_MEMPTR
-	uint8_t *payload_ptr;
+	const uint8_t *payload_ptr;
 	size_t payload_size;
 #endif /* CONFIG_SUIT_STREAM_SOURCE_MEMPTR */
 	suit_component_type_t src_component_type = SUIT_COMPONENT_TYPE_UNSUPPORTED;

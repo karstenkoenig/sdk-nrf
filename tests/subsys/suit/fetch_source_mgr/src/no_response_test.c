@@ -13,7 +13,7 @@ static const char *requested_resource_id = "ExampleImageName.img";
 static void *stream_sink_requested_ctx = (void *)0xabcd0001;
 static void *missing_image_notify_requested_ctx = (void *)0xabcd0002;
 
-static suit_plat_err_t ipc_stream_write_chunk(void *ctx, uint8_t *buf, size_t *size)
+static suit_plat_err_t ipc_stream_write_chunk(void *ctx, const uint8_t *buf, size_t size)
 {
 	write_chunk_count++;
 	return SUIT_PLAT_SUCCESS;

@@ -26,7 +26,7 @@ int suit_plat_check_content_mem_mapped(suit_component_t component,
 	size_t size = 0;
 	const uint8_t *content_data = content->value;
 
-	err = suit_memptr_storage_ptr_get((memptr_storage_handle_t)impl_data, (uint8_t**)&data, &size);
+	err = suit_memptr_storage_ptr_get((memptr_storage_handle_t)impl_data, &data, &size);
 	if (err != SUIT_PLAT_SUCCESS) {
 		LOG_ERR("Failed to get memptr ptr: %d", err);
 		return SUIT_ERR_CRASH;

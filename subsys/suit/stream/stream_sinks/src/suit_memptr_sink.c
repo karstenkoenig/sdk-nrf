@@ -9,7 +9,7 @@
 
 LOG_MODULE_REGISTER(suit_memptr_sink, CONFIG_SUIT_LOG_LEVEL);
 
-static suit_plat_err_t write(void *ctx, uint8_t *buf, size_t *size);
+static suit_plat_err_t write(void *ctx, const uint8_t *buf, size_t size);
 static suit_plat_err_t used_storage(void *ctx, size_t *size);
 
 suit_plat_err_t suit_memptr_sink_get(struct stream_sink *sink, memptr_storage_handle_t handle)
@@ -30,11 +30,11 @@ suit_plat_err_t suit_memptr_sink_get(struct stream_sink *sink, memptr_storage_ha
 	return SUIT_PLAT_ERR_INVAL;
 };
 
-static suit_plat_err_t write(void *ctx, uint8_t *buf, size_t *size)
+static suit_plat_err_t write(void *ctx, const uint8_t *buf, size_t size)
 {
 	suit_memptr_storage_err_t err;
-	if ((ctx != NULL) && (buf != NULL) && (size != NULL) && (*size != 0)) {
-		err = suit_memptr_storage_ptr_store(ctx, buf, *size);
+	if ((ctx != NULL) && (buf != NULL) && (size != 0)) {
+		err = suit_memptr_storage_ptr_store(ctx, buf, size);
 		if (err != SUIT_PLAT_SUCCESS)
 		{
 			/* In the current conditions suit_memptr_storage_ptr_store will only
@@ -52,7 +52,7 @@ static suit_plat_err_t write(void *ctx, uint8_t *buf, size_t *size)
 static suit_plat_err_t used_storage(void *ctx, size_t *size)
 {
 	if ((ctx != NULL) && (size != NULL)) {
-		uint8_t *payload_ptr;
+		const uint8_t *payload_ptr;
 		size_t payload_size;
 
 		if (suit_memptr_storage_ptr_get(ctx, &payload_ptr, &payload_size)

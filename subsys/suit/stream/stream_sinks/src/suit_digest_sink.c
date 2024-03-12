@@ -30,15 +30,15 @@ static struct digest_sink_context *get_new_context(void)
 	return NULL;
 }
 
-static suit_plat_err_t write(void *ctx, uint8_t *buf, size_t *size)
+static suit_plat_err_t write(void *ctx, const uint8_t *buf, size_t size)
 {
-	if ((NULL == ctx) || (NULL == buf) || (NULL == size)) {
+	if ((NULL == ctx) || (NULL == buf) || (0 == size)) {
 		LOG_ERR("Invalid arguments");
 		return SUIT_PLAT_ERR_INVAL;
 	}
 
 	LOG_DBG("buf: %p", (void *)buf);
-	LOG_DBG("size: %d", *size);
+	LOG_DBG("size: %d", size);
 
 	struct digest_sink_context *digest_ctx = (struct digest_sink_context *)ctx;
 
@@ -47,7 +47,7 @@ static suit_plat_err_t write(void *ctx, uint8_t *buf, size_t *size)
 		return SUIT_PLAT_ERR_INCORRECT_STATE;
 	}
 
-	psa_status_t status = psa_hash_update(&digest_ctx->operation, buf, *size);
+	psa_status_t status = psa_hash_update(&digest_ctx->operation, buf, size);
 	if (PSA_SUCCESS != status) {
 		LOG_ERR("Failed to update digest: %d", status);
 		return SUIT_PLAT_ERR_CRASH;

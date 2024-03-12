@@ -44,7 +44,7 @@ ZTEST(copy_tests, test_integrated_fetch_to_memptr_and_copy_to_msink_OK)
 	zassert_equal(ret, SUIT_SUCCESS, "suit_plat_component_impl_data_get failed - error %i",
 		      ret);
 
-	uint8_t *payload;
+	const uint8_t *payload;
 	size_t payload_size = 0;
 
 	ret = suit_memptr_storage_ptr_get(handle, &payload, &payload_size);
@@ -108,7 +108,7 @@ ZTEST(copy_tests, test_integrated_fetch_to_memptr_and_copy_to_msink_NOK_dst_hand
 	zassert_equal(ret, SUIT_SUCCESS, "suit_plat_component_impl_data_get failed - error %i",
 		      ret);
 
-	uint8_t *payload;
+	const uint8_t *payload;
 	size_t payload_size = 0;
 
 	ret = suit_memptr_storage_ptr_get(handle, &payload, &payload_size);
@@ -172,7 +172,7 @@ ZTEST(copy_tests, test_integrated_fetch_to_memptr_and_copy_to_msink_NOK_src_hand
 	zassert_equal(ret, SUIT_SUCCESS, "suit_plat_component_impl_data_get failed - error %i",
 		      ret);
 
-	uint8_t *payload;
+	const uint8_t *payload;
 	size_t payload_size = 0;
 
 	ret = suit_memptr_storage_ptr_get(handle, &payload, &payload_size);

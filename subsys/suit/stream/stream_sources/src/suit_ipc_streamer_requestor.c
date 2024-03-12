@@ -273,8 +273,7 @@ static suit_plat_err_t data_loop(image_request_state_t *irs)
 				if (SUIT_PLAT_SUCCESS == sink_error && NULL != cps->address && 0 != cps->size) {
 
 					image_request_state_unlock();
-					sink_error = irs->sink->write(irs->sink->ctx, cps->address,
-								      &cps->size);
+					sink_error = irs->sink->write(irs->sink->ctx, cps->address, cps->size);
 					image_request_state_lock();
 
 					if (SUIT_PLAT_SUCCESS == sink_error) {

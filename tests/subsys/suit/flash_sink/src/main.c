@@ -12,7 +12,7 @@
 #include <zephyr/drivers/flash.h>
 #include <suit_memptr_storage.h>
 
-#define TEST_DATA_SIZE	    64
+#define TEST_ARBITRARY_WRITE_SIZE 21 
 #define TEST_REQUESTED_AREA 0x1000
 #define WRITE_ADDR	    suit_plat_mem_nvm_ptr_get(SUIT_DFU_PARTITION_OFFSET)
 
@@ -150,26 +150,25 @@ ZTEST(flash_sink_tests, test_flash_sink_write_OK)
 {
 	struct stream_sink flash_sink;
 	size_t used_storage = 0;
-	size_t input_size = 21; /* Arbitrary value, chosen to be unaligned */
 
 	int err = suit_flash_sink_get(&flash_sink, WRITE_ADDR, TEST_REQUESTED_AREA);
 	zassert_equal(err, SUIT_PLAT_SUCCESS, "suit_flash_sink_get failed - error %i", err);
 
-	err = flash_sink.write(flash_sink.ctx, test_data, &input_size);
+	err = flash_sink.write(flash_sink.ctx, test_data, TEST_ARBITRARY_WRITE_SIZE);
 	zassert_equal(err, SUIT_PLAT_SUCCESS, "flash_sink.write failed - error %i", err);
 
 	err = flash_sink.used_storage(flash_sink.ctx, &used_storage);
 	zassert_equal(err, SUIT_PLAT_SUCCESS, "flash_sink.use_storage failed - error %i", err);
-	zassert_equal(used_storage, input_size, "flash_sink.use_storage failed - value %d",
+	zassert_equal(used_storage, TEST_ARBITRARY_WRITE_SIZE, "flash_sink.use_storage failed - value %d",
 		      used_storage);
 
-	err = flash_sink.seek(flash_sink.ctx, input_size + 7);
+	err = flash_sink.seek(flash_sink.ctx, TEST_ARBITRARY_WRITE_SIZE + 7);
 	zassert_equal(err, SUIT_PLAT_SUCCESS, "flash_sink.seek failed - error %i", err);
 
 	err = flash_sink.used_storage(flash_sink.ctx, &used_storage);
 	zassert_equal(err, SUIT_PLAT_SUCCESS, "flash_sink.use_storage failed - error %i", err);
 
-	err = flash_sink.write(flash_sink.ctx, &test_data[input_size], &input_size);
+	err = flash_sink.write(flash_sink.ctx, &test_data[TEST_ARBITRARY_WRITE_SIZE], TEST_ARBITRARY_WRITE_SIZE);
 	zassert_equal(err, SUIT_PLAT_SUCCESS, "flash_sink.write failed - error %i", err);
 
 	err = flash_sink.release(flash_sink.ctx);
@@ -179,21 +178,19 @@ ZTEST(flash_sink_tests, test_flash_sink_write_OK)
 ZTEST(flash_sink_tests, test_flash_sink_write_NOK)
 {
 	struct stream_sink flash_sink;
-	size_t input_size = 0;
 
 	int err = suit_flash_sink_get(&flash_sink, WRITE_ADDR, TEST_REQUESTED_AREA);
 	zassert_equal(err, SUIT_PLAT_SUCCESS, "suit_flash_sink_get failed - error %i", err);
 
-	err = flash_sink.write(flash_sink.ctx, test_data, &input_size);
+	err = flash_sink.write(flash_sink.ctx, test_data, 0);
 	zassert_not_equal(err, SUIT_PLAT_SUCCESS,
 			  "flash_sink.write should have failed - size == 0");
 
-	input_size = 8;
-	err = flash_sink.write(NULL, test_data, &input_size);
+	err = flash_sink.write(NULL, test_data, TEST_ARBITRARY_WRITE_SIZE);
 	zassert_not_equal(err, SUIT_PLAT_SUCCESS,
 			  "flash_sink.write should have failed - ctx == NULL");
 
-	err = flash_sink.write(flash_sink.ctx, NULL, &input_size);
+	err = flash_sink.write(flash_sink.ctx, NULL, TEST_ARBITRARY_WRITE_SIZE);
 	zassert_not_equal(err, SUIT_PLAT_SUCCESS,
 			  "flash_sink.write should have failed - buf == NULL");
 

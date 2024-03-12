@@ -10,7 +10,7 @@
 LOG_MODULE_REGISTER(suit_memptr_storage, CONFIG_SUIT_LOG_LEVEL);
 
 struct memptr_storage {
-	uint8_t *payload_ptr;
+	const uint8_t *payload_ptr;
 	size_t payload_size;
 	bool in_use;
 };
@@ -41,7 +41,7 @@ suit_memptr_storage_err_t suit_memptr_storage_get(memptr_storage_handle_t *handl
 }
 
 suit_memptr_storage_err_t suit_memptr_storage_ptr_store(memptr_storage_handle_t handle,
-							uint8_t *payload_ptr,
+							const uint8_t *payload_ptr,
 							size_t payload_size)
 {
 	if (handle != NULL) {
@@ -63,7 +63,7 @@ suit_memptr_storage_err_t suit_memptr_storage_ptr_store(memptr_storage_handle_t 
 }
 
 suit_memptr_storage_err_t suit_memptr_storage_ptr_get(memptr_storage_handle_t handle,
-						      uint8_t **payload_ptr,
+						      const uint8_t **payload_ptr,
 						      size_t *payload_size)
 {
 	if ((handle != NULL) && (payload_ptr != NULL) && (payload_size != NULL)) {

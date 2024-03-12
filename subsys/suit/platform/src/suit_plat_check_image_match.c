@@ -33,7 +33,7 @@ static int suit_plat_check_image_match_mem_mapped(suit_component_t component,
 		return SUIT_ERR_UNSUPPORTED_COMPONENT_ID;
 	}
 
-	uint8_t *data = NULL;
+	const uint8_t *data = NULL;
 	size_t size = 0;
 	err = suit_memptr_storage_ptr_get((memptr_storage_handle_t)impl_data, &data, &size);
 	if (err != SUIT_PLAT_SUCCESS) {

@@ -19,7 +19,7 @@ suit_plat_err_t suit_memptr_streamer_stream(const uint8_t *payload, size_t paylo
 				struct stream_sink *sink)
 {
 	if ((payload != NULL) && (sink != NULL) && (sink->write != NULL) && (payload_size > 0)) {
-		return sink->write(sink->ctx, (uint8_t *)payload, &payload_size);
+		return sink->write(sink->ctx, (uint8_t *)payload, payload_size);
 	}
 
 	LOG_ERR("payload is %s", payload == NULL ? "NULL" : "OK");
