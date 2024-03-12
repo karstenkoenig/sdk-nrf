@@ -31,11 +31,3 @@ config SUIT_AUTHENTICATE
 	select PSA_WANT_ALG_ECDSA if SOC_FAMILY_NRF
 	select PSA_WANT_ECC_SECP_R1_256 if SOC_FAMILY_NRF
 	select PSA_WANT_ECC_TWISTED_EDWARDS_255 if SOC_FAMILY_NRF
-
-config SUIT_CHECK_IMAGE_MATCH
-	bool "Enable image digest verification"
-	depends on SUIT_CRYPTO
-	depends on SUIT_DIGEST
-	depends on SUIT_STREAM
-	depends on SUIT_STREAM_SINK_DIGEST
-	depends on SUIT_STREAM_SOURCE_MEMPTR

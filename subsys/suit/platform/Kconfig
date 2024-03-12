@@ -54,6 +54,14 @@ config MBEDTLS_USER_CONFIG_FILE
 	default "user-tls-conf.h" if SUIT_DEFAULT_MBEDTLS_CONFIG
 endif
 
+config SUIT_CHECK_IMAGE_MATCH
+	bool "Enable image digest verification"
+	depends on SUIT_CRYPTO
+	depends on SUIT_DIGEST
+	depends on SUIT_STREAM
+	depends on SUIT_STREAM_SINK_DIGEST
+	depends on SUIT_STREAM_SOURCE_MEMPTR
+
 config SUIT_PLAT_CHECK_COMPONENT_COMPATIBILITY
 	bool "Enable component ID check against supported manifest class IDs"
 	depends on SUIT_UTILS
