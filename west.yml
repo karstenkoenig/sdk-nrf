@@ -150,9 +150,9 @@ manifest:
       path: modules/lib/nrf-regtool
     - name: nrfs
       path: modules/lib/nrfs
-      revision: 5e7c8874bc667bf7f6f453c19760b9d669940265
+      revision: 58e444f815d71de775f8fc93f14a0471e3f68b52
     - name: sdk-sysctrl
-      revision: v2.2.0
+      revision: cf640d64ee32c67ba44605603d4f9d1fdb20c44e
       path: core_fw/sysctrl
     - name: trusted-firmware-m
       repo-path: sdk-trusted-firmware-m-next
