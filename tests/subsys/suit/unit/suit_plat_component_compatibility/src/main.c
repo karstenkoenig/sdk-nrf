@@ -71,9 +71,8 @@ suit_mci_manifest_class_id_validate_invalid_fake_func(const suit_manifest_class_
 }
 
 static suit_plat_err_t
-suit_plat_decode_component_id_invalid_fake_func(struct zcbor_string *component_id,
-							    uint8_t *cpu_id, intptr_t *run_address,
-							    size_t *size)
+suit_plat_decode_component_id_invalid_fake_func(struct zcbor_string *component_id, uint8_t *cpu_id,
+						intptr_t *run_address, size_t *size)
 {
 	zassert_equal(&valid_component_id, component_id, "Invalid component ID value");
 	zassert_not_equal(cpu_id, NULL,
@@ -88,9 +87,8 @@ suit_plat_decode_component_id_invalid_fake_func(struct zcbor_string *component_i
 }
 
 static suit_plat_err_t
-suit_plat_decode_component_id_correct_fake_func(struct zcbor_string *component_id,
-							    uint8_t *cpu_id, intptr_t *run_address,
-							    size_t *size)
+suit_plat_decode_component_id_correct_fake_func(struct zcbor_string *component_id, uint8_t *cpu_id,
+						intptr_t *run_address, size_t *size)
 {
 	zassert_equal(&valid_component_id, component_id, "Invalid component ID value");
 	zassert_not_equal(cpu_id, NULL,
@@ -110,7 +108,7 @@ suit_plat_decode_component_id_correct_fake_func(struct zcbor_string *component_i
 
 static suit_plat_err_t
 suit_plat_decode_component_type_invalid_fake_func(struct zcbor_string *component_id,
-							      suit_component_type_t *type)
+						  suit_component_type_t *type)
 {
 	zassert_equal(&valid_component_id, component_id, "Invalid component ID value");
 
@@ -121,7 +119,7 @@ suit_plat_decode_component_type_invalid_fake_func(struct zcbor_string *component
 
 static suit_plat_err_t
 suit_plat_decode_component_type_mem_correct_fake_func(struct zcbor_string *component_id,
-								  suit_component_type_t *type)
+						      suit_component_type_t *type)
 {
 	zassert_equal(&valid_component_id, component_id, "Invalid component ID value");
 	zassert_not_equal(type, NULL,
@@ -186,7 +184,7 @@ suit_plat_decode_component_type_instld_mfst_correct_fake_func(struct zcbor_strin
 
 static suit_plat_err_t
 suit_plat_decode_component_number_invalid_fake_func(struct zcbor_string *component_id,
-								uint32_t *number)
+						    uint32_t *number)
 {
 	zassert_equal(&valid_component_id, component_id, "Invalid component ID value");
 	zassert_not_equal(number, NULL,
@@ -197,7 +195,7 @@ suit_plat_decode_component_number_invalid_fake_func(struct zcbor_string *compone
 
 static suit_plat_err_t
 suit_plat_decode_component_number_correct_fake_func(struct zcbor_string *component_id,
-								uint32_t *number)
+						    uint32_t *number)
 {
 	zassert_equal(&valid_component_id, component_id, "Invalid component ID value");
 	zassert_not_equal(number, NULL,
@@ -230,7 +228,7 @@ static int suit_mci_platform_specific_component_rights_validate_correct_fake_fun
 
 static int
 suit_mci_processor_start_rights_validate_invalid_fake_func(const suit_manifest_class_id_t *class_id,
-						      int processor_id)
+							   int processor_id)
 {
 	zassert_equal(&sample_class_id, class_id, "Invalid class ID value");
 	zassert_equal(valid_cpu_id, processor_id, "Invalid processor_id value");
@@ -239,8 +237,7 @@ suit_mci_processor_start_rights_validate_invalid_fake_func(const suit_manifest_c
 }
 
 int suit_mci_processor_start_rights_validate_correct_fake_func(
-							  const suit_manifest_class_id_t *class_id,
-							  int processor_id)
+	const suit_manifest_class_id_t *class_id, int processor_id)
 {
 	zassert_equal(&sample_class_id, class_id, "Invalid class ID value");
 	zassert_equal(valid_cpu_id, processor_id, "Invalid processor_id value");
@@ -250,7 +247,7 @@ int suit_mci_processor_start_rights_validate_correct_fake_func(
 
 static int
 suit_mci_memory_access_rights_validate_invalid_fake_func(const suit_manifest_class_id_t *class_id,
-						    void *address, size_t mem_size)
+							 void *address, size_t mem_size)
 {
 	zassert_equal(&sample_class_id, class_id, "Invalid class ID value");
 	zassert_equal(valid_address, (intptr_t)address, "Invalid address value: 0x%X - 0x%X",
@@ -262,7 +259,7 @@ suit_mci_memory_access_rights_validate_invalid_fake_func(const suit_manifest_cla
 
 static int
 suit_mci_memory_access_rights_validate_correct_fake_func(const suit_manifest_class_id_t *class_id,
-						    void *address, size_t mem_size)
+							 void *address, size_t mem_size)
 {
 	zassert_equal(&sample_class_id, class_id, "Invalid class ID value");
 	zassert_equal(valid_address, (intptr_t)address, "Invalid address value: 0x%X - 0x%X",
@@ -432,7 +429,7 @@ ZTEST(suit_plat_component_compatibility_tests, test_invalid_decode_component_typ
 	int ret = suit_plat_component_compatibility_check(&sample_class_id, &valid_component_id);
 
 	/* Manifest authentication fails */
-	zassert_equal(SUIT_ERR_DECODING, ret, "Authorization should have failed");
+	zassert_equal(SUIT_ERR_UNSUPPORTED_COMPONENT_ID, ret, "Authorization should have failed");
 
 	/* Check expected call counts for fake functions */
 	zassert_equal(suit_mci_manifest_class_id_validate_fake.call_count, 1,
@@ -466,7 +463,7 @@ ZTEST(suit_plat_component_compatibility_tests, test_mem_type_invalid_decode_comp
 	int ret = suit_plat_component_compatibility_check(&sample_class_id, &valid_component_id);
 
 	/* Manifest authentication fails */
-	zassert_equal(SUIT_ERR_DECODING, ret, "Authorization should have failed");
+	zassert_equal(SUIT_ERR_UNSUPPORTED_COMPONENT_ID, ret, "Authorization should have failed");
 
 	/* Check expected call counts for fake functions */
 	zassert_equal(suit_mci_manifest_class_id_validate_fake.call_count, 1,
@@ -502,7 +499,7 @@ ZTEST(suit_plat_component_compatibility_tests, test_mem_type_invalid_processor_s
 	int ret = suit_plat_component_compatibility_check(&sample_class_id, &valid_component_id);
 
 	/* Manifest authentication fails */
-	zassert_equal(SUIT_ERR_UNSUPPORTED_COMPONENT_ID, ret, "Authorization should have failed");
+	zassert_equal(SUIT_ERR_UNAUTHORIZED_COMPONENT, ret, "Authorization should have failed");
 
 	/* Check expected call counts for fake functions */
 	zassert_equal(suit_mci_manifest_class_id_validate_fake.call_count, 1,
@@ -540,7 +537,7 @@ ZTEST(suit_plat_component_compatibility_tests, test_mem_type_invalid_memory_acce
 	int ret = suit_plat_component_compatibility_check(&sample_class_id, &valid_component_id);
 
 	/* Manifest authentication fails */
-	zassert_equal(SUIT_ERR_UNSUPPORTED_COMPONENT_ID, ret, "Authorization should have failed");
+	zassert_equal(SUIT_ERR_UNAUTHORIZED_COMPONENT, ret, "Authorization should have failed");
 
 	/* Check expected call counts for fake functions */
 	zassert_equal(suit_mci_manifest_class_id_validate_fake.call_count, 1,
@@ -600,8 +597,7 @@ ZTEST(suit_plat_component_compatibility_tests, test_mem_type_OK)
 		      "Incorrect number of suit_plat_decode_manifest_class_id() calls");
 }
 
-ZTEST(suit_plat_component_compatibility_tests,
-      test_special_type_invalid_decode_component_number)
+ZTEST(suit_plat_component_compatibility_tests, test_special_type_invalid_decode_component_number)
 {
 	suit_mci_manifest_class_id_validate_fake.custom_fake =
 		suit_mci_manifest_class_id_validate_correct_fake_func;
@@ -650,7 +646,7 @@ ZTEST(suit_plat_component_compatibility_tests,
 	int ret = suit_plat_component_compatibility_check(&sample_class_id, &valid_component_id);
 
 	/* Manifest authentication fails */
-	zassert_equal(SUIT_ERR_UNSUPPORTED_COMPONENT_ID, ret, "Authorization should have failed");
+	zassert_equal(SUIT_ERR_UNAUTHORIZED_COMPONENT, ret, "Authorization should have failed");
 
 	/* Check expected call counts for fake functions */
 	zassert_equal(suit_mci_manifest_class_id_validate_fake.call_count, 1,
@@ -708,8 +704,7 @@ ZTEST(suit_plat_component_compatibility_tests, test_special_type_OK)
 		      "Incorrect number of suit_plat_decode_manifest_class_id() calls");
 }
 
-ZTEST(suit_plat_component_compatibility_tests,
-      test_cand_mfst_type_invalid_decode_component_number)
+ZTEST(suit_plat_component_compatibility_tests, test_cand_mfst_type_invalid_decode_component_number)
 {
 	suit_mci_manifest_class_id_validate_fake.custom_fake =
 		suit_mci_manifest_class_id_validate_correct_fake_func;
@@ -721,7 +716,7 @@ ZTEST(suit_plat_component_compatibility_tests,
 	int ret = suit_plat_component_compatibility_check(&sample_class_id, &valid_component_id);
 
 	/* Manifest authentication fails */
-	zassert_equal(SUIT_ERR_DECODING, ret, "Authorization should have failed");
+	zassert_equal(SUIT_ERR_UNSUPPORTED_COMPONENT_ID, ret, "Authorization should have failed");
 
 	/* Check expected call counts for fake functions */
 	zassert_equal(suit_mci_manifest_class_id_validate_fake.call_count, 1,

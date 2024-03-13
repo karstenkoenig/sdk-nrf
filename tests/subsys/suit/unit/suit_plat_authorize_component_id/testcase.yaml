@@ -1,5 +1,5 @@
 tests:
-  suit.unit.platform.suit_plat_authenticate:
+  suit.unit.platform.suit_plat_authorize_component_id:
     type: unit
     tags: >-
       suit

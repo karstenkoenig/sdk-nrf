@@ -199,7 +199,7 @@ ZTEST(suit_platform_authorize_component_id_tests, test_invalid_decode_manifest_c
 		suit_plat_authorize_component_id(&valid_manifest_component_id, &valid_component_id);
 
 	/* Manifest authentication fails */
-	zassert_equal(SUIT_ERR_UNSUPPORTED_COMPONENT_ID, ret, "Authorization should have failed");
+	zassert_equal(SUIT_ERR_UNAUTHORIZED_COMPONENT, ret, "Authorization should have failed");
 
 	/* Check expected call counts for fake functions */
 	zassert_equal(suit_plat_decode_manifest_class_id_fake.call_count, 1,

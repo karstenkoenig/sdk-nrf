@@ -120,7 +120,7 @@ ZTEST(suit_platform_authorize_process_dependency_tests, test_processing_denied)
 							 SUIT_SEQ_PARSE);
 
 	/* Manifest sequence authorization fails */
-	zassert_equal(SUIT_ERR_AUTHENTICATION, ret,
+	zassert_equal(SUIT_ERR_UNAUTHORIZED_COMPONENT, ret,
 		      "Failed to block processing of invalid manifest hierarchy");
 
 	/* Check expected call counts for fake functions */

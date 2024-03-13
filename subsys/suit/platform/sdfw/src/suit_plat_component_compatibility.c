@@ -33,7 +33,7 @@ int suit_plat_component_compatibility_check(const suit_manifest_class_id_t *clas
 	}
 
 	if (suit_plat_decode_component_type(component_id, &type) != SUIT_PLAT_SUCCESS) {
-		return SUIT_ERR_DECODING;
+		return SUIT_ERR_UNSUPPORTED_COMPONENT_ID;
 	}
 
 	switch (type) {
@@ -41,19 +41,19 @@ int suit_plat_component_compatibility_check(const suit_manifest_class_id_t *clas
 		/* Decode component_id */
 		if (suit_plat_decode_component_id(component_id, &cpu_id, &address, &size) !=
 		    SUIT_PLAT_SUCCESS) {
-			return SUIT_ERR_DECODING;
+			return SUIT_ERR_UNSUPPORTED_COMPONENT_ID;
 		}
 
 		if (NO_BOOT_CAPABILITY_CPU_ID != cpu_id) {
 			ret = suit_mci_processor_start_rights_validate(class_id, cpu_id);
 			if (ret != SUIT_PLAT_SUCCESS) {
-				return SUIT_ERR_UNSUPPORTED_COMPONENT_ID;
+				return SUIT_ERR_UNAUTHORIZED_COMPONENT;
 			}
 		}
 
 		ret = suit_mci_memory_access_rights_validate(class_id, (void *)address, size);
 		if (ret != SUIT_PLAT_SUCCESS) {
-			return SUIT_ERR_UNSUPPORTED_COMPONENT_ID;
+			return SUIT_ERR_UNAUTHORIZED_COMPONENT;
 		}
 		break;
 	case SUIT_COMPONENT_TYPE_SOC_SPEC:
@@ -63,14 +63,14 @@ int suit_plat_component_compatibility_check(const suit_manifest_class_id_t *clas
 
 		ret = suit_mci_platform_specific_component_rights_validate(class_id, number);
 		if (ret != SUIT_PLAT_SUCCESS) {
-			return SUIT_ERR_UNSUPPORTED_COMPONENT_ID;
+			return SUIT_ERR_UNAUTHORIZED_COMPONENT;
 		}
 		break;
 	case SUIT_COMPONENT_TYPE_CAND_MFST:
 	case SUIT_COMPONENT_TYPE_CAND_IMG:
 	case SUIT_COMPONENT_TYPE_CACHE_POOL:
 		if (suit_plat_decode_component_number(component_id, &number) != SUIT_PLAT_SUCCESS) {
-			return SUIT_ERR_DECODING;
+			return SUIT_ERR_UNSUPPORTED_COMPONENT_ID;
 		}
 		break;
 
@@ -84,7 +84,7 @@ int suit_plat_component_compatibility_check(const suit_manifest_class_id_t *clas
 		/* Validate manifest class ID against supported manifests */
 		ret = suit_mci_manifest_class_id_validate(decoded_class_id);
 		if (ret != SUIT_PLAT_SUCCESS) {
-			return SUIT_ERR_UNSUPPORTED_COMPONENT_ID;
+			return SUIT_ERR_UNAUTHORIZED_COMPONENT;
 		}
 
 		break;

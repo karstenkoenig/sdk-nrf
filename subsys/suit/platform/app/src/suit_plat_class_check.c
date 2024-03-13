@@ -249,5 +249,5 @@ int suit_plat_authorize_process_dependency(struct zcbor_string *parent_component
 
 	LOG_INF("Manifest dependency link unauthorized for sequence %d (err: %i)", seq_name, ret);
 
-	return SUIT_ERR_AUTHENTICATION;
+	return SUIT_ERR_UNAUTHORIZED_COMPONENT;
 }
