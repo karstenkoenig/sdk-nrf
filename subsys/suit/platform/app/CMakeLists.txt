@@ -15,7 +15,7 @@ zephyr_library_sources(src/plat_swap.c)
 zephyr_library_sources(src/plat_fetch_app_specific.c)
 zephyr_library_sources(src/plat_copy.c)
 zephyr_library_sources(src/plat_write.c)
-zephyr_library_sources(src/plat_retrieve_manifest.c)
+zephyr_library_sources(src/plat_retrieve_manifest_app_specific.c)
 zephyr_library_sources_ifdef(CONFIG_SUIT_CHECK_IMAGE_MATCH
  src/plat_check_image_match_app_specific.c)
 zephyr_library_sources(src/suit_plat_authenticate.c)

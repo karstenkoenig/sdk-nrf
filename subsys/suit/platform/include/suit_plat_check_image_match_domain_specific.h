@@ -35,4 +35,3 @@ int suit_plat_check_image_match_domain_specific(suit_component_t component,
 #endif
 
 #endif /* SUIT_PLAT_CHECK_IMAGE_MATCH_DOMAIN_SPECIFIC_H__ */
-

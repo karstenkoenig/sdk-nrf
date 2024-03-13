@@ -7,18 +7,12 @@
 #include <suit_platform_internal.h>
 #include <zephyr/logging/log.h>
 #include <suit_plat_decode_util.h>
-
-#ifdef CONFIG_SUIT_STREAM
-#include <sink.h>
-#endif /* CONFIG_SUIT_STREAM */
+#include <suit_plat_retrieve_manifest_domain_specific.h>
 
 #ifdef CONFIG_SUIT_MEMPTR_STORAGE
 #include <suit_memptr_storage.h>
 #endif /* CONFIG_SUIT_MEMPTR_STORAGE */
 
-#ifdef CONFIG_SUIT_STORAGE
-#include <suit_storage.h>
-#endif /* CONFIG_SUIT_STORAGE */
 
 LOG_MODULE_REGISTER(suit_plat_retr_mfst, CONFIG_SUIT_LOG_LEVEL);
 
@@ -44,27 +38,6 @@ int suit_plat_retrieve_manifest(suit_component_t component_handle, uint8_t **env
 	}
 
 	switch (component_type) {
-#ifdef CONFIG_SUIT_STORAGE
-	case SUIT_COMPONENT_TYPE_INSTLD_MFST: {
-		suit_manifest_class_id_t *class_id;
-
-		if (suit_plat_decode_manifest_class_id(component_id, &class_id)
-		    != SUIT_PLAT_SUCCESS) {
-			LOG_ERR("Unable to decode manifest class ID");
-			ret = SUIT_ERR_UNSUPPORTED_COMPONENT_ID;
-			break;
-		}
-
-		ret = suit_storage_installed_envelope_get(class_id, envelope_str, envelope_len);
-		if ((ret != SUIT_PLAT_SUCCESS) || (*envelope_str == NULL) || (*envelope_len == 0)) {
-			LOG_ERR("Unable to find installed envelope (err: %d)", ret);
-			ret = SUIT_ERR_UNSUPPORTED_COMPONENT_ID;
-			break;
-		}
-
-		ret = SUIT_SUCCESS;
-	} break;
-#endif /* CONFIG_SUIT_STORAGE */
 #ifdef CONFIG_SUIT_MEMPTR_STORAGE
 	case SUIT_COMPONENT_TYPE_CAND_MFST: {
 		memptr_storage_handle_t handle = NULL;
@@ -88,6 +61,8 @@ int suit_plat_retrieve_manifest(suit_component_t component_handle, uint8_t **env
 	} break;
 #endif /* CONFIG_SUIT_MEMPTR_STORAGE */
 	default:
+		ret = suit_plat_retrieve_manifest_domain_specific(component_id, component_type,
+								  envelope_str, envelope_len);
 		break;
 	}
 

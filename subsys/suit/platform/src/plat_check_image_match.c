@@ -107,12 +107,14 @@ int suit_plat_check_image_match(suit_component_t component, enum suit_cose_alg a
 		return SUIT_ERR_UNSUPPORTED_COMPONENT_ID;
 	}
 
+#ifdef CONFIG_SUIT_STREAM_SINK_DIGEST
 	LOG_DBG("Component type: %d", component_type);
 
 	if (suit_plat_check_image_match_domain_specific_is_type_mem_mapped(component_type))
 	{
 		err = suit_plat_check_image_match_mem_mapped(component, alg_id, digest);
 	}
+#endif
 
 	if (component_type == SUIT_COMPONENT_TYPE_UNSUPPORTED)
 	{
