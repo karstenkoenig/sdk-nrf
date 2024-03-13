@@ -1,0 +1,70 @@
+/*
+ * Copyright (c) 2024 Nordic Semiconductor ASA
+ *
+ * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
+ */
+
+ / {
+	allocatable_ram {
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		/* Allow to use defined RAM3x region by App and cores owned by
+		 * App, including UART DMA buffer.
+		 */
+		ram3x_app: memory@2fc00000 {
+			compatible = "nordic,allocatable-ram";
+			reg = <0x2fc00000 DT_SIZE_K(32)>;
+			perm-read;
+			perm-write;
+		};
+	};
+
+	chosen {
+		zephyr,console = &uart136;
+	};
+};
+
+/* ram3x_cpuapp buffer is used by App core UART driver. */
+&ram3x_cpuapp {
+	status = "okay";
+};
+
+/* Configure UART with test output. */
+&uart136 {
+	status = "okay";
+	memory-regions = <&ram3x_cpuapp>;
+};
+
+/delete-node/ &mram1;
+&mram_controller {
+	mram1: mram@e19d000 {
+		compatible = "nordic,allocatable-mram", "soc-nv-flash";
+		reg = < 0xe19d000 DT_SIZE_K(288) >;
+		erase-block-size = < 0x10 >;
+		/* Hardcoded inside the soc_flash_nrf_mram.c (MRAM_WORD_SIZE) */
+		write-block-size = < 0x10 >;
+
+		perm-read;
+		perm-write;
+
+		partitions {
+			compatible = "fixed-partitions";
+			#address-cells = < 0x1 >;
+			#size-cells = < 0x1 >;
+
+			dfu_partition: partition@19d000 {
+				label = "dfu_partition";
+				reg = < 0x19d000 DT_SIZE_K(1) >;
+			};
+
+			dfu_cache_partition_1: partition@19d400 {
+				reg = <0x19d400 DT_SIZE_K(1)>;
+			};
+			
+			dfu_cache_partition_3: partition@19d800 {
+				reg = <0x19d800 DT_SIZE_K(1)>;
+			};
+		};
+	};
+};

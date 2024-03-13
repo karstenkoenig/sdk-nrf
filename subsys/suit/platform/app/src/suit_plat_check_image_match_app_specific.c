@@ -6,11 +6,11 @@
 
 #include <suit_plat_check_image_match_domain_specific.h>
 #include <zephyr/logging/log.h>
-
 #include <sdfw/sdfw_services/suit_service.h>
 
 LOG_MODULE_REGISTER(suit_plat_check_image_match_app, CONFIG_SUIT_LOG_LEVEL);
 
+#ifdef CONFIG_SSF_SUIT_SERVICE_ENABLED
 static int suit_plat_check_image_match_ssf(struct zcbor_string *component_id,
 					   enum suit_cose_alg alg_id, struct zcbor_string *digest)
 {
@@ -42,6 +42,7 @@ static int suit_plat_check_image_match_ssf(struct zcbor_string *component_id,
 
 	return SUIT_ERR_CRASH;
 }
+#endif /* CONFIG_SSF_SUIT_SERVICE_ENABLED */
 
 bool suit_plat_check_image_match_domain_specific_is_type_mem_mapped(
 	suit_component_type_t component_type)
@@ -70,7 +71,11 @@ int suit_plat_check_image_match_domain_specific(suit_component_t component,
 	case SUIT_COMPONENT_TYPE_INSTLD_MFST:
 	case SUIT_COMPONENT_TYPE_MEM:
 	case SUIT_COMPONENT_TYPE_SOC_SPEC: {
+#ifdef CONFIG_SSF_SUIT_SERVICE_ENABLED
 		err = suit_plat_check_image_match_ssf(component_id, alg_id, digest);
+#else
+		err = SUIT_ERR_UNSUPPORTED_COMPONENT_ID;
+#endif /* CONFIG_SSF_SUIT_SERVICE_ENABLED */
 		break;
 	}
 	case SUIT_COMPONENT_TYPE_CACHE_POOL:
