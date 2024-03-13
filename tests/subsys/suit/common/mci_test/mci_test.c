@@ -110,6 +110,7 @@ int suit_mci_supported_manifest_class_ids_get(suit_manifest_class_info_t *class_
 
 	for (int i = 0; i < output_size; ++i) {
 		class_info[i].class_id = supported_manifests[i].manifest_class_id;
+		suit_mci_nordic_vendor_id_get(&class_info[i].vendor_id);
 	}
 
 	*size = output_size;

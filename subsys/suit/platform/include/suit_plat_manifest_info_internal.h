@@ -14,6 +14,17 @@
 extern "C" {
 #endif
 
+/**
+ * @brief Gets an array of supported manifest class_info struct. This is
+ *        a function which shall be supported on all domains.
+ *
+ * @param[out]     class_info An array of `suit_manifest_class_info_t` structures to store the supported
+ *                 manifest class information.
+ * @param[in,out]  size		as input - maximal amount of elements an array can hold,
+ *				   as output - amount of stored elements
+ * @return SUIT_SUCCESS on success, error code otherwise.
+ *
+ */
 int suit_plat_supported_manifest_class_infos_get(suit_manifest_class_info_t *class_info,
 						 size_t *size);
 
@@ -23,10 +34,7 @@ int suit_plat_supported_manifest_class_infos_get(suit_manifest_class_info_t *cla
  * @param[in]   class_id  Manifest class ID.
  * @param[out]  role      Pointer to the role variable.
  *
- * @retval SUIT_PLAT_SUCCESS        on success
- * @retval SUIT_PLAT_ERR_INVAL      invalid parameter, i.e. null pointer
- * @retval SUIT_PLAT_ERR_CRASH      unable to fetch manifest provisioning information
- * @retval SUIT_PLAT_ERR_NOT_FOUND  manifest with given manifest class ID not configured.
+ * @return SUIT_SUCCESS on success, error code otherwise.
  */
 int suit_plat_manifest_role_get(const suit_manifest_class_id_t *class_id,
 				suit_manifest_role_t *role);
