@@ -6,8 +6,8 @@
 
 #include <suit_platform.h>
 #include <suit_platform_internal.h>
-#include <suit_mci.h>
 #include <suit_plat_component_compatibility.h>
+#include <suit_plat_manifest_info_internal.h>
 #include <zephyr/logging/log.h>
 
 LOG_MODULE_REGISTER(suit_plat_class_check, CONFIG_SUIT_LOG_LEVEL);
@@ -35,10 +35,10 @@ int suit_plat_check_cid(suit_component_t component_handle, struct zcbor_string *
 		return SUIT_ERR_UNSUPPORTED_COMPONENT_ID;
 	}
 
-	mci_err_t ret = suit_mci_supported_manifest_class_ids_get(manifest_class_info_list, &size);
+	int ret = suit_plat_supported_manifest_class_infos_get(manifest_class_info_list, &size);
 
-	if (ret != SUIT_PLAT_SUCCESS) {
-		return SUIT_ERR_CRASH;
+	if (ret != SUIT_SUCCESS) {
+		return ret;
 	}
 
 	/* Get component ID from component_handle */
@@ -64,7 +64,6 @@ int suit_plat_check_vid(suit_component_t component_handle, struct zcbor_string *
 		manifest_class_info_list[CONFIG_MAX_NUMBER_OF_MANIFEST_CLASS_IDS] = {NULL};
 	size_t size = CONFIG_MAX_NUMBER_OF_MANIFEST_CLASS_IDS;
 	struct zcbor_string *component_id;
-	const suit_uuid_t *vendor_id = NULL;
 	const suit_uuid_t *vid = validate_and_get_uuid(vid_uuid);
 
 	if (vid == NULL) {
@@ -72,10 +71,10 @@ int suit_plat_check_vid(suit_component_t component_handle, struct zcbor_string *
 		return SUIT_ERR_UNSUPPORTED_COMPONENT_ID;
 	}
 
-	mci_err_t ret = suit_mci_supported_manifest_class_ids_get(manifest_class_info_list, &size);
+	int ret = suit_plat_supported_manifest_class_infos_get(manifest_class_info_list, &size);
 
-	if (ret != SUIT_PLAT_SUCCESS) {
-		return SUIT_ERR_CRASH;
+	if (ret != SUIT_SUCCESS) {
+		return ret;
 	}
 
 	/* Get component ID from component_handle */
@@ -86,9 +85,8 @@ int suit_plat_check_vid(suit_component_t component_handle, struct zcbor_string *
 	for (size_t i = 0; i < size; i++) {
 		if ((suit_plat_component_compatibility_check(manifest_class_info_list[i].class_id,
 							     component_id) == SUIT_SUCCESS) &&
-		    (suit_mci_vendor_id_for_manifest_class_id_get(
-			     manifest_class_info_list[i].class_id, &vendor_id) == SUIT_PLAT_SUCCESS) &&
-		    (suit_metadata_uuid_compare(vid, vendor_id) == SUIT_PLAT_SUCCESS)) {
+		    (suit_metadata_uuid_compare(vid, manifest_class_info_list[i].vendor_id) ==
+		     SUIT_PLAT_SUCCESS)) {
 			return SUIT_SUCCESS;
 		}
 	}

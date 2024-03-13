@@ -53,3 +53,12 @@ config SUIT_DEFAULT_MBEDTLS_CONFIG
 config MBEDTLS_USER_CONFIG_FILE
 	default "user-tls-conf.h" if SUIT_DEFAULT_MBEDTLS_CONFIG
 endif
+
+config SUIT_PLAT_CHECK_COMPONENT_COMPATIBILITY
+	bool "Enable component ID check against supported manifest class IDs"
+	depends on SUIT_UTILS
+	depends on SUIT_METADATA
+
+config SUIT_PLAT_CHECK_CLASSES
+	bool "Enable vendor/class/device class ID checks"
+	depends on SUIT_PLAT_CHECK_COMPONENT_COMPATIBILITY

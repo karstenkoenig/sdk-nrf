@@ -40,12 +40,3 @@ config SUIT_CHECK_IMAGE_MATCH
 	depends on SUIT_STREAM_SINK_DIGEST
 	depends on SUIT_STREAM_SOURCE_MEMPTR
 
-config SUIT_PLAT_CHECK_COMPONENT_COMPATIBILITY
-	bool "Enable component ID check against supported manifest class IDs"
-	depends on SUIT_UTILS
-	depends on SUIT_MCI
-	depends on SUIT_METADATA
-
-config SUIT_PLAT_CHECK_CLASSES
-	bool "Enable vendor/class/device class ID checks"
-	depends on SUIT_PLAT_CHECK_COMPONENT_COMPATIBILITY

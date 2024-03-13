@@ -22,7 +22,7 @@ zephyr_library_sources(src/plat_check_content.c)
 zephyr_library_sources_ifdef(CONFIG_SUIT_DEVCONFIG src/suit_plat_devconfig.c)
 zephyr_library_sources_ifdef(CONFIG_SUIT_AUTHENTICATE src/suit_plat_authenticate.c)
 zephyr_library_sources_ifdef(CONFIG_SUIT_PLAT_CHECK_COMPONENT_COMPATIBILITY src/suit_plat_component_compatibility.c)
-zephyr_library_sources_ifdef(CONFIG_SUIT_PLAT_CHECK_CLASSES src/suit_plat_class_check.c)
+zephyr_library_sources_ifdef(CONFIG_SUIT_PLAT_CHECK_CLASSES src/suit_plat_manifest_info.c)
 
 zephyr_library_sources(src/plat_invoke.c)
 if(${CONFIG_ZTEST})

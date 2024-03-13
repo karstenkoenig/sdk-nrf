@@ -16,6 +16,7 @@ zephyr_library_sources(src/suit_plat_commands.c)
 zephyr_library_sources_ifdef(CONFIG_SUIT_MEMPTR_STORAGE src/suit_plat_memptr_size_update.c)
 zephyr_library_sources(src/suit_plat_error_convert.c)
 zephyr_library_sources_ifdef(CONFIG_SUIT_DIGEST src/suit_plat_digest.c)
+zephyr_library_sources_ifdef(CONFIG_SUIT_PLAT_CHECK_CLASSES src/suit_plat_class_check.c)
 
 zephyr_library_link_libraries(suit)
 zephyr_library_link_libraries(suit_platform_err)
