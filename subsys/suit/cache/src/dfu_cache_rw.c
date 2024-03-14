@@ -38,6 +38,7 @@ LOG_MODULE_REGISTER(suit_cache_rw, CONFIG_SUIT_LOG_LEVEL);
 #define MAX_URI_ENCODE_BUFFER_LENGTH (CONFIG_SUIT_MAX_URI_LENGTH + 9)
 
 extern struct dfu_cache dfu_cache;
+static bool prevent_second_init = false;
 
 struct dfu_cache_partition_ext { /* Extended structure describing single cache partition */
 	const struct device *fdev;
@@ -159,6 +160,11 @@ static bool setup_partition_addresses(void)
 
 suit_plat_err_t suit_dfu_cache_rw_initialize(void *addr, size_t size)
 {
+	if (prevent_second_init) {
+		return SUIT_PLAT_ERR_INCORRECT_STATE;
+	}
+	prevent_second_init = true;
+
 	suit_plat_err_t ret = cache_0_update(addr, size);
 
 	if (ret != SUIT_PLAT_SUCCESS) {
@@ -221,6 +227,8 @@ suit_plat_err_t suit_dfu_cache_rw_deinitialize(void)
 	if (!translate_partition_start_address(&dfu_partitions_ext[0])) {
 		return SUIT_PLAT_ERR_OUT_OF_BOUNDS;
 	}
+
+	prevent_second_init = false;
 
 	return ret;
 }
