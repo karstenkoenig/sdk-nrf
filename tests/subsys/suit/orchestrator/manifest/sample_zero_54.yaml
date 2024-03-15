@@ -62,12 +62,13 @@ SUIT_Envelope_Tagged:
         namespace: nordicsemi.com
         name: test_sample_app
   suit-text:
-    '["MEM", 0, 235577344, 0]':
-      suit-text-vendor-name: Nordic Semiconductor ASA
-      suit-text-model-name: test_cpuapp
-      suit-text-vendor-domain: nordicsemi.com
-      suit-text-model-info: The test application
-      suit-text-component-description: Sample application for tests
-      suit-text-component-version: v1.0.0
+    en:
+      '["MEM", 0, 235577344, 0]':
+        suit-text-vendor-name: Nordic Semiconductor ASA
+        suit-text-model-name: test_cpuapp
+        suit-text-vendor-domain: nordicsemi.com
+        suit-text-model-info: The test application
+        suit-text-component-description: Sample application for tests
+        suit-text-component-version: v1.0.0
   suit-integrated-payloads:
     '#file.bin': file.bin

@@ -62,12 +62,13 @@ SUIT_Envelope_Tagged:
         namespace: nordicsemi.com
         name: nRF54H20_sample_rad
   suit-text:
-    '["MEM", 3, 235225088, 350208]':
-      suit-text-vendor-name: Nordic Semiconductor ASA
-      suit-text-model-name: nRF54H20_cpurad
-      suit-text-vendor-domain: nordicsemi.com
-      suit-text-model-info: The nRF54H20 radio core
-      suit-text-component-description: Sample radio core FW
-      suit-text-component-version: v1.0.0
+    en:
+      '["MEM", 3, 235225088, 350208]':
+        suit-text-vendor-name: Nordic Semiconductor ASA
+        suit-text-model-name: nRF54H20_cpurad
+        suit-text-vendor-domain: nordicsemi.com
+        suit-text-model-info: The nRF54H20 radio core
+        suit-text-component-description: Sample radio core FW
+        suit-text-component-version: v1.0.0
   suit-integrated-payloads:
     '#file.bin': file.bin

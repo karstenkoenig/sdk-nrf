@@ -94,10 +94,11 @@ SUIT_Envelope_Tagged:
         namespace: nordicsemi.com
         name: nRF54H20_sample_app
   suit-text:
-    '["MEM", 2, 235560960, 458752]':
-      suit-text-vendor-name: Nordic Semiconductor ASA
-      suit-text-model-name: nRF54H20_cpuapp
-      suit-text-vendor-domain: nordicsemi.com
-      suit-text-model-info: The nRF54H20 application core
-      suit-text-component-description: Sample application core FW
-      suit-text-component-version: v1.0.0
+    en:
+      '["MEM", 2, 235560960, 458752]':
+        suit-text-vendor-name: Nordic Semiconductor ASA
+        suit-text-model-name: nRF54H20_cpuapp
+        suit-text-vendor-domain: nordicsemi.com
+        suit-text-model-info: The nRF54H20 application core
+        suit-text-component-description: Sample application core FW
+        suit-text-component-version: v1.0.0

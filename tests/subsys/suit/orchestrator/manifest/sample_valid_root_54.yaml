@@ -100,12 +100,13 @@ SUIT_Envelope_Tagged:
         namespace: nordicsemi.com
         name: test_sample_root
   suit-text:
-    '["CAND_MFST", 0]':
-      suit-text-vendor-name: Nordic Semiconductor ASA
-      suit-text-model-name: test
-      suit-text-vendor-domain: nordicsemi.com
-      suit-text-model-info: The test root manifest
-      suit-text-component-description: Sample root manifest
-      suit-text-component-version: v1.0.0
+    en:
+      '["CAND_MFST", 0]':
+        suit-text-vendor-name: Nordic Semiconductor ASA
+        suit-text-model-name: test
+        suit-text-vendor-domain: nordicsemi.com
+        suit-text-model-info: The test root manifest
+        suit-text-component-description: Sample root manifest
+        suit-text-component-version: v1.0.0
   suit-integrated-dependencies:
     '#app.suit': sample_app.suit
