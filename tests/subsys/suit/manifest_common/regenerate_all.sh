@@ -38,7 +38,7 @@ declare -A root_envelopes=(
   ["../storage/manifest/manifest_root.yaml"]="../storage/src/manifest_root.c"
   ["../storage/manifest/manifest_root_posix.yaml"]="../storage/src/manifest_root_posix.c"
   ["../storage/manifest/manifest_root_posix_v2.yaml"]="../storage/src/manifest_root_posix_v2.c"
-  ["../orchestrator/manifest/sample_valid_root_54.yaml"]="../orchestrator/src/manifest_valid_54.c"
+  ["../orchestrator/manifest/sample_valid_root_54.yaml"]="../orchestrator/manifest/src/manifest_valid_54.c"
   ["../orchestrator/manifest/sample_valid_root.yaml"]="../orchestrator/manifest/src/manifest_valid.c"
 )
 declare -A envelope_dependency_names=(
@@ -87,14 +87,14 @@ done
 
 
 # Manually manipulate some of the generated envelopes to match test description
-cp "../orchestrator/src/manifest_valid_54.c" "../orchestrator/manifest/src/manifest_manipulated_54.c"
+cp "../orchestrator/manifest/src/manifest_valid_54.c" "../orchestrator/manifest/src/manifest_manipulated_54.c"
 sed -i 's/0xD8, 0x6B, \(.*\)0x58/0xD8, 0x6B, \10xFF/g' "../orchestrator/manifest/src/manifest_manipulated_54.c"
 sed -i 's/Valid SUIT envelope/Manipulated SUIT envelope/g' "../orchestrator/manifest/src/manifest_manipulated_54.c"
-sed -i 's/.yaml/.yaml\n *\n * @details The manipulation is done on byte of index 7, from value 0x58 to 0xFF/g' "../orchestrator/src/manifest_manipulated_54.c"
+sed -i 's/.yaml/.yaml\n *\n * @details The manipulation is done on byte of index 7, from value 0x58 to 0xFF/g' "../orchestrator/manifest/src/manifest_manipulated_54.c"
 sed -i 's/manifest_valid_buf/manifest_manipulated_buf/g' "../orchestrator/manifest/src/manifest_manipulated_54.c"
 sed -i 's/manifest_valid_len/manifest_manipulated_len/g' "../orchestrator/manifest/src/manifest_manipulated_54.c"
 
-cp "../orchestrator/src/manifest_valid.c" "../orchestrator/manifest/src/manifest_manipulated.c"
+cp "../orchestrator/manifest/src/manifest_valid.c" "../orchestrator/manifest/src/manifest_manipulated.c"
 sed -i 's/0xD8, 0x6B, \(.*\)0x58/0xD8, 0x6B, \10xFF/g' "../orchestrator/manifest/src/manifest_manipulated.c"
 sed -i 's/Valid SUIT envelope/Manipulated SUIT envelope/g' "../orchestrator/manifest/src/manifest_manipulated.c"
 sed -i 's/.yaml/.yaml\n *\n * @details The manipulation is done on byte of index 7, from value 0x58 to 0xFF/g' "../orchestrator/manifest/src/manifest_manipulated.c"
