@@ -101,6 +101,20 @@ static const suit_storage_mpi_t mpi_test_sample[] = {
 		/* RFC4122 uuid5(nordic_vid, 'test_sample_app') */
 		.class_id = {0x5b, 0x46, 0x9f, 0xd1, 0x90, 0xee, 0x53, 0x9c, 0xa3, 0x18, 0x68, 0x1b,
 			     0x03, 0x69, 0x5e, 0x36},
+	},
+	{
+		.version = SUIT_MPI_INFO_VERSION,
+		.downgrade_prevention_policy = SUIT_MPI_DOWNGRADE_PREVENTION_DISABLED,
+		.independent_updateability_policy = SUIT_MPI_INDEPENDENT_UPDATE_ALLOWED,
+		.signature_verification_policy = SUIT_MPI_SIGNATURE_CHECK_DISABLED,
+		.reserved = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+			     0xFF},
+		/* RFC4122 uuid5(uuid.NAMESPACE_DNS, 'nordicsemi.com') */
+		.vendor_id = {0x76, 0x17, 0xda, 0xa5, 0x71, 0xfd, 0x5a, 0x85, 0x8f, 0x94, 0xe2,
+			      0x8d, 0x73, 0x5c, 0xe9, 0xf4},
+		/* RFC4122 uuid5(nordic_vid, 'test_sample_recovery') */
+		.class_id = {0x74, 0xa0, 0xc6, 0xe7, 0xa9, 0x2a, 0x56, 0x00, 0x9c, 0x5d, 0x30, 0xee,
+			     0x87, 0x8b, 0x06, 0xba},
 	}};
 
 static suit_plat_err_t find_mpi_area(suit_manifest_role_t role, uint8_t **addr, size_t *size)
@@ -115,6 +129,9 @@ static suit_plat_err_t find_mpi_area(suit_manifest_role_t role, uint8_t **addr, 
 		break;
 	case SUIT_MANIFEST_APP_LOCAL_1:
 		index = 1;
+		break;
+	case SUIT_MANIFEST_APP_RECOVERY:
+		index = 2;
 		break;
 	default:
 		index = -1;
@@ -142,6 +159,9 @@ static suit_plat_err_t find_manifest_area(suit_manifest_role_t role, const uint8
 		break;
 	case SUIT_MANIFEST_APP_LOCAL_1:
 		index = 1;
+		break;
+	case SUIT_MANIFEST_APP_RECOVERY:
+		index = 2;
 		break;
 	default:
 		index = -1;
@@ -178,6 +198,7 @@ suit_plat_err_t suit_storage_init(void)
 	suit_manifest_role_t roles[] = {
 		SUIT_MANIFEST_APP_ROOT,
 		SUIT_MANIFEST_APP_LOCAL_1,
+		SUIT_MANIFEST_APP_RECOVERY,
 	};
 
 	if (sizeof(struct suit_storage) > SUIT_STORAGE_SIZE) {

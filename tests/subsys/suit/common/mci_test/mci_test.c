@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
  */
 #include <suit_mci.h>
+#include <suit_execution_mode.h>
 #if defined(CONFIG_MBEDTLS) || defined(CONFIG_NRF_SECURITY)
 #include <psa/crypto.h>
 #endif /* CONFIG_MBEDTLS || CONFIG_NRF_SECURITY*/
@@ -24,6 +25,12 @@ static const suit_manifest_class_id_t nordic_app_manifest_class_id = {
 	{0x5b, 0x46, 0x9f, 0xd1, 0x90, 0xee, 0x53, 0x9c, 0xa3, 0x18, 0x68, 0x1b, 0x03, 0x69, 0x5e,
 	 0x36}};
 
+/* RFC4122 uuid5(nordic_vid, 'test_sample_recovery')
+ */
+static const suit_manifest_class_id_t nordic_recovery_manifest_class_id = {
+	{0x74, 0xa0, 0xc6, 0xe7, 0xa9, 0x2a, 0x56, 0x00, 0x9c, 0x5d, 0x30, 0xee, 0x87, 0x8b, 0x06,
+	 0xba}};
+
 typedef struct {
 	const suit_manifest_class_id_t *manifest_class_id;
 	const suit_manifest_class_id_t *parent_manifest_class_id;
@@ -41,6 +48,11 @@ static manifest_config_t supported_manifests[] = {
 	 0x00000000, 0xFFFFFFFF},
 	{&nordic_app_manifest_class_id, &nordic_root_manifest_class_id,
 	 SUIT_DOWNGRADE_PREVENTION_DISABLED, SUIT_INDEPENDENT_UPDATE_DENIED,
+	 /* signing_key_mask equal to -1 means signing with specified key is required
+	  */
+	 0x00000000, 0xFFFFFFFF},
+	{&nordic_recovery_manifest_class_id, NULL, SUIT_DOWNGRADE_PREVENTION_DISABLED,
+	 SUIT_INDEPENDENT_UPDATE_ALLOWED,
 	 /* signing_key_mask equal to -1 means signing with specified key is required
 	  */
 	 0x00000000, 0xFFFFFFFF}};
@@ -94,8 +106,7 @@ static suit_plat_err_t load_keys(uint32_t *key_id)
 }
 #endif /* CONFIG_MBEDTLS || CONFIG_NRF_SECURITY */
 
-int suit_mci_supported_manifest_class_ids_get(suit_manifest_class_info_t *class_info,
-					      size_t *size)
+int suit_mci_supported_manifest_class_ids_get(suit_manifest_class_info_t *class_info, size_t *size)
 {
 	if (NULL == class_info || NULL == size) {
 		return SUIT_PLAT_ERR_INVAL;
@@ -133,8 +144,20 @@ int suit_mci_invoke_order_get(const suit_manifest_class_id_t **class_id, size_t 
 		return SUIT_PLAT_ERR_SIZE;
 	}
 
-	class_id[0] = &nordic_root_manifest_class_id;
-	*size = output_size;
+	switch (suit_execution_mode_get()) {
+	case EXECUTION_MODE_INVOKE:
+		class_id[0] = &nordic_root_manifest_class_id;
+		*size = output_size;
+		break;
+	case EXECUTION_MODE_INVOKE_RECOVERY:
+		class_id[0] = &nordic_recovery_manifest_class_id;
+		*size = output_size;
+		break;
+	default:
+		*size = 0;
+		break;
+	}
+
 	return SUIT_PLAT_SUCCESS;
 }
 
@@ -167,6 +190,26 @@ mci_err_t suit_mci_independent_update_policy_get(const suit_manifest_class_id_t 
 		return MCI_ERR_MANIFESTCLASSID;
 	}
 	*policy = manifest_config->independent_update_policy;
+
+	/* Override independent updateability policy in recovery scenarios:
+	 * If the update candidate was delivered by the recovery firmware,
+	 * it must not update the recovery firmware.
+	 * Invoke modes included, so the recovery firmware may reject the incorrect
+	 * update candidate before resetting the SoC.
+	 */
+	switch (suit_execution_mode_get()) {
+	case EXECUTION_MODE_INVOKE_RECOVERY:
+	case EXECUTION_MODE_INSTALL_RECOVERY:
+	case EXECUTION_MODE_POST_INVOKE_RECOVERY:
+		if (SUIT_PLAT_SUCCESS ==
+		    suit_metadata_uuid_compare(&nordic_recovery_manifest_class_id, class_id)) {
+			*policy = SUIT_INDEPENDENT_UPDATE_DENIED;
+		}
+		break;
+	default:
+		break;
+	}
+
 	return SUIT_PLAT_SUCCESS;
 }
 
@@ -232,6 +275,15 @@ int suit_mci_processor_start_rights_validate(const suit_manifest_class_id_t *cla
 		}
 
 		return MCI_ERR_NOACCESS;
+	} else if (SUIT_PLAT_SUCCESS ==
+		   suit_metadata_uuid_compare(&nordic_recovery_manifest_class_id, class_id)) {
+		/* Application recovery manifest. Use "0" as CPU ID in tests
+		 */
+		if (0 == processor_id) {
+			return SUIT_PLAT_SUCCESS;
+		}
+
+		return MCI_ERR_NOACCESS;
 	}
 
 	return MCI_ERR_NOACCESS;
@@ -259,6 +311,11 @@ int suit_mci_memory_access_rights_validate(const suit_manifest_class_id_t *class
 	} else if (SUIT_PLAT_SUCCESS ==
 		   suit_metadata_uuid_compare(&nordic_app_manifest_class_id, class_id)) {
 		/* Application manifest - allow to overwrite any address
+		 */
+		return SUIT_PLAT_SUCCESS;
+	} else if (SUIT_PLAT_SUCCESS ==
+		   suit_metadata_uuid_compare(&nordic_recovery_manifest_class_id, class_id)) {
+		/* Application recovery manifest - allow to overwrite any address
 		 */
 		return SUIT_PLAT_SUCCESS;
 	}
@@ -299,35 +356,35 @@ int suit_mci_vendor_id_for_manifest_class_id_get(const suit_manifest_class_id_t 
 }
 
 int suit_mci_manifest_parent_child_declaration_validate(
-						const suit_manifest_class_id_t *parent_class_id,
-						const suit_manifest_class_id_t *child_class_id)
+	const suit_manifest_class_id_t *parent_class_id,
+	const suit_manifest_class_id_t *child_class_id)
 {
 	if (NULL == parent_class_id || NULL == child_class_id) {
 		return SUIT_PLAT_ERR_INVAL;
 	}
 
-	if ((SUIT_PLAT_SUCCESS == 
-			suit_metadata_uuid_compare(&nordic_root_manifest_class_id, parent_class_id)) &&
-		(SUIT_PLAT_SUCCESS == 
-			suit_metadata_uuid_compare(&nordic_app_manifest_class_id, child_class_id))) {
+	if ((SUIT_PLAT_SUCCESS ==
+	     suit_metadata_uuid_compare(&nordic_root_manifest_class_id, parent_class_id)) &&
+	    (SUIT_PLAT_SUCCESS ==
+	     suit_metadata_uuid_compare(&nordic_app_manifest_class_id, child_class_id))) {
 		return SUIT_PLAT_SUCCESS;
 	}
 
 	return MCI_ERR_NOACCESS;
 }
 
-mci_err_t suit_mci_manifest_process_dependency_validate(
-						const suit_manifest_class_id_t *parent_class_id,
-						const suit_manifest_class_id_t *child_class_id)
+mci_err_t
+suit_mci_manifest_process_dependency_validate(const suit_manifest_class_id_t *parent_class_id,
+					      const suit_manifest_class_id_t *child_class_id)
 {
 	if (NULL == parent_class_id || NULL == child_class_id) {
 		return SUIT_PLAT_ERR_INVAL;
 	}
 
-	if ((SUIT_PLAT_SUCCESS == 
-			suit_metadata_uuid_compare(&nordic_root_manifest_class_id, parent_class_id)) &&
-		(SUIT_PLAT_SUCCESS == 
-			suit_metadata_uuid_compare(&nordic_app_manifest_class_id, child_class_id))) {
+	if ((SUIT_PLAT_SUCCESS ==
+	     suit_metadata_uuid_compare(&nordic_root_manifest_class_id, parent_class_id)) &&
+	    (SUIT_PLAT_SUCCESS ==
+	     suit_metadata_uuid_compare(&nordic_app_manifest_class_id, child_class_id))) {
 		return SUIT_PLAT_SUCCESS;
 	}
 
@@ -339,11 +396,13 @@ int suit_mci_init(void)
 #if defined(CONFIG_MBEDTLS) || defined(CONFIG_NRF_SECURITY)
 	if (supported_manifests[0].signing_key_bits == 0) {
 		int ret = load_keys(&supported_manifests[0].signing_key_bits);
+
 		if (ret != SUIT_PLAT_SUCCESS) {
 			return ret;
 		}
 
 		supported_manifests[1].signing_key_bits = supported_manifests[0].signing_key_bits;
+		supported_manifests[2].signing_key_bits = supported_manifests[0].signing_key_bits;
 	}
 #endif /* CONFIG_MBEDTLS || CONFIG_NRF_SECURITY */
 
