@@ -125,6 +125,49 @@ suit_plat_err_t suit_storage_var_get(size_t index, uint32_t *value);
  */
 suit_plat_err_t suit_storage_var_set(size_t index, uint32_t value);
 
+/**
+ * @brief Erase the report area.
+ *
+ * @param[in]  index  Index of the report slot.
+ *
+ * @retval SUIT_PLAT_SUCCESS            if area was successfully erased.
+ * @retval SUIT_PLAT_ERR_INVAL          if one of the input arguments is invalid (i.e. NULL).
+ * @retval SUIT_PLAT_ERR_OUT_OF_BOUNDS  if the index value is too big.
+ * @retval SUIT_PLAT_ERR_HW_NOT_READY   if NVM controller is unavailable.
+ * @retval SUIT_PLAT_ERR_IO             if unable to change NVM contents.
+ */
+suit_plat_err_t suit_storage_report_clear(size_t index);
+
+/**
+ * @brief Save the binary data representing the processing report.
+ *
+ * @param[in]  index  Index of the report slot.
+ * @param[in]  buf    Binary data representing report to save.
+ * @param[in]  len    Length of the binary data.
+ *
+ * @retval SUIT_PLAT_SUCCESS            if the value was successfully saved.
+ * @retval SUIT_PLAT_ERR_INVAL          if one of the input arguments is invalid (i.e. NULL).
+ * @retval SUIT_PLAT_ERR_SIZE           if binary data is too long.
+ * @retval SUIT_PLAT_ERR_OUT_OF_BOUNDS  if the index value is too big.
+ * @retval SUIT_PLAT_ERR_HW_NOT_READY   if NVM controller is unavailable.
+ * @retval SUIT_PLAT_ERR_IO             if unable to change NVM contents.
+ */
+suit_plat_err_t suit_storage_report_save(size_t index, const uint8_t *buf, size_t len);
+
+/**
+ * @brief Read the binary data representing the processing report.
+ *
+ * @param[in]   index  Index of the report slot.
+ * @param[out]  buf    Pointer to the binary data representing the report.
+ * @param[out]  len    Length of the report.
+ *
+ * @retval SUIT_PLAT_SUCCESS            if the value was successfully read.
+ * @retval SUIT_PLAT_ERR_INVAL          if one of the input arguments is invalid (i.e. NULL).
+ * @retval SUIT_PLAT_ERR_OUT_OF_BOUNDS  if the index value is too big.
+ * @retval SUIT_PLAT_ERR_NOT_FOUND      if update report is not saved.
+ */
+suit_plat_err_t suit_storage_report_read(size_t index, const uint8_t **buf, size_t *len);
+
 #ifdef __cplusplus
 }
 #endif

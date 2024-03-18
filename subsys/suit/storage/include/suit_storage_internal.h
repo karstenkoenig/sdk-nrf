@@ -24,6 +24,7 @@
 #include <zcbor_common.h>
 #include <suit_plat_mem_util.h>
 #include <suit_storage_mpi.h>
+#include <suit_storage_report_internal.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -41,9 +42,10 @@ extern "C" {
 				  (SUIT_STORAGE_EB_SIZE))),                                        \
 		     (SUIT_STORAGE_EB_SIZE)))
 
-#define CEIL_DIV(a, b) ((((a)-1) / (b)) + 1)
-#define EB_ALIGN(size) (CEIL_DIV(size, SUIT_STORAGE_EB_SIZE) * SUIT_STORAGE_EB_SIZE)
-#define EB_SIZE(type)  (EB_ALIGN(sizeof(type)))
+#define CEIL_DIV(a, b)	  ((((a)-1) / (b)) + 1)
+#define EB_ALIGN(size)	  (CEIL_DIV(size, SUIT_STORAGE_EB_SIZE) * SUIT_STORAGE_EB_SIZE)
+#define WRITE_ALIGN(size) (CEIL_DIV(size, SUIT_STORAGE_WRITE_SIZE) * SUIT_STORAGE_WRITE_SIZE)
+#define EB_SIZE(type)	  (EB_ALIGN(sizeof(type)))
 #define ACCESS_SIZE(type)                                                                          \
 	(CEIL_DIV(sizeof(type), SUIT_STORAGE_ACCESS_BLOCK_SIZE) * SUIT_STORAGE_ACCESS_BLOCK_SIZE)
 

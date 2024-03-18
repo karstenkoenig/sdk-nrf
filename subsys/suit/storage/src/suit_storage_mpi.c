@@ -64,7 +64,7 @@ suit_plat_err_t suit_storage_mpi_configuration_load(suit_manifest_role_t role, c
 	}
 
 	if (mpi->version != SUIT_MPI_INFO_VERSION) {
-		/* Detect if the erea is erased. */
+		/* Detect if the area is erased. */
 		for (size_t i = 0; i < size; i++) {
 			if (addr[i] != 0xFF) {
 				return SUIT_PLAT_ERR_OUT_OF_BOUNDS;

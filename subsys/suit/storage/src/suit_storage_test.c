@@ -13,6 +13,8 @@ LOG_MODULE_REGISTER(suit_storage, CONFIG_SUIT_LOG_LEVEL);
 #define SUIT_STORAGE_ADDRESS suit_plat_mem_nvm_ptr_get(SUIT_STORAGE_OFFSET)
 #define SUIT_STORAGE_OFFSET  FIXED_PARTITION_OFFSET(suit_storage)
 #define SUIT_STORAGE_SIZE    FIXED_PARTITION_SIZE(suit_storage)
+#define SUIT_REPORT_SIZE     4096 /**< Size of a single SUIT report slot. */
+#define SUIT_N_REPORTS	     2	  /**< Number of SUIT report slots. */
 
 /* Update candidate metadata, aligned to the erase block size. */
 union suit_update_candidate_entry {
@@ -32,7 +34,7 @@ union suit_envelope_entry {
 	uint8_t erase_block[EB_SIZE(suit_envelope_encoded_t)];
 };
 
-/* SUIT configuration erea, set by application (i.e. thorough IPC service) and
+/* SUIT configuration area, set by application (i.e. thorough IPC service) and
  * checked using suit-condition-check-content.
  *
  * Currently both the service and the directive is not supported.
@@ -48,6 +50,15 @@ union suit_config_entry {
 	uint8_t erase_block[EB_SIZE(suit_config_t)];
 };
 
+/* SUIT report binary. */
+typedef uint8_t suit_report_t[SUIT_REPORT_SIZE];
+
+/* SUIT rebort area, aligned to the erase block size. */
+union suit_report_entry {
+	suit_report_t report;
+	uint8_t erase_block[EB_SIZE(suit_report_t)];
+};
+
 /* SUIT storage structure, that can be used to parse the NVM contents. */
 struct suit_storage {
 	/** Update candidate information. */
@@ -58,6 +69,8 @@ struct suit_storage {
 	union suit_config_entry config_backup;
 	/** The main storage for the SUIT envelopes. */
 	union suit_envelope_entry envelopes[CONFIG_SUIT_STORAGE_N_ENVELOPES];
+	/** Storage for the SUIT reports. */
+	union suit_report_entry reports[SUIT_N_REPORTS];
 };
 
 static const suit_storage_mpi_t mpi_test_sample[] = {
@@ -145,6 +158,20 @@ static suit_plat_err_t find_manifest_area(suit_manifest_role_t role, uint8_t **a
 	return SUIT_PLAT_SUCCESS;
 }
 
+static suit_plat_err_t find_report_area(size_t index, uint8_t **addr, size_t *size)
+{
+	struct suit_storage *storage = (struct suit_storage *)SUIT_STORAGE_ADDRESS;
+
+	if (index >= SUIT_N_REPORTS) {
+		return SUIT_PLAT_ERR_OUT_OF_BOUNDS;
+	}
+
+	*addr = storage->reports[index].erase_block;
+	*size = sizeof(storage->reports[index].erase_block);
+
+	return SUIT_PLAT_SUCCESS;
+}
+
 suit_plat_err_t suit_storage_init(void)
 {
 	suit_plat_err_t err = SUIT_PLAT_SUCCESS;
@@ -163,6 +190,11 @@ suit_plat_err_t suit_storage_init(void)
 	}
 
 	err = suit_storage_mpi_init();
+	if (err != SUIT_PLAT_SUCCESS) {
+		return err;
+	}
+
+	err = suit_storage_report_internal_init();
 	if (err != SUIT_PLAT_SUCCESS) {
 		return err;
 	}
@@ -276,4 +308,49 @@ suit_plat_err_t suit_storage_install_envelope(const suit_manifest_class_id_t *id
 	LOG_INF("Envelope with role 0x%x saved.", role);
 
 	return err;
+}
+
+suit_plat_err_t suit_storage_report_clear(size_t index)
+{
+	uint8_t *area_addr = NULL;
+	size_t area_size = 0;
+	suit_plat_err_t err;
+
+	err = find_report_area(index, &area_addr, &area_size);
+	if (err != SUIT_PLAT_SUCCESS) {
+		LOG_INF("Unable to find report area at index %d.", index);
+		return err;
+	}
+
+	return suit_storage_report_internal_clear(area_addr, area_size);
+}
+
+suit_plat_err_t suit_storage_report_save(size_t index, const uint8_t *buf, size_t len)
+{
+	uint8_t *area_addr = NULL;
+	size_t area_size = 0;
+	suit_plat_err_t err;
+
+	err = find_report_area(index, &area_addr, &area_size);
+	if (err != SUIT_PLAT_SUCCESS) {
+		LOG_INF("Unable to find area for report at index %d.", index);
+		return err;
+	}
+
+	return suit_storage_report_internal_save(area_addr, area_size, buf, len);
+}
+
+suit_plat_err_t suit_storage_report_read(size_t index, const uint8_t **buf, size_t *len)
+{
+	uint8_t *area_addr = NULL;
+	size_t area_size = 0;
+	suit_plat_err_t err;
+
+	err = find_report_area(index, &area_addr, &area_size);
+	if (err != SUIT_PLAT_SUCCESS) {
+		LOG_INF("Unable to find area with report at index %d.", index);
+		return err;
+	}
+
+	return suit_storage_report_internal_read(area_addr, area_size, buf, len);
 }

@@ -10,10 +10,10 @@
 		#address-cells = <1>;
 		#size-cells = <1>;
 
-		/* Use the last 32KB of NVM as suit storage. */
-		suit_storage: partition@f8000 {
+		/* Use the last 40KB of NVM as suit storage. */
+		suit_storage: partition@f6000 {
 			label = "suit_storage";
-			reg = <0xf8000 DT_SIZE_K(32)>;
+			reg = <0xf6000 DT_SIZE_K(40)>;
 		};
 	};
 };

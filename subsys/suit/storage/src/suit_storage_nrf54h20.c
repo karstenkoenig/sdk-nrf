@@ -67,8 +67,11 @@ struct suit_storage_nordic {
 			/* Application MPI Backup and digest. */
 			struct suit_storage_mpi_app app_mpi_bak;
 
+			/* The last SUIT update report. */
+			uint8_t report_0[160];
+
 			/* Reserved for Future Use. */
-			uint8_t reserved[320];
+			uint8_t reserved[160];
 
 			/* Installed envelope: Nordic Top */
 			uint8_t top[EB_ALIGN(1280)];
@@ -715,6 +718,23 @@ static suit_plat_err_t configure_manifests(suit_manifest_role_t *roles, size_t n
 	return SUIT_PLAT_SUCCESS;
 }
 
+static suit_plat_err_t find_report_area(size_t index, uint8_t **addr, size_t *size)
+{
+	struct suit_storage_nordic *nordic_storage =
+		(struct suit_storage_nordic *)SUIT_STORAGE_NORDIC_ADDRESS;
+
+	switch (index) {
+	case 0:
+		*addr = nordic_storage->nordic.report_0;
+		*size = ARRAY_SIZE(nordic_storage->nordic.report_0);
+		break;
+	default:
+		return SUIT_PLAT_ERR_OUT_OF_BOUNDS;
+	}
+
+	return SUIT_PLAT_SUCCESS;
+}
+
 suit_plat_err_t suit_storage_init(void)
 {
 	struct suit_storage_nordic *nordic_storage =
@@ -743,6 +763,12 @@ suit_plat_err_t suit_storage_init(void)
 	ret = suit_storage_mpi_init();
 	if (ret != SUIT_PLAT_SUCCESS) {
 		LOG_ERR("Failed to initialize MPI submodule: %d", ret);
+		return ret;
+	}
+
+	ret = suit_storage_report_internal_init();
+	if (ret != SUIT_PLAT_SUCCESS) {
+		LOG_ERR("Failed to initialize report submodule: %d", ret);
 		return ret;
 	}
 
@@ -949,4 +975,49 @@ suit_plat_err_t suit_storage_var_set(size_t index, uint32_t value)
 
 	/* Update digest and backup. */
 	return digest_struct_commit(area_addr, backup_addr, area_size);
+}
+
+suit_plat_err_t suit_storage_report_clear(size_t index)
+{
+	uint8_t *area_addr = NULL;
+	size_t area_size = 0;
+	suit_plat_err_t err;
+
+	err = find_report_area(index, &area_addr, &area_size);
+	if (err != SUIT_PLAT_SUCCESS) {
+		LOG_INF("Unable to find report area at index %d.", index);
+		return err;
+	}
+
+	return suit_storage_report_internal_clear(area_addr, area_size);
+}
+
+suit_plat_err_t suit_storage_report_save(size_t index, const uint8_t *buf, size_t len)
+{
+	uint8_t *area_addr = NULL;
+	size_t area_size = 0;
+	suit_plat_err_t err;
+
+	err = find_report_area(index, &area_addr, &area_size);
+	if (err != SUIT_PLAT_SUCCESS) {
+		LOG_INF("Unable to find area for report at index %d.", index);
+		return err;
+	}
+
+	return suit_storage_report_internal_save(area_addr, area_size, buf, len);
+}
+
+suit_plat_err_t suit_storage_report_read(size_t index, const uint8_t **buf, size_t *len)
+{
+	uint8_t *area_addr = NULL;
+	size_t area_size = 0;
+	suit_plat_err_t err;
+
+	err = find_report_area(index, &area_addr, &area_size);
+	if (err != SUIT_PLAT_SUCCESS) {
+		LOG_INF("Unable to find area with report at index %d.", index);
+		return err;
+	}
+
+	return suit_storage_report_internal_read(area_addr, area_size, buf, len);
 }
