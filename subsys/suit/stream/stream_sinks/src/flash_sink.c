@@ -161,7 +161,6 @@ suit_plat_err_t suit_flash_sink_get(struct stream_sink *sink, uint8_t *dst, size
 				return SUIT_PLAT_ERR_INVAL;
 			}
 
-			memset(sink, 0, sizeof(*sink));
 			sink->erase = erase;
 			sink->write = write;
 			sink->seek = seek;
