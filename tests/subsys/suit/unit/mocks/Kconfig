@@ -69,3 +69,12 @@ config MOCK_DIGEST_SINK
 
 config MOCK_GENERIC_ADDRESS_STREAMER
 	bool "Mock stream sources"
+
+config MOCK_DFU_CACHE_STREAMER
+	bool "Mock dfu cache streamer"
+
+config MOCK_FETCH_SOURCE_STREAMER
+	bool "Mock fetch source streamer"
+
+config MOCK_DFU_CACHE_SINK
+	bool "Mock dfu cache sink"

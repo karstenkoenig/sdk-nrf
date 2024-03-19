@@ -62,6 +62,18 @@
 #include <mock_generic_address_streamer.h>
 #endif /* CONFIG_MOCK_GENERIC_ADDRESS_STREAMER */
 
+#ifdef CONFIG_MOCK_DFU_CACHE_SINK
+#include <mock_dfu_cache_sink.h>
+#endif /* CONFIG_MOCK_DFU_CACHE_SINK */
+
+#ifdef CONFIG_MOCK_DFU_CACHE_STREAMER
+#include <mock_dfu_cache_streamer.h>
+#endif /* CONFIG_MOCK_DFU_CACHE_STREAMER */
+
+#ifdef CONFIG_MOCK_FETCH_SOURCE_STREAMER
+#include <mock_fetch_source_streamer.h>
+#endif /* CONFIG_MOCK_FETCH_SOURCE_STREAMER */
+
 static inline void mocks_reset(void)
 {
 #ifdef CONFIG_MOCK_SUIT_PROCESSOR
@@ -115,5 +127,18 @@ static inline void mocks_reset(void)
 #ifdef CONFIG_MOCK_GENERIC_ADDRESS_STREAMER
 	mock_generic_address_streamer_reset();
 #endif /* CONFIG_MOCK_GENERIC_ADDRESS_STREAMER */
+
+#ifdef CONFIG_MOCK_DFU_CACHE_SINK
+	mock_dfu_cache_sink_reset();
+#endif /* CONFIG_MOCK_DFU_CACHE_SINK */
+
+#ifdef CONFIG_MOCK_DFU_CACHE_STREAMER
+	mock_dfu_cache_streamer_reset();
+#endif /* CONFIG_MOCK_DFU_CACHE_STREAMER */
+
+#ifdef CONFIG_MOCK_FETCH_SOURCE_STREAMER
+	mock_fetch_source_streamer_reset();
+#endif /* CONFIG_MOCK_FETCH_SOURCE_STREAMER */
+
 }
 #endif /* MOCK_H__ */

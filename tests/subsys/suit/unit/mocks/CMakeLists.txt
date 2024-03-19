@@ -100,3 +100,18 @@ if (CONFIG_MOCK_GENERIC_ADDRESS_STREAMER)
   target_compile_options(test_interface INTERFACE -DCONFIG_SUIT_STREAM)
   target_include_directories(testbinary PRIVATE ${SUIT_SUBSYS_DIR}/stream/stream_sources/include)
 endif()
+
+if (CONFIG_MOCK_DFU_CACHE_STREAMER)
+  target_compile_options(test_interface INTERFACE -DCONFIG_SUIT_STREAM -DCONFIG_SUIT_CACHE_RW)
+  target_include_directories(testbinary PRIVATE ${SUIT_SUBSYS_DIR}/stream/stream_sources/include)
+endif()
+
+if (CONFIG_MOCK_DFU_CACHE_SINK)
+  target_compile_options(test_interface INTERFACE -DCONFIG_SUIT_STREAM)
+  target_include_directories(testbinary PRIVATE ${SUIT_SUBSYS_DIR}/stream/stream_sinks/include)
+endif()
+
+if (CONFIG_MOCK_FETCH_SOURCE_STREAMER)
+  target_compile_options(test_interface INTERFACE -DCONFIG_SUIT_STREAM -DCONFIG_SUIT_STREAM_FETCH_SOURCE_MGR)
+  target_include_directories(testbinary PRIVATE ${SUIT_SUBSYS_DIR}/stream/stream_sources/include)
+endif()
