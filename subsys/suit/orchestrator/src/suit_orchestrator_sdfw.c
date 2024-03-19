@@ -41,25 +41,47 @@ enum suit_orchestrator_state {
 
 static suit_plat_err_t storage_emergency_flag_get(bool *flag)
 {
+	const uint8_t *fail_report;
+	size_t fail_report_len;
+	suit_plat_err_t ret = suit_storage_report_read(0, &fail_report, &fail_report_len);
+
 	if (flag == NULL) {
 		return SUIT_PLAT_ERR_INVAL;
 	}
 
-	LOG_WRN("TODO: Implement emergency flag handling");
-	*flag = false;
+	if (ret == SUIT_PLAT_ERR_NOT_FOUND) {
+		*flag = false;
+	} else if (ret == SUIT_PLAT_SUCCESS) {
+		*flag = true;
+	} else {
+		LOG_ERR("Unable to read recovery flag: %d", ret);
+		*flag = true;
+		return ret;
+	}
 
 	return SUIT_PLAT_SUCCESS;
 }
 
 static int enter_emergency_recovery(void)
 {
-	LOG_WRN("TODO: Implement entering emergency recovery");
-	return -ENOTSUP;
+	/* TODO: Report boot status */
+	suit_plat_err_t ret = suit_storage_report_save(0, NULL, 0);
+
+	if (ret != SUIT_PLAT_SUCCESS) {
+		LOG_ERR("Unable to set recovery flag: %d", ret);
+		return -EIO;
+	}
+
+	return 0;
 }
 
 static void leave_emergency_recovery(void)
 {
-	LOG_WRN("TODO: Implement leaving emergency recovery");
+	suit_plat_err_t ret = suit_storage_report_clear(0);
+
+	if (ret != SUIT_PLAT_SUCCESS) {
+		LOG_ERR("Unable to clear recovery flag: %d", ret);
+	}
 }
 
 static int validate_update_candidate_address_and_size(const uint8_t *addr, size_t size)
@@ -163,6 +185,7 @@ static int update_path(void)
 	size_t update_regions_len = 0;
 
 	int err = suit_storage_update_cand_get(&update_regions, &update_regions_len);
+
 	if ((err != SUIT_PLAT_SUCCESS) || (update_regions_len < 1)) {
 		LOG_ERR("Failed to get update candidate data: %d", err);
 		return SUIT_PLAT_ERR_TO_ZEPHYR_ERR(err);
@@ -249,6 +272,7 @@ static int boot_envelope(const suit_manifest_class_id_t *class_id)
 	LOG_DBG("Validated installed root manifest");
 
 	unsigned int seq_num;
+
 	err = suit_processor_get_manifest_metadata(installed_envelope_address,
 						   installed_envelope_size, true, NULL, NULL, NULL,
 						   &seq_num);
@@ -316,9 +340,9 @@ static int boot_path(bool emergency)
 				continue;
 			}
 			return ret;
-		} else {
-			LOG_DBG("Manifest %d booted", i);
 		}
+
+		LOG_DBG("Manifest %d booted", i);
 	}
 
 	return ret;
@@ -331,18 +355,21 @@ int suit_orchestrator_init(void)
 	size_t update_regions_len = 0;
 
 	int err = suit_processor_init();
+
 	if (err != SUIT_SUCCESS) {
 		LOG_ERR("Failed to initialize suit processor: %d", err);
 		return SUIT_PROCESSOR_ERR_TO_ZEPHYR_ERR(err);
 	}
 
 	suit_plat_err_t plat_err = suit_storage_init();
+
 	if (plat_err != SUIT_PLAT_SUCCESS) {
 		LOG_ERR("Failed to init suit storage: %d", plat_err);
 		return SUIT_PLAT_ERR_TO_ZEPHYR_ERR(plat_err);
 	}
 
 	mci_err_t mci_err = suit_mci_init();
+
 	if (mci_err != SUIT_PLAT_SUCCESS) {
 		LOG_ERR("Failed to init MCI: %d", mci_err);
 		return SUIT_PLAT_ERR_TO_ZEPHYR_ERR(mci_err);
@@ -437,6 +464,7 @@ static int suit_orchestrator_run(void)
 			/* TODO: Report update status */
 
 			int clear_ret = clear_update_candidate();
+
 			if (clear_ret != 0) {
 				LOG_WRN("Unable to clear update candidate info: %d", clear_ret);
 			}
@@ -472,13 +500,9 @@ static int suit_orchestrator_run(void)
 		case STATE_ENTER_RECOVERY:
 			LOG_INF("Enter recovery mode");
 
-			/* TODO: Report boot status */
-
 			ret = enter_emergency_recovery();
 			if (ret != 0) {
 				LOG_WRN("Unable to enter emergency recovery: %d", ret);
-				/* TODO: Remove once emergency recovery flag is implemented. */
-				return ret;
 			}
 
 			if (IS_ENABLED(CONFIG_SUIT_BOOT_RECOVERY_REBOOT_ENABLED)) {
@@ -486,7 +510,7 @@ static int suit_orchestrator_run(void)
 				LOG_PANIC();
 				sys_reboot(SYS_REBOOT_COLD);
 			}
-			return ret;
+			return -ENOTSUP;
 
 		case STATE_POST_INVOKE:
 			if (suit_execution_mode_set(EXECUTION_MODE_POST_INVOKE) !=
