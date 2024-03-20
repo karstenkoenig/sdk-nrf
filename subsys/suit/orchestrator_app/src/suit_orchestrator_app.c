@@ -43,20 +43,6 @@ LOG_MODULE_REGISTER(suit_dfu, CONFIG_SUIT_LOG_LEVEL);
 
 #if CONFIG_SUIT_ORCHESTRATOR_APP_CANDIDATE_PROCESSING
 
-#if CONFIG_SUIT_PROCESSOR
-static int update_candidate_manifest_validate(uint8_t *manifest_address, size_t manifest_size)
-{
-	int err = suit_process_sequence(manifest_address, manifest_size, SUIT_SEQ_PARSE);
-
-	if (err != SUIT_SUCCESS) {
-		LOG_ERR("Failed to validate update candidate manifest: %d", err);
-		return SUIT_PROCESSOR_ERR_TO_ZEPHYR_ERR(err);
-	}
-
-	return 0;
-}
-#endif /* CONFIG_SUIT_PROCESSOR */
-
 static int dfu_partition_erase(void)
 {
 	const struct device *fdev = DFU_PARTITION_DEVICE;
@@ -176,16 +162,6 @@ int suit_dfu_candidate_preprocess(void)
 
 	LOG_DBG("Update candidate address: %p", candidate_envelope_address);
 	LOG_DBG("Update candidate size: %d", candidate_envelope_size);
-
-	err = update_candidate_manifest_validate(candidate_envelope_address,
-						 candidate_envelope_size);
-	if (err != SUIT_SUCCESS) {
-		LOG_ERR("Failed to validate update candidate manifest: %d", err);
-
-		return err;
-	}
-
-	LOG_DBG("Manifest validated");
 
 	err = suit_process_sequence(candidate_envelope_address, candidate_envelope_size,
 				    SUIT_SEQ_DEP_RESOLUTION);
