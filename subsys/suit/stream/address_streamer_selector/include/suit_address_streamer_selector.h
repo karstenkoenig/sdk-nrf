@@ -7,7 +7,7 @@
 #ifndef SUIT_ADDRESS_STREAMER_SELECTOR_H__
 #define SUIT_ADDRESS_STREAMER_SELECTOR_H__
 
-#include <sink.h>
+#include <suit_sink.h>
 
 #ifdef __cplusplus
 extern "C" {

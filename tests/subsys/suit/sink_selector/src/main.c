@@ -6,11 +6,11 @@
 
 #include <zephyr/ztest.h>
 #include <stdint.h>
-#include <ram_sink.h>
-#include <memptr_sink.h>
-#include <flash_sink.h>
-#include <sink.h>
-#include <sink_selector.h>
+#include <suit_ram_sink.h>
+#include <suit_memptr_sink.h>
+#include <suit_flash_sink.h>
+#include <suit_sink.h>
+#include <suit_sink_selector.h>
 #include <suit_platform.h>
 #include <suit_platform_internal.h>
 

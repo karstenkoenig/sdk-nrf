@@ -9,10 +9,10 @@ target_include_directories(suit_cache_interface INTERFACE include)
 target_link_libraries(suit_cache_interface INTERFACE suit_platform_err)
 
 zephyr_library()
-zephyr_library_sources(src/dfu_cache.c)
-zephyr_library_sources(src/dfu_cache_helpers.c)
+zephyr_library_sources(src/suit_dfu_cache.c)
+zephyr_library_sources(src/suit_dfu_cache_helpers.c)
 
-zephyr_library_sources_ifdef(CONFIG_SUIT_CACHE_RW src/dfu_cache_rw.c)
+zephyr_library_sources_ifdef(CONFIG_SUIT_CACHE_RW src/suit_dfu_cache_rw.c)
 
 zephyr_library_link_libraries(suit_cache_interface)
 

@@ -19,11 +19,11 @@
 #include <suit_envelope_info.h>
 #include <suit_plat_mem_util.h>
 #if CONFIG_SUIT_CACHE_RW
-#include <dfu_cache_rw.h>
+#include <suit_dfu_cache_rw.h>
 #endif
 
 #if CONFIG_SUIT_STREAM_IPC_PROVIDER
-#include <ipc_streamer.h>
+#include <suit_ipc_streamer.h>
 #endif
 
 #define FIXED_PARTITION_ERASE_BLOCK_SIZE(label)                                                    \

@@ -19,7 +19,7 @@
 #include <suit_plat_digest_cache.h>
 #include "suit_plat_err.h"
 #include <suit_execution_mode.h>
-#include <dfu_cache.h>
+#include <suit_dfu_cache.h>
 
 LOG_MODULE_REGISTER(suit_orchestrator, CONFIG_SUIT_LOG_LEVEL);
 

@@ -12,7 +12,7 @@
 
 #include <suit_mci.h>
 
-/* generic_ids.c */
+/* suit_generic_ids.c */
 #ifdef CONFIG_MOCK_SUIT_MCI_GENERIC_IDS
 FAKE_VALUE_FUNC(int, suit_mci_nordic_vendor_id_get, const suit_uuid_t **);
 #endif /* CONFIG_MOCK_SUIT_MCI_GENERIC_IDS */

@@ -11,7 +11,7 @@
 #include <suit_types.h>
 #include <suit_platform_internal.h>
 #ifdef CONFIG_SUIT_STREAM
-#include <sink.h>
+#include <suit_sink.h>
 
 #ifdef __cplusplus
 extern "C" {

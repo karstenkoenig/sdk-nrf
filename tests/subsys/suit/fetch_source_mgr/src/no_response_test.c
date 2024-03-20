@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
  */
 #include <zephyr/ztest.h>
-#include <ipc_streamer.h>
+#include <suit_ipc_streamer.h>
 
 static uint32_t write_chunk_count = 0;
 static uint32_t missing_image_notify_count = 0;

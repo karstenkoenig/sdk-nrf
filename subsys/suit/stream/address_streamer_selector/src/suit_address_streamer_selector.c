@@ -9,15 +9,15 @@
 #include <suit_plat_err.h>
 
 #if IS_ENABLED(CONFIG_SUIT_STREAM_SOURCE_EXTMEM)
-#include <extmem_streamer.h>
+#include <suit_extmem_streamer.h>
 #endif
 
 #if IS_ENABLED(CONFIG_SUIT_STREAM_SOURCE_FLASH)
-#include <flash_streamer.h>
+#include <suit_flash_streamer.h>
 #endif
 
 #if IS_ENABLED(CONFIG_SUIT_STREAM_SOURCE_MEMPTR)
-#include <memptr_streamer.h>
+#include <suit_memptr_streamer.h>
 #endif
 
 LOG_MODULE_REGISTER(suit_plat_source_selector, CONFIG_SUIT_LOG_LEVEL);

@@ -9,7 +9,7 @@
 #include <suit_platform.h>
 #include <suit_plat_decode_util.h>
 #include <suit_memptr_storage.h>
-#include <sink.h>
+#include <suit_sink.h>
 
 /* Data for digest calculation */
 static uint8_t data[] = {0xde, 0xad, 0xbe, 0xef};

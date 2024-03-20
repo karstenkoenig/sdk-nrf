@@ -5,7 +5,7 @@
  */
 #include <zephyr/ztest.h>
 #include <zephyr/kernel.h>
-#include <ipc_streamer.h>
+#include <suit_ipc_streamer.h>
 
 static K_THREAD_STACK_DEFINE(injector_stack, 1024);
 static struct k_thread injector_thread;

@@ -6,7 +6,7 @@
 
 #include <suit_platform.h>
 #include <suit_plat_error_convert.h>
-#include <digest_sink.h>
+#include <suit_digest_sink.h>
 
 #include <zephyr/logging/log.h>
 

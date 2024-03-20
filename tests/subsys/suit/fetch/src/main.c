@@ -8,7 +8,7 @@
 #include <suit_platform.h>
 #include <suit_memptr_storage.h>
 #include <suit_platform_internal.h>
-#include <dfu_cache.h>
+#include <suit_dfu_cache.h>
 
 #define TEST_DATA_SIZE 64
 #define WRITE_ADDR     0x1A00080000

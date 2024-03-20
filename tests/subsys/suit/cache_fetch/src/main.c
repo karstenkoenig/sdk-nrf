@@ -5,10 +5,10 @@
  */
 
 #include <zephyr/ztest.h>
-#include <sink.h>
-#include <memptr_sink.h>
-#include <dfu_cache_streamer.h>
-#include <dfu_cache.h>
+#include <suit_sink.h>
+#include <suit_memptr_sink.h>
+#include <suit_dfu_cache_streamer.h>
+#include <suit_dfu_cache.h>
 
 /*
   {"http://source1.com": h'4235623423462346456234623487723572702975',

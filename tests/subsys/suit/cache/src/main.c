@@ -5,7 +5,7 @@
  */
 
 #include <zephyr/ztest.h>
-#include <dfu_cache.h>
+#include <suit_dfu_cache.h>
 
 /*
   {"http://source1.com": h'4235623423462346456234623487723572702975',

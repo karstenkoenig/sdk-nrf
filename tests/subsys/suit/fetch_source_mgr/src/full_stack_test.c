@@ -5,7 +5,7 @@
  */
 #include <zephyr/ztest.h>
 #include <zephyr/kernel.h>
-#include <ipc_streamer.h>
+#include <suit_ipc_streamer.h>
 #include <dfu/suit_dfu_fetch_source.h>
 
 static uint32_t received_bytes = 0;

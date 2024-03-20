@@ -12,6 +12,6 @@ project(plat_retrieve_manifest)
 
 target_sources(testbinary PRIVATE
   src/main.c
-  ${SUIT_SUBSYS_DIR}/platform/src/plat_retrieve_manifest.c
-  ${SUIT_SUBSYS_DIR}/platform/sdfw/src/plat_retrieve_manifest_sdfw_specific.c
+  ${SUIT_SUBSYS_DIR}/platform/src/suit_plat_retrieve_manifest.c
+  ${SUIT_SUBSYS_DIR}/platform/sdfw/src/suit_plat_retrieve_manifest_sdfw_specific.c
 )

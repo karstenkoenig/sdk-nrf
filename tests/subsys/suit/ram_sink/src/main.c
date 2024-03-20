@@ -6,8 +6,8 @@
 
 #include <zephyr/ztest.h>
 #include <stdint.h>
-#include <ram_sink.h>
-#include <sink.h>
+#include <suit_ram_sink.h>
+#include <suit_sink.h>
 
 #define TEST_DATA_SIZE		64
 #define SUIT_MAX_RAM_COMPONENTS 1 /* Currently only one component allowed */

@@ -6,8 +6,8 @@
 
 #include <zephyr/ztest.h>
 #include <stdint.h>
-#include <sink.h>
-#include <memptr_sink.h>
+#include <suit_sink.h>
+#include <suit_memptr_sink.h>
 #include <suit_memptr_storage.h>
 
 #define TEST_DATA_SIZE 64

@@ -10,8 +10,8 @@
 #include <zephyr/fff.h>
 #include <mock_globals.h>
 
-#include <sink.h>
-#include <generic_address_streamer.h>
+#include <suit_sink.h>
+#include <suit_generic_address_streamer.h>
 
 
 FAKE_VALUE_FUNC(suit_plat_err_t, suit_generic_address_streamer_stream, const uint8_t *, size_t, struct stream_sink *);

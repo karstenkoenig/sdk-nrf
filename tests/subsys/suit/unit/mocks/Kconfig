@@ -9,7 +9,7 @@ menuconfig MOCK_SUIT_MCI
 
 if MOCK_SUIT_MCI
 config MOCK_SUIT_MCI_GENERIC_IDS
-	bool "Mock generic_ids.c implementation"
+	bool "Mock suit_generic_ids.c implementation"
 	default y
 	help
 	  If not enabled, the module implementation will be included.

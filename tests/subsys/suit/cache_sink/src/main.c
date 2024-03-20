@@ -7,9 +7,9 @@
 #include <zephyr/ztest.h>
 #include <zephyr/drivers/flash.h>
 #include <zephyr/storage/flash_map.h>
-#include <sink.h>
-#include <dfu_cache_sink.h>
-#include <dfu_cache_rw.h>
+#include <suit_sink.h>
+#include <suit_dfu_cache_sink.h>
+#include <suit_dfu_cache_rw.h>
 #include <suit_plat_mem_util.h>
 
 #ifndef CONFIG_BOARD_NATIVE_POSIX

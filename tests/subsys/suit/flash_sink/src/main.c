@@ -6,8 +6,8 @@
 
 #include <zephyr/ztest.h>
 #include <stdint.h>
-#include <flash_sink.h>
-#include <sink.h>
+#include <suit_flash_sink.h>
+#include <suit_sink.h>
 #include <suit_plat_mem_util.h>
 #include <zephyr/drivers/flash.h>
 #include <suit_memptr_storage.h>

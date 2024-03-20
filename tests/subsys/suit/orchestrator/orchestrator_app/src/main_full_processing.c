@@ -10,8 +10,8 @@
 #include <suit_plat_err.h>
 #include <suit_types.h>
 #include <dfu/suit_dfu_fetch_source.h>
-#include <dfu_cache_rw.h>
-#include <dfu_cache.h>
+#include <suit_dfu_cache_rw.h>
+#include <suit_dfu_cache.h>
 #include <suit_metadata.h>
 #include <zephyr/sys/util.h>
 

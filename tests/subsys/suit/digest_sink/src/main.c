@@ -6,7 +6,7 @@
 
 #include <zephyr/ztest.h>
 
-#include <digest_sink.h>
+#include <suit_digest_sink.h>
 
 static uint8_t valid_payload[] = {0xde, 0xad, 0xbe, 0xef};
 

@@ -15,7 +15,7 @@
 #include <zephyr/storage/flash_map.h>
 #include <suit_plat_mem_util.h>
 #include <update_magic_values.h>
-#include <dfu_cache.h>
+#include <suit_dfu_cache.h>
 
 #if DT_NODE_EXISTS(DT_NODELABEL(suit_storage_app))
 #define SUIT_STORAGE_OFFSET FIXED_PARTITION_OFFSET(suit_storage_app)

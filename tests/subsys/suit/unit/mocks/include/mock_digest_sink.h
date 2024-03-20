@@ -10,8 +10,8 @@
 #include <zephyr/fff.h>
 #include <mock_globals.h>
 
-#include <sink.h>
-#include <digest_sink.h>
+#include <suit_sink.h>
+#include <suit_digest_sink.h>
 
 
 FAKE_VALUE_FUNC(suit_plat_err_t, suit_digest_sink_get, struct stream_sink *, psa_algorithm_t, const uint8_t *);
