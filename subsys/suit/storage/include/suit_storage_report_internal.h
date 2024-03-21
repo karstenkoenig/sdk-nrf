@@ -27,6 +27,10 @@
 #include <stddef.h>
 #include <suit_plat_err.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * @brief Initialize the SUIT storage module managing processing reports.
  *
@@ -82,5 +86,9 @@ suit_plat_err_t suit_storage_report_internal_save(uint8_t *area_addr, size_t are
  */
 suit_plat_err_t suit_storage_report_internal_read(const uint8_t *area_addr, size_t area_size,
 						  const uint8_t **buf, size_t *len);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* SUIT_STORAGE_REPORT_INTERNAL_H__ */

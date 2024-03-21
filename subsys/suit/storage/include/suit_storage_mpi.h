@@ -24,6 +24,10 @@
 
 #include <suit_metadata.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define SUIT_MPI_INFO_VERSION 1
 
 #define SUIT_MPI_DOWNGRADE_PREVENTION_DISABLED 1
@@ -159,5 +163,9 @@ suit_mpi_independent_updateability_policy_to_metadata(int mpi_policy);
  */
 suit_signature_verification_policy_t
 suit_mpi_signature_verification_policy_to_metadata(int mpi_policy);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* SUIT_STORAGE_MPI_H__ */

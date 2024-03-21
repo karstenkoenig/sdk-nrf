@@ -22,6 +22,10 @@
 #include <stddef.h>
 #include <suit_plat_err.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define SUIT_STORAGE_NVV_N_VARS 8
 
 typedef uint32_t suit_storage_nvv_t[SUIT_STORAGE_NVV_N_VARS];
@@ -84,5 +88,9 @@ suit_plat_err_t suit_storage_nvv_get(const uint8_t *area_addr, size_t area_size,
  */
 suit_plat_err_t suit_storage_nvv_set(uint8_t *area_addr, size_t area_size, size_t index,
 				     uint32_t value);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* SUIT_STORAGE_NVV_H__ */
