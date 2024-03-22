@@ -32,3 +32,5 @@ You can learn about this in the :ref:`ug_nrf54h20_suit_customize_dfu` page, whic
    ug_nrf54h20_suit_hierarchical_manifests.rst
    ug_nrf54h20_suit_why.rst
    ug_nrf54h20_suit_mcuboot_compare.rst
+   ug_nrf54h20_suit_fetch.rst
+   ug_nrf54h20_suit_external_memory.rst
