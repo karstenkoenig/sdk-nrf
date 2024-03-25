@@ -313,12 +313,17 @@ int dns_sd_service_for_each(dns_sd_service_cb_t callback, void *user_data, k_tim
 	}
 
 	SYS_SLIST_FOR_EACH_CONTAINER_SAFE(&service_list, current, next, node) {
-		callback((struct dns_sd_service_handle *)current, user_data);
+		enum net_verdict verdict = callback((struct dns_sd_service_handle *)current,
+						    user_data);
+
 		res++;
+		if (verdict == NET_OK) {
+			goto done;
+		}
 	}
 
+done:
 	unlock_mdns_mutex();
-
 	return res;
 }
 

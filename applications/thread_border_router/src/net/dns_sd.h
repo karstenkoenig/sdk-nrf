@@ -27,9 +27,14 @@ struct dns_sd_service_handle;
  * @brief Service iteration callback
  *
  * Function pointer to be provided as @ref dns_sd_service_for_each() argument. It
- * is invoked for every published service.
+ * is invoked until callback returns @ref NET_OK.
+ *
+ * The callback returns:
+ *  - NET_CONTINUE if next service should be handled (e.g. if required to handle
+ *    all services one by one).
+ *  - NET_OK in case when needs to interrupt @ref dns_sd_service_for_each() (e.g. service is found).
  */
-typedef void (*dns_sd_service_cb_t)(struct dns_sd_service_handle *handle, void *user_data);
+typedef enum net_verdict (*dns_sd_service_cb_t)(struct dns_sd_service_handle *handle, void *user_data);
 
 /** Service's transport protocol */
 enum dns_sd_service_proto {

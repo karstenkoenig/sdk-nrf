@@ -693,7 +693,7 @@ static int cmd_tbr_dns_sd_services_remove(const struct shell *sh, size_t argc, c
 	return res;
 }
 
-static void print_service(struct dns_sd_service_handle *handle, void *user_data)
+static enum net_verdict print_service(struct dns_sd_service_handle *handle, void *user_data)
 {
 	const struct shell *sh = (const struct shell *)user_data;
 	struct dns_sd_service_info_out info;
@@ -732,6 +732,9 @@ static void print_service(struct dns_sd_service_handle *handle, void *user_data)
 		shell_print(sh, "               TXT data:");
 		shell_hexdump(sh, txt_data, info.txt_data.len_read);
 	}
+
+	/* Print all services. */
+	return NET_CONTINUE;
 }
 
 static int cmd_tbr_dns_sd_services_show(const struct shell *sh, size_t argc, char *argv[])
