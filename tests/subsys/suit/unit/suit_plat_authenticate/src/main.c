@@ -142,7 +142,7 @@ static int psa_verify_message_correct_eddsa_fake_func(mbedtls_svc_key_id_t key, 
 						      size_t signature_length)
 {
 	zassert_equal(key, sample_integer_key_id, "Invalid key ID value");
-	zassert_equal(alg, PSA_ALG_ED25519PH, "Invalid alg value");
+	zassert_equal(alg, PSA_ALG_PURE_EDDSA, "Invalid alg value");
 	zassert_equal(input, valid_data.value, "Invalid input value");
 	zassert_equal(input_length, valid_data.len, "Invalid input length");
 	zassert_equal(signature, valid_signature.value, "Invalid signature value");
