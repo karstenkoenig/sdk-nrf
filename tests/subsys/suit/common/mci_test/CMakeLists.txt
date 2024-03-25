@@ -9,7 +9,7 @@ if (CONFIG_SUIT_MCI_IMPL_CUSTOM)
   zephyr_library_link_libraries(suit_mci)
   zephyr_library_link_libraries(suit_metadata)
   zephyr_library_link_libraries(suit_execution_mode)
-  
+
   if (CONFIG_MBEDTLS)
     # Link MCI (incl. crypto) module with mbedTLS library, that provides PSA crypto APIs.
     zephyr_library_link_libraries(mbedTLS)

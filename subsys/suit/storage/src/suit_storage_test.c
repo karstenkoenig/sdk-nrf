@@ -148,7 +148,8 @@ static suit_plat_err_t find_mpi_area(suit_manifest_role_t role, uint8_t **addr, 
 	return SUIT_PLAT_SUCCESS;
 }
 
-static suit_plat_err_t find_manifest_area(suit_manifest_role_t role, const uint8_t **addr, size_t *size)
+static suit_plat_err_t find_manifest_area(suit_manifest_role_t role, const uint8_t **addr,
+					  size_t *size)
 {
 	struct suit_storage *storage = (struct suit_storage *)SUIT_STORAGE_ADDRESS;
 	int index = -1;
@@ -263,7 +264,7 @@ suit_plat_err_t suit_storage_update_cand_set(suit_plat_mreg_t *regions, size_t l
 }
 
 suit_plat_err_t suit_storage_installed_envelope_get(const suit_manifest_class_id_t *id,
-						   const uint8_t **addr, size_t *size)
+						    const uint8_t **addr, size_t *size)
 {
 	suit_manifest_role_t role;
 
@@ -272,6 +273,7 @@ suit_plat_err_t suit_storage_installed_envelope_get(const suit_manifest_class_id
 	}
 
 	suit_plat_err_t err = suit_storage_mpi_role_get(id, &role);
+
 	if (err != SUIT_PLAT_SUCCESS) {
 		LOG_INF("Unable to find role for given class ID.");
 		return err;

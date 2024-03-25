@@ -44,7 +44,16 @@ echo "Signing SUIT envelope using key_priv.pem ..."
 python3 ${SIGN_SCRIPT} --input-file sample.suit --output-file sample_signed.suit
 generated_files+=("\tsigned binary envelope:\t\t\t$PWD/sample_signed.suit")
 echo "Converting binary envelope into C code ..."
-zcbor convert -c ${SUIT_PROCESSOR_DIR}/cddl/manifest.cddl -c ${SUIT_PROCESSOR_DIR}/cddl/trust_domains.cddl -i ./sample_signed.suit --input-as cbor -t SUIT_Envelope_Tagged -o sample_signed.suit.c --c-code-var-name manifest --c-code-columns 15
+zcbor convert \
+  -c ${SUIT_PROCESSOR_DIR}/cddl/manifest.cddl \
+  -c ${SUIT_PROCESSOR_DIR}/cddl/trust_domains.cddl \
+  -c ${SUIT_PROCESSOR_DIR}/cddl/update_management.cddl \
+  -i ./sample_signed.suit \
+  --input-as cbor \
+  -t SUIT_Envelope_Tagged \
+  -o sample_signed.suit.c \
+  --c-code-var-name manifest \
+  --c-code-columns 15
 generated_files+=("\tsigned binary envelope as C code:\t$PWD/sample_signed.suit.c")
 echo "Done, following files have been created:"
 for file in "${generated_files[@]}"

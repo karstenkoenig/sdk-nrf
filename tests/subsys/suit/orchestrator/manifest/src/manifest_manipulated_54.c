@@ -10,7 +10,7 @@
 
 /** @brief Manipulated SUIT envelope, based on ../manifest/sample_valid_54.yaml
  *
- * @details The manipulation is done on byte of index 7, from value 0x58 to 0xFF
+ * @details The manipulation is done on byte of index 11, from value 0x58 to 0xFF
  *
  */
 const uint8_t manifest_manipulated_buf[] = {
