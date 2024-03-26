@@ -79,11 +79,15 @@ static int validate_update_candidate_address_and_size(const uint8_t *addr, size_
 
 static int initialize_dfu_cache(const suit_plat_mreg_t *update_regions, size_t update_regions_len)
 {
+	struct dfu_cache cache = {0};
+
 	if (update_regions == NULL || update_regions_len < 1) {
 		return -EINVAL;
 	}
 
-	struct dfu_cache cache = {0};
+	if ((update_regions_len - 1) > ARRAY_SIZE(cache.pools)) {
+		return -EINVAL;
+	}
 
 	cache.pools_count = update_regions_len - 1;
 
@@ -92,7 +96,7 @@ static int initialize_dfu_cache(const suit_plat_mreg_t *update_regions, size_t u
 		cache.pools[i - 1].size = update_regions[i].size;
 	}
 
-	return SUIT_PROCESSOR_ERR_TO_ZEPHYR_ERR(suit_dfu_cache_initialize(&cache));
+	return SUIT_PLAT_ERR_TO_ZEPHYR_ERR(suit_dfu_cache_initialize(&cache));
 }
 
 static int validate_update_candidate_manifest(uint8_t *manifest_address, size_t manifest_size)
