@@ -10,6 +10,7 @@
 #include <suit_plat_decode_util.h>
 #include <suit_plat_component_compatibility.h>
 #include <zephyr/logging/log.h>
+#include <sdfw/sdfw_builtin_keys.h>
 
 LOG_MODULE_REGISTER(suit_plat_authenticate, CONFIG_SUIT_LOG_LEVEL);
 
@@ -76,6 +77,18 @@ int suit_plat_authenticate_manifest(struct zcbor_string *manifest_component_id,
 	}
 
 	/* Verify data */
+	if(sdfw_builtin_keys_is_builtin(public_key_id)) {
+		if (sdfw_builtin_keys_verify_message(public_key_id, psa_alg, data->value,
+						     data->len, signature->value,
+						     signature->len) == PSA_SUCCESS) {
+			return SUIT_SUCCESS;
+		}
+		else {
+			LOG_ERR("Signature verification failed.");
+			return SUIT_ERR_AUTHENTICATION;
+		}
+	}
+
 	if (psa_verify_message(public_key_id, psa_alg, data->value, data->len, signature->value,
 			       signature->len) == PSA_SUCCESS) {
 		return SUIT_SUCCESS;

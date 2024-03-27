@@ -115,3 +115,8 @@ if (CONFIG_MOCK_FETCH_SOURCE_STREAMER)
   target_compile_options(test_interface INTERFACE -DCONFIG_SUIT_STREAM -DCONFIG_SUIT_STREAM_FETCH_SOURCE_MGR)
   target_include_directories(testbinary PRIVATE ${SUIT_SUBSYS_DIR}/stream/stream_sources/include)
 endif()
+
+if (CONFIG_MOCK_SDFW_BUILTIN_KEYS)
+  target_include_directories(testbinary PRIVATE $ENV{ZEPHYR_BASE}/../modules/crypto/mbedtls/include)
+  target_include_directories(testbinary PRIVATE ${ZEPHYR_BASE}/../core_fw/secdom/include)
+endif()

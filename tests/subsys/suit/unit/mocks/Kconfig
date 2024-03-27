@@ -84,3 +84,6 @@ config MOCK_FETCH_SOURCE_STREAMER
 
 config MOCK_DFU_CACHE_SINK
 	bool "Mock dfu cache sink"
+
+config MOCK_SDFW_BUILTIN_KEYS
+	bool "Mock SDFW builtin keys handling"

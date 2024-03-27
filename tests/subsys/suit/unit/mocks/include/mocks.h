@@ -74,6 +74,10 @@
 #include <mock_fetch_source_streamer.h>
 #endif /* CONFIG_MOCK_FETCH_SOURCE_STREAMER */
 
+#ifdef CONFIG_MOCK_SDFW_BUILTIN_KEYS
+#include <mock_sdfw_builtin_keys.h>
+#endif /* CONFIG_MOCK_SDFW_BUILTIN_KEYS */
+
 static inline void mocks_reset(void)
 {
 #ifdef CONFIG_MOCK_SUIT_PROCESSOR
@@ -139,6 +143,10 @@ static inline void mocks_reset(void)
 #ifdef CONFIG_MOCK_FETCH_SOURCE_STREAMER
 	mock_fetch_source_streamer_reset();
 #endif /* CONFIG_MOCK_FETCH_SOURCE_STREAMER */
+
+#ifdef CONFIG_MOCK_SDFW_BUILTIN_KEYS
+	mock_sdfw_builtin_keys_reset();
+#endif /* CONFIG_MOCK_SDFW_BUILTIN_KEYS */
 
 }
 #endif /* MOCK_H__ */
