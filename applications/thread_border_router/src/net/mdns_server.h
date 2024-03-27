@@ -67,6 +67,16 @@ struct mdns_server_listener_config {
 };
 
 /**
+ * @brief mDNS server statistics
+ *
+ * To be provided as an output parameter to @ref mdns_server_stats_get().
+ */
+struct mdns_server_stats {
+	size_t records_num_current;
+	size_t used_buffers_current;
+};
+
+/**
  * @brief Initialize mDNS server
  *
  * Prepare memory buffers, IP addresses etc.
@@ -517,5 +527,12 @@ int mdns_record_get_rdata_txt(const struct mdns_record_handle *handle, uint8_t *
 int mdns_record_get_rdata_srv(const struct mdns_record_handle *handle, uint16_t *priority,
 			      uint16_t *weight, uint16_t *port, char *target, size_t max_len,
 			      k_timeout_t timeout);
+
+/**
+ * @brief Get current statistics for mDNS server
+ *
+ * @note Function is thread safe.
+ */
+void mdns_server_stats_get(struct mdns_server_stats *stats);
 
 #endif

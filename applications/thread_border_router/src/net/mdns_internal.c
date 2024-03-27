@@ -277,3 +277,14 @@ fail:
 	free_mdns_record(record);
 	return NULL;
 }
+
+void mdns_server_stats_get(struct mdns_server_stats *stats)
+{
+	k_spinlock_key_t key = k_spin_lock(&records_slab.lock);
+
+	stats->records_num_current = records_slab.num_used;
+
+	k_spin_unlock(&records_slab.lock, key);
+
+	stats->used_buffers_current = (size_t)atomic_get(&generic_rdata.avail_count);
+}
