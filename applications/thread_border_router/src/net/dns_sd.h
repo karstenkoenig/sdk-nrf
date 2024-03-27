@@ -27,7 +27,7 @@ struct dns_sd_service_handle;
  * @brief Service iteration callback
  *
  * Function pointer to be provided as @ref dns_sd_service_for_each() argument. It
- * is invoked until callback returns @ref NET_OK.
+ * is invoked until callback returns NET_OK.
  *
  * The callback returns:
  *  - NET_CONTINUE if next service should be handled (e.g. if required to handle
