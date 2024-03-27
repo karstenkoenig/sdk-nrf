@@ -751,6 +751,20 @@ static int cmd_tbr_dns_sd_services_show(const struct shell *sh, size_t argc, cha
 	return 0;
 }
 
+static int cmd_tbr_mdns_stats(const struct shell *sh, size_t argc, char *argv[])
+{
+	struct mdns_server_stats stats;
+
+	mdns_server_stats_get(&stats);
+
+	shell_print(sh, "Records used: %u max: %u", stats.records_num_current,
+		    CONFIG_NRF_TBR_MDNS_SERVER_NUM_RECORDS);
+	shell_print(sh, "Buffers used: %u max:%u", stats.used_buffers_current,
+		    CONFIG_NRF_TBR_MDNS_SERVER_DATA_BUFFER_COUNT);
+
+	return 0;
+}
+
 SHELL_STATIC_SUBCMD_SET_CREATE(tbr_cmd_nd,
 			       SHELL_CMD(send_rs, NULL, "Send Router Solicitation\n"
 					 "  Usage: tbr nd send_rs <interface's index>",
@@ -771,6 +785,7 @@ SHELL_STATIC_SUBCMD_SET_CREATE(tbr_cmd_mdns_records,
 SHELL_STATIC_SUBCMD_SET_CREATE(tbr_cmd_mdns,
 			       SHELL_CMD(records, &tbr_cmd_mdns_records, "Manage mDNS records",
 					 NULL),
+			       SHELL_CMD(stats, NULL, "mDNS server statistics", cmd_tbr_mdns_stats),
 			       SHELL_SUBCMD_SET_END
 			       );
 
