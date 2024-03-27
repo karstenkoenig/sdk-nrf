@@ -112,6 +112,8 @@ config NRF_TBR_DNS_SD_NUM_SERVICES
       Defines a number of DNS-SD services that can be published using
       mDNS server.
 
+rsource "Kconfig.defaults"
+
 module = NRF_TBR_MDNS_SERVER
 module-dep = LOG
 module-str = mDNS server
