@@ -43,6 +43,7 @@ static int suitfu_mgmt_img_upload(struct smp_streamer *ctx)
 	zcbor_state_t *zsd = ctx->reader->zs;
 	zcbor_state_t *zse = ctx->writer->zs;
 	static size_t image_size = 0;
+	static size_t offset_in_image = 0;
 
 	size_t decoded = 0;
 	suitfu_mgmt_image_upload_req_t req = {
@@ -77,6 +78,7 @@ static int suitfu_mgmt_img_upload(struct smp_streamer *ctx)
 	if (req.off == 0) {
 		LOG_INF("New image transfer started (image number: %d)", req.image);
 		image_size = 0;
+		offset_in_image = 0;
 
 		if (req.size == 0) {
 			LOG_ERR("Candidate image empty");
@@ -110,6 +112,15 @@ static int suitfu_mgmt_img_upload(struct smp_streamer *ctx)
 		return MGMT_ERR_ENOMEM;
 	}
 
+	if (req.off != offset_in_image) {
+		LOG_ERR("Wrong offset in image, expected: %p, received: %p",
+			(void *)offset_in_image, (void *)req.off);
+		if (zcbor_tstr_put_lit(zse, "rc") && zcbor_int32_put(zse, MGMT_ERR_EUNKNOWN) &&
+		    zcbor_tstr_put_lit(zse, "off") && zcbor_size_put(zse, offset_in_image)) {
+			return MGMT_ERR_EOK;
+		}
+	}
+
 	if ((req.off + req.img_data.len) == image_size) {
 		last = true;
 	}
@@ -118,7 +129,7 @@ static int suitfu_mgmt_img_upload(struct smp_streamer *ctx)
 
 	if (rc == MGMT_ERR_EOK) {
 
-		req.off += req.img_data.len;
+		offset_in_image += req.img_data.len;
 		if (last) {
 			rc = suitfu_mgmt_candidate_envelope_stored(image_size);
 			image_size = 0;
@@ -126,7 +137,7 @@ static int suitfu_mgmt_img_upload(struct smp_streamer *ctx)
 	}
 
 	if (zcbor_tstr_put_lit(zse, "rc") && zcbor_int32_put(zse, rc) &&
-	    zcbor_tstr_put_lit(zse, "off") && zcbor_size_put(zse, req.off)) {
+	    zcbor_tstr_put_lit(zse, "off") && zcbor_size_put(zse, offset_in_image)) {
 		return MGMT_ERR_EOK;
 	}
 

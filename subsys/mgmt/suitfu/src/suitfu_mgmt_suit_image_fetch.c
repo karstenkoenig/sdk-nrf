@@ -138,6 +138,7 @@ int suitfu_mgmt_suit_missing_image_upload(struct smp_streamer *ctx)
 	zcbor_state_t *zsd = ctx->reader->zs;
 	zcbor_state_t *zse = ctx->writer->zs;
 	static size_t image_size = 0;
+	static size_t offset_in_image = 0;
 
 	size_t decoded = 0;
 	suitfu_mgmt_missing_img_upload_req_t req = {
@@ -166,6 +167,7 @@ int suitfu_mgmt_suit_missing_image_upload(struct smp_streamer *ctx)
 	if (req.off == 0) {
 		LOG_INF("New image transfer started, stream_session_id: %d", req.stream_session_id);
 		image_size = 0;
+		offset_in_image = 0;
 
 		if (req.size == 0) {
 			LOG_ERR("Candidate image empty");
@@ -186,6 +188,15 @@ int suitfu_mgmt_suit_missing_image_upload(struct smp_streamer *ctx)
 		return MGMT_ERR_ENOMEM;
 	}
 
+	if (req.off != offset_in_image) {
+		LOG_ERR("Wrong offset in image, expected: %p, received: %p",
+			(void *)offset_in_image, (void *)req.off);
+		if (zcbor_tstr_put_lit(zse, "rc") && zcbor_int32_put(zse, MGMT_ERR_EUNKNOWN) &&
+		    zcbor_tstr_put_lit(zse, "off") && zcbor_size_put(zse, offset_in_image)) {
+			return MGMT_ERR_EOK;
+		}
+	}
+
 	bool last = false;
 
 	if ((req.off + req.img_data.len) == image_size) {
@@ -195,8 +206,8 @@ int suitfu_mgmt_suit_missing_image_upload(struct smp_streamer *ctx)
 	size_t chunk_size = req.img_data.len;
 
 	component_lock();
-	if (session->transfer_completed_cvar && session->uri &&
-	    session->uri_length && session->session_id == req.stream_session_id) {
+	if (session->transfer_completed_cvar && session->uri && session->uri_length &&
+	    session->session_id == req.stream_session_id) {
 
 		session->last_notify_ts = k_uptime_get();
 
@@ -209,17 +220,17 @@ int suitfu_mgmt_suit_missing_image_upload(struct smp_streamer *ctx)
 	rc = suit_dfu_fetch_source_seek(session->fetch_src_session_id, req.off);
 
 	if (rc == 0) {
-		rc = suit_dfu_fetch_source_write_fetched_data(session->fetch_src_session_id, req.img_data.value,
-							      chunk_size);
+		rc = suit_dfu_fetch_source_write_fetched_data(session->fetch_src_session_id,
+							      req.img_data.value, chunk_size);
 	}
 
 	if (rc == 0) {
-		req.off += req.img_data.len;
+		offset_in_image += req.img_data.len;
 	}
 
 	component_lock();
-	if (session->transfer_completed_cvar && session->uri &&
-	    session->uri_length && session->session_id == req.stream_session_id) {
+	if (session->transfer_completed_cvar && session->uri && session->uri_length &&
+	    session->session_id == req.stream_session_id) {
 		if (rc != 0) {
 			session->return_code = SUIT_PLAT_ERR_IO;
 			k_condvar_signal(session->transfer_completed_cvar);
@@ -243,7 +254,7 @@ int suitfu_mgmt_suit_missing_image_upload(struct smp_streamer *ctx)
 
 	rc = MGMT_ERR_EOK;
 	if (zcbor_tstr_put_lit(zse, "rc") && zcbor_int32_put(zse, rc) &&
-	    zcbor_tstr_put_lit(zse, "off") && zcbor_size_put(zse, req.off)) {
+	    zcbor_tstr_put_lit(zse, "off") && zcbor_size_put(zse, offset_in_image)) {
 		return MGMT_ERR_EOK;
 	}
 
