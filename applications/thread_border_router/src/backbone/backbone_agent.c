@@ -30,7 +30,6 @@ static void become_primary()
 {
 	LOG_DBG("Backbone Agent: becoming Primary BBR");
 
-	nd_proxy_enable();
 	mcast_routing_set_enabled(true);
 }
 
@@ -73,4 +72,5 @@ void backbone_agent_init(void)
 	handle_backbone_router_state();
 	openthread_state_changed_cb_register(ctx->ot, &ot_state_chaged_cb);
 	mcast_routing_init();
+	nd_proxy_enable();
 }

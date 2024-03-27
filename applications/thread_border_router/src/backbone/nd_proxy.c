@@ -29,7 +29,7 @@ K_MEM_SLAB_DEFINE_STATIC(entries_slab, ND_PROXY_SLAB_BLOCK_SIZE, ND_PROXY_SLAB_B
 			 ND_PROXY_SLAB_BLOCK_ALIGN);
 
 static enum net_verdict handle_icmpv6_ns(struct net_pkt *pkt, struct net_ipv6_hdr *ip_hdr,
-					    struct net_icmp_hdr *icmp_hdr);
+					 struct net_icmp_hdr *icmp_hdr);
 
 static struct nd_proxy_entry *entry_find(const struct in6_addr *addr);
 
@@ -55,7 +55,7 @@ static void send_na(const struct in6_addr *dst, const struct in6_addr *target)
 }
 
 static enum net_verdict handle_icmpv6_ns(struct net_pkt *pkt, struct net_ipv6_hdr *ip_hdr,
-					    struct net_icmp_hdr *icmp_hdr)
+					 struct net_icmp_hdr *icmp_hdr)
 {
 	NET_PKT_DATA_ACCESS_CONTIGUOUS_DEFINE(ns_access, struct net_icmpv6_ns_hdr);
 	struct net_icmpv6_ns_hdr *ns_hdr;
@@ -202,8 +202,7 @@ static void handle_nd_proxy_event(void *cb_ctx, otBackboneRouterNdProxyEvent eve
 		net_addr_ntop(AF_INET6, &addr.s6_addr, addr_str, sizeof(addr_str));
 	}
 
-	switch (event)
-	{
+	switch (event) {
 	case OT_BACKBONE_ROUTER_NDPROXY_ADDED:
 	case OT_BACKBONE_ROUTER_NDPROXY_RENEWED:
 		__ASSERT(dua, "ND Proxy: addition or renewal without the address");
@@ -248,7 +247,6 @@ void nd_proxy_enable(void)
 
 	sys_slist_init(&entries);
 
-	/** TODO: Start after Domain Prefix is set **/
 	net_icmpv6_register_handler(&icpmv6_ns_handler);
 	otBackboneRouterSetNdProxyCallback(ctx->ot->instance, handle_nd_proxy_event, NULL);
 }

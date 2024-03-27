@@ -13,6 +13,8 @@
 
 /**
  * @brief Enable Neighbor Discovery Proxy
+ *
+ * NOTE: This function MUST be called just once.
  */
 void nd_proxy_enable(void);
 
