@@ -145,6 +145,12 @@ int suitfu_mgmt_suit_missing_image_state_read(struct smp_streamer *ctx);
  */
 int suitfu_mgmt_suit_missing_image_upload(struct smp_streamer *ctx);
 
+/**
+ * @brief Returns SUIT bootloader info
+ *
+ */
+int suitfu_mgmt_suit_bootloader_info_read(struct smp_streamer *ctx);
+
 #ifdef __cplusplus
 }
 #endif
