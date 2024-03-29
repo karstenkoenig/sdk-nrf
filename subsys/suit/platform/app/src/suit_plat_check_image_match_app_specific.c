@@ -6,7 +6,9 @@
 
 #include <suit_plat_check_image_match_domain_specific.h>
 #include <zephyr/logging/log.h>
+#ifdef CONFIG_SSF_SUIT_SERVICE_ENABLED
 #include <sdfw/sdfw_services/suit_service.h>
+#endif /* CONFIG_SSF_SUIT_SERVICE_ENABLED */
 
 LOG_MODULE_REGISTER(suit_plat_check_image_match_app, CONFIG_SUIT_LOG_LEVEL);
 
