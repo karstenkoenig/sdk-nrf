@@ -6,12 +6,32 @@
 #include <zephyr/ztest.h>
 #include <suit_mci.h>
 #include <suit_execution_mode.h>
+#ifdef CONFIG_SUIT_STORAGE
+#include <suit_storage.h>
+#endif /* CONFIG_SUIT_STORAGE */
 
 #define OUTPUT_MAX_SIZE 32
 static const suit_uuid_t *result_uuid[OUTPUT_MAX_SIZE];
 static suit_manifest_class_info_t result_class_info[OUTPUT_MAX_SIZE];
 
-static void test_null_pointers(void)
+static void *test_suit_setup(void)
+{
+	int ret = 0;
+
+#ifdef CONFIG_SUIT_STORAGE
+	ret = suit_storage_init();
+	zassert_equal(ret, SUIT_PLAT_SUCCESS, "Unable to initialize SUIT storage");
+#endif /* CONFIG_SUIT_STORAGE */
+
+	ret = suit_mci_init();
+	zassert_equal(ret, SUIT_PLAT_SUCCESS, "Unable to initialize MCI module");
+
+	return NULL;
+}
+
+ZTEST_SUITE(mci_snity_tests, NULL, test_suit_setup, NULL, NULL, NULL);
+
+ZTEST(mci_snity_tests, test_null_pointers)
 {
 	const suit_manifest_class_id_t unsupported_manifest_class_id = {
 		{'u', 'n', 's', 'u', 'p', 'p', 'o', 'r', 't', 'e', 'd', '!', '!', '!', ' ', ' '}};
@@ -85,11 +105,13 @@ static void test_null_pointers(void)
 	zassert_equal(rc, SUIT_PLAT_ERR_INVAL,
 		      "suit_mci_platform_specific_component_rights_validate returned (%d)", rc);
 
-	rc = suit_mci_manifest_parent_child_declaration_validate(&unsupported_manifest_class_id, NULL);
+	rc = suit_mci_manifest_parent_child_declaration_validate(&unsupported_manifest_class_id,
+								 NULL);
 	zassert_equal(rc, SUIT_PLAT_ERR_INVAL,
 		      "suit_mci_manifest_parent_child_validate returned (%d)", rc);
 
-	rc = suit_mci_manifest_parent_child_declaration_validate(NULL, &unsupported_manifest_class_id);
+	rc = suit_mci_manifest_parent_child_declaration_validate(NULL,
+								 &unsupported_manifest_class_id);
 	zassert_equal(rc, SUIT_PLAT_ERR_INVAL,
 		      "suit_mci_manifest_parent_child_validate returned (%d)", rc);
 
@@ -110,7 +132,7 @@ static void test_null_pointers(void)
 		      "suit_mci_vendor_id_for_manifest_class_id_get returned (%d)", rc);
 }
 
-static void test_invalid_params(void)
+ZTEST(mci_snity_tests, test_invalid_params)
 {
 	void *mem_address = &mem_address;
 	size_t mem_size = sizeof(mem_address);
@@ -121,7 +143,7 @@ static void test_invalid_params(void)
 		      "suit_mci_memory_access_rights_validate returned (%d)", rc);
 }
 
-static void test_output_buffer_too_small(void)
+ZTEST(mci_snity_tests, test_output_buffer_too_small)
 {
 	size_t output_size = OUTPUT_MAX_SIZE;
 	size_t supported_manifest_count = 0;
@@ -167,7 +189,6 @@ static void test_output_buffer_too_small(void)
 	rc = suit_mci_invoke_order_get(result_uuid, &output_size);
 	zassert_equal(rc, SUIT_PLAT_SUCCESS, "suit_mci_invoke_order_get returned (%d)", rc);
 
-
 	if (invokable_manifest_count > 1) {
 		output_size = invokable_manifest_count - 1;
 		rc = suit_mci_invoke_order_get(result_uuid, &output_size);
@@ -181,13 +202,4 @@ static void test_output_buffer_too_small(void)
 		zassert_equal(rc, SUIT_PLAT_ERR_SIZE, "suit_mci_invoke_order_get returned (%d)",
 			      rc);
 	}
-}
-
-void test_sanity(void)
-{
-	ztest_test_suite(test_suit_mci_sanity, ztest_unit_test(test_null_pointers),
-			 ztest_unit_test(test_invalid_params),
-			 ztest_unit_test(test_output_buffer_too_small));
-
-	ztest_run_test_suite(test_suit_mci_sanity);
 }

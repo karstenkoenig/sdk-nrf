@@ -7,6 +7,12 @@
 / {
 	chosen {
 		zephyr,console = &uart137;
+		zephyr,entropy = &psa_rng;
+	};
+
+	psa_rng: psa-rng {
+		compatible = "zephyr,psa-crypto-rng";
+		status = "okay";
 	};
 };
 
