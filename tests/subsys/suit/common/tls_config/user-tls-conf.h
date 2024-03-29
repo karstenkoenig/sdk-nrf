@@ -117,4 +117,14 @@
  */
 #define MBEDTLS_ECDSA_C
 
+/* Verify that the assigned volatile key ID will match with the key ID used
+ * inside the authentication wrappers.
+ */
+#if ((defined MBEDTLS_PSA_KEY_SLOT_COUNT) && (MBEDTLS_PSA_KEY_SLOT_COUNT > 32))
+#undef MBEDTLS_PSA_KEY_SLOT_COUNT
+#define MBEDTLS_PSA_KEY_SLOT_COUNT     32
+#elif ((defined MBEDTLS_PSA_KEY_SLOT_COUNT) && (MBEDTLS_PSA_KEY_SLOT_COUNT != 32))
+#error "Key ID ranges will not match"
+#endif
+
 #endif /* USER_MBEDTLS_CONFIG_H */
