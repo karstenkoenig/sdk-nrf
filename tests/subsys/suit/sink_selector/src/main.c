@@ -84,7 +84,7 @@ ZTEST(sink_selector_tests, test_select_ram_sink_OK)
 		      err);
 }
 
-#if SOC_NRF54H20 && !HW_REVISION_SOC1
+#if CONFIG_SUIT_STREAM_SINK_SDFW
 ZTEST(sink_selector_tests, test_select_sdfw_sink_OK)
 {
 	suit_component_t handle;
