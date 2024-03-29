@@ -6,6 +6,8 @@
 
 menuconfig SUIT
 	bool "Enable SUIT modules"
+	# Enforce new ZTEST API. The old API is no longer available in NCS.
+	imply ZTEST_NEW_API if ZTEST
 
 if SUIT
 

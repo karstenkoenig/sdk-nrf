@@ -4,6 +4,12 @@
 # SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
 #
 
+config ENFORCE_ZTEST_NEW_API
+	bool
+	default y
+	# Enforce new ZTEST API. The old API is no longer available in NCS.
+	imply ZTEST_NEW_API if ZTEST
+
 menuconfig MOCK_SUIT_MCI
 	bool "Include SUIT MCI mocks"
 
