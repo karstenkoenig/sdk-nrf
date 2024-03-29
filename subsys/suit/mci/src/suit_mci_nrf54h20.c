@@ -427,11 +427,11 @@ suit_mci_platform_specific_component_rights_validate(const suit_manifest_class_i
 
 	if (role == SUIT_MANIFEST_SEC_SDFW) {
 		/* The only manifest with ability to control platform specific components is secdom.
-		 * 0 - SDFW Firmware
-		 * 1 - SDFW Recovery Firmware
+		 * 1 - SDFW
+		 * 2 - SDFW Recovery
 		 */
-		if (platform_specific_component_number == 0 ||
-		    platform_specific_component_number == 1) {
+		if (platform_specific_component_number == 1 ||
+		    platform_specific_component_number == 2) {
 			return SUIT_PLAT_SUCCESS;
 		}
 	}
