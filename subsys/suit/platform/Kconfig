@@ -43,8 +43,18 @@ config SUIT_CRYPTO
 	imply MBEDTLS if !SOC_FAMILY_NRF
 	imply NRF_SECURITY if SOC_FAMILY_NRF
 	imply MBEDTLS_ENABLE_HEAP if SOC_FAMILY_NRF
+	imply ENTROPY_GENERATOR
 
 if MBEDTLS
+
+# Make sure that PSA API compatibility layer is enabled
+config MBEDTLS_PSA_CRYPTO_C
+	default y
+
+# Instruct mbedTLS to use Zephyr entropy
+config MBEDTLS_ZEPHYR_ENTROPY
+	default y
+
 config SUIT_DEFAULT_MBEDTLS_CONFIG
 	bool "Use default mbedTLS configuration file"
 	default y
