@@ -21,6 +21,14 @@
 
 LOG_MODULE_REGISTER(suit_cache_rw, CONFIG_SUIT_LOG_LEVEL);
 
+#ifndef BSWAP_32
+#define BSWAP_32 __bswap_32
+#endif
+
+#ifndef BSWAP_16
+#define BSWAP_16 __bswap_16
+#endif
+
 #define SUCCESS 0
 #define INDEFINITE_MAP_HEADER 0xBF
 
@@ -640,7 +648,7 @@ suit_plat_err_t suit_dfu_cache_rw_slot_create(uint8_t cache_partition_id,
 suit_plat_err_t suit_dfu_cache_rw_slot_close(struct suit_cache_slot *slot, size_t size_used)
 {
 	if ((slot != NULL) && (slot->size >= size_used)) {
-		uint32_t tmp = __bswap_32(size_used);
+		uint32_t tmp = BSWAP_32(size_used);
 		size_t tmp_size = sizeof(uint32_t);
 		size_t end_address = (size_t)slot->slot_address + slot->data_offset + size_used;
 
@@ -693,7 +701,7 @@ suit_plat_err_t suit_dfu_cache_rw_slot_close(struct suit_cache_slot *slot, size_
 				padding_size -= header_size;
 				header[1] = 0x59; /* byte string (two-byte uint16_t for n, and then
 						     n bytes follow) */
-				*(uint16_t *)(&header[2]) = __bswap_16(padding_size);
+				*(uint16_t *)(&header[2]) = BSWAP_16(padding_size);
 			} else {
 				LOG_ERR("Number of required padding bytes exceeds assumed max size "
 					"0xFFFF");
