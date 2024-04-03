@@ -189,7 +189,7 @@ int suitfu_mgmt_suit_missing_image_upload(struct smp_streamer *ctx)
 	}
 
 	if (req.off != offset_in_image) {
-		LOG_ERR("Wrong offset in image, expected: %p, received: %p",
+		LOG_WRN("Wrong offset in image, expected: %p, received: %p",
 			(void *)offset_in_image, (void *)req.off);
 		if (zcbor_tstr_put_lit(zse, "rc") && zcbor_int32_put(zse, MGMT_ERR_EUNKNOWN) &&
 		    zcbor_tstr_put_lit(zse, "off") && zcbor_size_put(zse, offset_in_image)) {
