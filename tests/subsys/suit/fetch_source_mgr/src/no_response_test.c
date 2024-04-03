@@ -6,8 +6,8 @@
 #include <zephyr/ztest.h>
 #include <suit_ipc_streamer.h>
 
-static uint32_t write_chunk_count = 0;
-static uint32_t missing_image_notify_count = 0;
+static uint32_t write_chunk_count;
+static uint32_t missing_image_notify_count;
 
 static const char *requested_resource_id = "ExampleImageName.img";
 static void *stream_sink_requested_ctx = (void *)0xabcd0001;

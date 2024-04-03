@@ -115,8 +115,8 @@ ZTEST(mci_api_positive_scenarios_tests, test_signing_key_id_validate)
 		uint32_t key_id = 0;
 
 		rc = suit_mci_signing_key_id_validate(result_class_info[i].class_id, key_id);
-		zassert_true((MCI_ERR_NOACCESS == rc || SUIT_PLAT_SUCCESS == rc ||
-			      MCI_ERR_WRONGKEYID == rc),
+		zassert_true((rc == MCI_ERR_NOACCESS || rc == SUIT_PLAT_SUCCESS ||
+			      rc == MCI_ERR_WRONGKEYID),
 			     "suit_mci_signing_key_id_validate returned (%d)", rc);
 	}
 }
@@ -135,7 +135,7 @@ ZTEST(mci_api_positive_scenarios_tests, test_processor_start_rights_validate)
 
 		rc = suit_mci_processor_start_rights_validate(result_class_info[i].class_id,
 							      processor_id);
-		zassert_true((MCI_ERR_NOACCESS == rc || SUIT_PLAT_SUCCESS == rc),
+		zassert_true((rc == MCI_ERR_NOACCESS || rc == SUIT_PLAT_SUCCESS),
 			     "suit_mci_processor_start_rights_validate returned (%d)", rc);
 	}
 }
@@ -155,7 +155,7 @@ ZTEST(mci_api_positive_scenarios_tests, test_memory_access_rights_validate)
 
 		rc = suit_mci_memory_access_rights_validate(result_class_info[i].class_id, address,
 							    mem_size);
-		zassert_true((MCI_ERR_NOACCESS == rc || SUIT_PLAT_SUCCESS == rc),
+		zassert_true((rc == MCI_ERR_NOACCESS || rc == SUIT_PLAT_SUCCESS),
 			     "suit_mci_memory_access_rights_validate returned (%d)", rc);
 	}
 }
@@ -174,7 +174,7 @@ ZTEST(mci_api_positive_scenarios_tests, test_platform_specific_component_rights_
 
 		rc = suit_mci_platform_specific_component_rights_validate(
 			result_class_info[i].class_id, platform_specific_component_number);
-		zassert_true((MCI_ERR_NOACCESS == rc || SUIT_PLAT_SUCCESS == rc),
+		zassert_true((rc == MCI_ERR_NOACCESS || rc == SUIT_PLAT_SUCCESS),
 			     "suit_mci_platform_specific_component_rights_validate returned (%d)",
 			     rc);
 	}
@@ -192,7 +192,7 @@ ZTEST(mci_api_positive_scenarios_tests, test_manifest_parent_child_declaration_v
 	for (int i = 0; i < output_size; ++i) {
 		rc = suit_mci_manifest_parent_child_declaration_validate(
 			result_class_info[0].class_id, result_class_info[i].class_id);
-		zassert_true((MCI_ERR_NOACCESS == rc || SUIT_PLAT_SUCCESS == rc),
+		zassert_true((rc == MCI_ERR_NOACCESS || rc == SUIT_PLAT_SUCCESS),
 			     "suit_mci_manifest_parent_child_validate returned (%d)", rc);
 	}
 }
@@ -209,7 +209,7 @@ ZTEST(mci_api_positive_scenarios_tests, test_manifest_process_dependency_validat
 	for (int i = 0; i < output_size; ++i) {
 		rc = suit_mci_manifest_process_dependency_validate(result_class_info[0].class_id,
 								   result_class_info[i].class_id);
-		zassert_true((MCI_ERR_NOACCESS == rc || SUIT_PLAT_SUCCESS == rc),
+		zassert_true((rc == MCI_ERR_NOACCESS || rc == SUIT_PLAT_SUCCESS),
 			     "suit_mci_manifest_parent_child_validate returned (%d)", rc);
 	}
 }

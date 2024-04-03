@@ -102,18 +102,19 @@ static uint8_t data3[] = {
 	0x2e, 0x09, 0x7d, 0xf0, 0x5c, 0x0c, 0xa9, 0xa5, 0x9a, 0x8a, 0xe0, 0xa3, 0xa8, 0x23, 0xc1,
 	0x41, 0x4e, 0x5e, 0x3f, 0xf7, 0x39, 0xa4, 0xc5, 0x5b, 0xec};
 
-
 void setup_dfu_test_cache(void *f)
 {
 	int ret = suit_dfu_cache_rw_initialize(NULL, 0);
+
 	zassert_equal(ret, SUIT_PLAT_SUCCESS, "Failed to initialize cache: %i", ret);
 }
 
 #ifndef CONFIG_BOARD_NATIVE_POSIX
-void setup_dfu_test_corrupted_cache(const uint8_t* corrupted_cache, size_t corrupted_cache_size)
+void setup_dfu_test_corrupted_cache(const uint8_t *corrupted_cache, size_t corrupted_cache_size)
 {
 	/* Erase the area, to met the preconditions in the next test. */
 	const struct device *fdev = DEVICE_DT_GET(DT_CHOSEN(zephyr_flash_controller));
+
 	zassert_not_null(fdev, "Unable to find a driver to erase area");
 
 	int rc = flash_write(fdev, FIXED_PARTITION_OFFSET(dfu_cache_partition_1), corrupted_cache,
@@ -136,10 +137,12 @@ void clear_dfu_test_partitions(void *f)
 {
 	/* Erase the area, to meet the preconditions in the next test. */
 	const struct device *fdev = DEVICE_DT_GET(DT_CHOSEN(zephyr_flash_controller));
+
 	zassert_not_null(fdev, "Unable to find a driver to erase area");
 
 	int rc = flash_erase(fdev, FIXED_PARTITION_OFFSET(dfu_cache_partition_1),
 			     FIXED_PARTITION_SIZE(dfu_cache_partition_1));
+
 	zassert_equal(rc, 0, "Unable to erase dfu__cache_partition_1 before test execution: %i",
 		      rc);
 
@@ -174,6 +177,7 @@ ZTEST(cache_rw_initialization_tests, test_cache_initialization_size_nok)
 	size_t envelope_size = FIXED_PARTITION_SIZE(dfu_partition);
 
 	int ret = suit_dfu_cache_rw_initialize(envelope_address, envelope_size);
+
 	zassert_not_equal(ret, SUIT_PLAT_SUCCESS,
 			  "Initialization should have failed: size out of bounds");
 }
@@ -185,6 +189,7 @@ ZTEST(cache_rw_initialization_tests, test_cache_initialization_address_nok)
 	size_t envelope_size = FIXED_PARTITION_SIZE(dfu_partition);
 
 	int ret = suit_dfu_cache_rw_initialize(envelope_address, envelope_size);
+
 	zassert_not_equal(ret, SUIT_PLAT_SUCCESS,
 			  "Initialization should have failed: address out of bounds");
 }
@@ -196,6 +201,7 @@ ZTEST(cache_rw_initialization_tests, test_cache_initialization_ok)
 	size_t envelope_size = FIXED_PARTITION_SIZE(dfu_partition) - 1024;
 
 	int ret = suit_dfu_cache_rw_initialize(envelope_address, envelope_size);
+
 	zassert_equal(ret, SUIT_PLAT_SUCCESS, "Initialization failed: %i", ret);
 }
 
@@ -213,6 +219,7 @@ ZTEST(cache_sink_recovery_tests, test_cache_recovery_header_ok_size_nok)
 	zassert_true(is_cache_partition_1_empty(), "Corrupted cache partition was not recovered");
 
 	int ret = suit_dfu_cache_sink_get(&sink, 1, uri3, sizeof(uri3), true);
+
 	zassert_equal(ret, SUIT_PLAT_SUCCESS, "Failed to get sink: %i", ret);
 
 	ret = sink.write(sink.ctx, data, sizeof(data));
@@ -242,6 +249,7 @@ ZTEST(cache_sink_tests, test_cache_drop_slot_ok)
 	struct stream_sink sink;
 
 	int ret = suit_dfu_cache_sink_get(&sink, 1, uri, sizeof(uri), true);
+
 	zassert_equal(ret, SUIT_PLAT_SUCCESS, "Failed to get sink: %i", ret);
 
 	ret = sink.write(sink.ctx, data, sizeof(data));
@@ -282,6 +290,7 @@ ZTEST(cache_sink_tests, test_cache_get_slot_ok)
 	struct stream_sink sink;
 
 	int ret = suit_dfu_cache_sink_get(&sink, 1, uri, sizeof(uri), true);
+
 	zassert_equal(ret, SUIT_PLAT_SUCCESS, "Failed to get sink: %i", ret);
 
 	ret = sink.write(sink.ctx, data, sizeof(data));
@@ -331,6 +340,7 @@ ZTEST(cache_sink_tests, test_cache_get_slot_nok_uri_exists)
 	struct stream_sink sink;
 
 	int ret = suit_dfu_cache_sink_get(&sink, 1, uri, sizeof(uri), true);
+
 	zassert_equal(ret, SUIT_PLAT_SUCCESS, "Failed to get sink: %i", ret);
 
 	ret = sink.write(sink.ctx, data, sizeof(data));
@@ -357,6 +367,7 @@ ZTEST(cache_sink_tests, test_cache_get_slot_nok_no_requested_cache)
 
 	/* Request sink for suit_cache_4, which should fail because suit_cache_4 was not defined */
 	int ret = suit_dfu_cache_sink_get(&sink, 4, uri, sizeof(uri), false);
+
 	zassert_not_equal(ret, SUIT_PLAT_SUCCESS,
 			  "Get cache sink should have failed, suit_cache_4 not defined: %i", ret);
 
@@ -370,6 +381,7 @@ ZTEST(cache_sink_tests, test_cache_get_slot_nok_not_enough_space)
 	struct stream_sink sink;
 
 	int ret = suit_dfu_cache_sink_get(&sink, 1, uri3, sizeof(uri3), true);
+
 	zassert_equal(ret, SUIT_PLAT_SUCCESS, "Failed to get sink: %i", ret);
 
 	for (size_t i = 0x10 + sizeof(data3); i < FIXED_PARTITION_SIZE(dfu_cache_partition_1);

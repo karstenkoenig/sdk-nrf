@@ -10,12 +10,12 @@
  * cannot take place in these tests. This is for two reasons:
  * - native_posix and nrf52 platforms do not have the secure domain to communicate with
  * - on nRF54H calling suit_trigger_update would reset a device, which would stop the tests
-*/
+ */
 DEFINE_FFF_GLOBALS;
 
-DEFINE_FAKE_VALUE_FUNC(int, suit_trigger_update, suit_plat_mreg_t*, size_t);
+DEFINE_FAKE_VALUE_FUNC(int, suit_trigger_update, suit_plat_mreg_t *, size_t);
 
-void fill_dfu_partition_with_data(const uint8_t* data_address, size_t data_size)
+void fill_dfu_partition_with_data(const uint8_t *data_address, size_t data_size)
 {
 	const struct device *fdev = DFU_PARTITION_DEVICE;
 	static uint8_t write_buf[DFU_PARTITION_WRITE_SIZE];
@@ -26,8 +26,7 @@ void fill_dfu_partition_with_data(const uint8_t* data_address, size_t data_size)
 	size_t data_offset = 0;
 	int err;
 
-	while (bytes_remaining >= DFU_PARTITION_WRITE_SIZE)
-	{
+	while (bytes_remaining >= DFU_PARTITION_WRITE_SIZE) {
 		memcpy(write_buf, &data_address[data_offset], DFU_PARTITION_WRITE_SIZE);
 
 		err = flash_write(fdev, DFU_PARTITION_OFFSET + data_offset, write_buf,

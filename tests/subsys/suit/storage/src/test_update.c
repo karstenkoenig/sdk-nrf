@@ -22,17 +22,20 @@ static void test_suite_before(void *f)
 {
 	/* Execute SUIT storage init, so the MPI area is copied into a backup region. */
 	int err = suit_storage_init();
+
 	zassert_equal(SUIT_PLAT_SUCCESS, err, "Failed to init and backup suit storage (%d)", err);
 
 	/* Clear the whole application area */
 	const struct device *fdev = DEVICE_DT_GET(DT_CHOSEN(zephyr_flash_controller));
+
 	zassert_not_null(fdev, "Unable to find a driver to erase storage area");
 
 	err = flash_erase(fdev, SUIT_STORAGE_OFFSET, SUIT_STORAGE_SIZE);
 	zassert_equal(0, err, "Unable to erase storage before test execution");
 
 	err = suit_storage_init();
-	zassert_equal(err, SUIT_PLAT_SUCCESS, "Failed to initialize SUIT storage module (%d).", err);
+	zassert_equal(err, SUIT_PLAT_SUCCESS, "Failed to initialize SUIT storage module (%d).",
+		      err);
 }
 
 ZTEST_SUITE(suit_storage_update_tests, NULL, NULL, test_suite_before, NULL, NULL);
@@ -78,6 +81,7 @@ ZTEST(suit_storage_update_tests, test_empty_update_get)
 ZTEST(suit_storage_update_tests, test_empty_update_clear)
 {
 	int rc = suit_storage_update_cand_set(NULL, 0);
+
 	zassert_equal(rc, SUIT_PLAT_SUCCESS, "Unable to clear empty partition (%d)", rc);
 }
 
@@ -149,6 +153,7 @@ ZTEST(suit_storage_update_tests, test_empty_update_set)
 ZTEST(suit_storage_update_tests, test_cleared_update_set)
 {
 	int rc = suit_storage_update_cand_set(NULL, 0);
+
 	zassert_equal(rc, SUIT_PLAT_SUCCESS, "Unable to clear empty partition (%d)", rc);
 
 	verify_storage_updates();
@@ -157,6 +162,7 @@ ZTEST(suit_storage_update_tests, test_cleared_update_set)
 ZTEST(suit_storage_update_tests, test_cleared_update_clear)
 {
 	int rc = suit_storage_update_cand_set(NULL, 0);
+
 	zassert_equal(rc, SUIT_PLAT_SUCCESS, "Unable to clear empty partition (%d)", rc);
 
 	rc = suit_storage_update_cand_set(NULL, 0);
@@ -170,12 +176,14 @@ ZTEST(suit_storage_update_tests, test_valid_update_clear)
 		.size = 2044,
 	}};
 	int rc = suit_storage_update_cand_set(update_candidate, ARRAY_SIZE(update_candidate));
+
 	zassert_equal(rc, SUIT_PLAT_SUCCESS,
 		      "Unable to set correct DFU before test execution (0x%x, %d).", 0xCAFEFECA,
 		      2044);
 
 	const suit_plat_mreg_t *update_regions = NULL;
 	size_t update_regions_len = 0;
+
 	rc = suit_storage_update_cand_get(&update_regions, &update_regions_len);
 	zassert_equal(rc, SUIT_PLAT_SUCCESS,
 		      "Set succeeded, but update availability is not reported.");
@@ -204,10 +212,12 @@ ZTEST(suit_storage_update_tests, test_update_with_caches)
 		},
 	};
 	int rc = suit_storage_update_cand_set(update_candidate, ARRAY_SIZE(update_candidate));
+
 	zassert_equal(rc, SUIT_PLAT_SUCCESS, "Unable to set complex update candidate info");
 
 	const suit_plat_mreg_t *update_regions = NULL;
 	size_t update_regions_len = 0;
+
 	rc = suit_storage_update_cand_get(&update_regions, &update_regions_len);
 	zassert_equal(rc, SUIT_PLAT_SUCCESS,
 		      "Set succeeded, but update availability is not reported.");
@@ -227,16 +237,20 @@ ZTEST(suit_storage_update_tests, test_update_with_caches)
 ZTEST(suit_storage_update_tests, test_update_with_too_many_caches)
 {
 	suit_plat_mreg_t update_candidate[CONFIG_SUIT_STORAGE_N_UPDATE_REGIONS + 1];
+
 	for (size_t i = 0; i < ARRAY_SIZE(update_candidate); i++) {
 		update_candidate[i].mem = (uint8_t *)0xCAFEFECA;
 		update_candidate[i].size = 2044;
 	}
+
 	int rc = suit_storage_update_cand_set(update_candidate, ARRAY_SIZE(update_candidate));
+
 	zassert_not_equal(rc, SUIT_PLAT_SUCCESS,
 			  "Too long complex update candidate info set shall fail");
 
 	const suit_plat_mreg_t *update_regions = NULL;
 	size_t update_regions_len = 0;
+
 	rc = suit_storage_update_cand_get(&update_regions, &update_regions_len);
 	zassert_not_equal(rc, SUIT_PLAT_SUCCESS,
 			  "Set not succeeded, but update availability is reported (0x%x, %d).",

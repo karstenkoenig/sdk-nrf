@@ -22,6 +22,7 @@ ZTEST(suit_memptr_storage_tests, test_suit_memptr_storage_get_OK)
 	memptr_storage_handle_t handle = NULL;
 
 	int err = suit_memptr_storage_get(&handle);
+
 	zassert_equal(err, SUIT_PLAT_SUCCESS, "get_new_memptr_record failed - error %i", err);
 
 	err = suit_memptr_storage_release(handle);
@@ -61,6 +62,7 @@ ZTEST(suit_memptr_storage_tests, test_memptr_storage_release_NOK)
 	memptr_storage_handle_t handle = NULL;
 
 	int err = suit_memptr_storage_get(&handle);
+
 	zassert_equal(err, SUIT_PLAT_SUCCESS, "suit_memptr_storage_get failed - error %i", err);
 
 	err = suit_memptr_storage_release(NULL);
@@ -76,6 +78,7 @@ ZTEST(suit_memptr_storage_tests, test_memptr_storage_save_OK)
 	memptr_storage_handle_t handle = NULL;
 
 	int err = suit_memptr_storage_get(&handle);
+
 	zassert_equal(err, SUIT_PLAT_SUCCESS, "suit_memptr_storage_get failed - error %i", err);
 
 	err = suit_memptr_storage_ptr_store(handle, test_data, TEST_DATA_SIZE);
@@ -91,6 +94,7 @@ ZTEST(suit_memptr_storage_tests, test_memptr_storage_save_NOK)
 	memptr_storage_handle_t handle = NULL;
 
 	int err = suit_memptr_storage_get(&handle);
+
 	zassert_equal(err, SUIT_PLAT_SUCCESS, "suit_memptr_storage_get failed - error %i", err);
 
 	err = suit_memptr_storage_ptr_store(NULL, test_data, TEST_DATA_SIZE);
@@ -113,6 +117,7 @@ ZTEST(suit_memptr_storage_tests, test_memptr_storage_get_OK)
 	size_t payload_size;
 
 	int err = suit_memptr_storage_get(&handle);
+
 	zassert_equal(err, SUIT_PLAT_SUCCESS, "suit_memptr_storage_get failed - error %i", err);
 
 	err = suit_memptr_storage_ptr_store(handle, test_data, TEST_DATA_SIZE);
@@ -137,6 +142,7 @@ ZTEST(suit_memptr_storage_tests, test_memptr_storage_get_NOK)
 	size_t payload_size;
 
 	int err = suit_memptr_storage_get(&handle);
+
 	zassert_equal(err, SUIT_PLAT_SUCCESS, "suit_memptr_storage_get failed - error %i", err);
 
 	err = suit_memptr_storage_ptr_store(handle, test_data, TEST_DATA_SIZE);

@@ -12,7 +12,8 @@
 
 #include <suit_plat_component_compatibility.h>
 
-FAKE_VALUE_FUNC(int, suit_plat_component_compatibility_check, const suit_manifest_class_id_t *, struct zcbor_string *);
+FAKE_VALUE_FUNC(int, suit_plat_component_compatibility_check, const suit_manifest_class_id_t *,
+		struct zcbor_string *);
 
 static inline void mock_suit_plat_component_compatibility_check_reset(void)
 {

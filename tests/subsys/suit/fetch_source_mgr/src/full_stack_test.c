@@ -8,10 +8,10 @@
 #include <suit_ipc_streamer.h>
 #include <dfu/suit_dfu_fetch_source.h>
 
-static uint32_t received_bytes = 0;
-static uint32_t received_checksum = 0;
-static uint32_t expected_bytes = 0;
-static uint32_t expected_checksum = 0;
+static uint32_t received_bytes;
+static uint32_t received_checksum;
+static uint32_t expected_bytes;
+static uint32_t expected_checksum;
 
 /* Intentionally missaligned buffer size
  */
@@ -44,8 +44,7 @@ typedef struct {
 
 } access_pattern_t;
 
-int  fetch_request_fn(const uint8_t *uri, size_t uri_length,
-				     uint32_t session_id)
+int fetch_request_fn(const uint8_t *uri, size_t uri_length, uint32_t session_id)
 {
 	zassert_equal(uri_length, strlen(requested_resource_id), "uri_length (%d)", uri_length);
 	zassert_mem_equal(uri, requested_resource_id, strlen(requested_resource_id));
@@ -67,13 +66,13 @@ int  fetch_request_fn(const uint8_t *uri, size_t uri_length,
 			access_pattern_t *ap = &ap_table[pattern_idx];
 
 			size_t to_be_copied = sizeof(test_buf) - offset_in_buffer;
+
 			if (ap->chunk_size < to_be_copied) {
 				to_be_copied = ap->chunk_size;
 			}
 
-			rc = suit_dfu_fetch_source_write_fetched_data(session_id,
-								      test_buf + offset_in_buffer,
-								      to_be_copied);
+			rc = suit_dfu_fetch_source_write_fetched_data(
+				session_id, test_buf + offset_in_buffer, to_be_copied);
 			if (rc != 0) {
 				return SUIT_PLAT_ERR_CRASH;
 			}
@@ -129,6 +128,7 @@ void test_full_stack(void)
 
 	uint32_t inter_chunk_timeout_ms = 10000;
 	uint32_t requesting_period_ms = 1000;
+
 	rc = suit_ipc_streamer_stream(requested_resource_id, strlen(requested_resource_id),
 				      &test_sink, inter_chunk_timeout_ms, requesting_period_ms);
 

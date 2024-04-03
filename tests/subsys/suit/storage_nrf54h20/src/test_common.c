@@ -74,9 +74,11 @@ void erase_area_nordic(void)
 {
 	/* Clear the whole nordic area */
 	const struct device *fdev = DEVICE_DT_GET(DT_CHOSEN(zephyr_flash_controller));
+
 	zassert_not_null(fdev, "Unable to find a driver to modify MPI area");
 
 	int err = flash_erase(fdev, SUIT_STORAGE_NORDIC_OFFSET, SUIT_STORAGE_NORDIC_SIZE);
+
 	zassert_equal(0, err, "Unable to erase nordic area before test execution");
 }
 
@@ -84,9 +86,11 @@ void erase_area_rad(void)
 {
 	/* Clear the whole radio area */
 	const struct device *fdev = DEVICE_DT_GET(DT_CHOSEN(zephyr_flash_controller));
+
 	zassert_not_null(fdev, "Unable to find a driver to modify MPI area");
 
 	int err = flash_erase(fdev, SUIT_STORAGE_RAD_OFFSET, SUIT_STORAGE_RAD_SIZE);
+
 	zassert_equal(0, err, "Unable to erase radio core area before test execution");
 }
 
@@ -94,57 +98,69 @@ void erase_area_app(void)
 {
 	/* Clear the whole application area */
 	const struct device *fdev = DEVICE_DT_GET(DT_CHOSEN(zephyr_flash_controller));
+
 	zassert_not_null(fdev, "Unable to find a driver to modify MPI area");
 
 	int err = flash_erase(fdev, SUIT_STORAGE_APP_OFFSET, SUIT_STORAGE_APP_SIZE);
+
 	zassert_equal(0, err, "Unable to erase application area before test execution");
 }
 
 void erase_area_app_nvv(void)
 {
 	const struct device *fdev = DEVICE_DT_GET(DT_CHOSEN(zephyr_flash_controller));
+
 	zassert_not_null(fdev, "Unable to find a driver to modify MPI area");
 
 	int err = flash_erase(fdev, SUIT_STORAGE_APP_NVV_OFFSET, SUIT_STORAGE_APP_NVV_SIZE / 2);
+
 	zassert_equal(0, err, "Unable to erase NNV area before test execution");
 }
 
 void erase_area_app_nvv_backup(void)
 {
 	const struct device *fdev = DEVICE_DT_GET(DT_CHOSEN(zephyr_flash_controller));
+
 	zassert_not_null(fdev, "Unable to find a driver to modify MPI area");
 
 	int err = flash_erase(fdev, SUIT_STORAGE_APP_NVV_OFFSET + SUIT_STORAGE_APP_NVV_SIZE / 2,
 			      SUIT_STORAGE_APP_NVV_SIZE / 2);
+
 	zassert_equal(0, err, "Unable to erase NNV backup before test execution");
 }
 
 void write_area_app_empty_nvv_backup(void)
 {
 	const struct device *fdev = DEVICE_DT_GET(DT_CHOSEN(zephyr_flash_controller));
+
 	zassert_not_null(fdev, "Unable to find a driver to modify MPI area");
 
 	int err = flash_write(fdev, SUIT_STORAGE_APP_NVV_OFFSET + SUIT_STORAGE_APP_NVV_SIZE / 2,
 			      nvv_empty, sizeof(nvv_empty));
+
 	zassert_equal(0, err, "Unable to store empty NVV contents before test execution");
 }
 
 void write_area_app_nvv_backup(void)
 {
 	const struct device *fdev = DEVICE_DT_GET(DT_CHOSEN(zephyr_flash_controller));
+
 	zassert_not_null(fdev, "Unable to find a driver to modify MPI area");
 
 	int err = flash_write(fdev, SUIT_STORAGE_APP_NVV_OFFSET + SUIT_STORAGE_APP_NVV_SIZE / 2,
 			      nvv_sample, sizeof(nvv_sample));
+
 	zassert_equal(0, err, "Unable to store empty NVV contents before test execution");
 }
 
 void write_area_app_nvv(void)
 {
 	const struct device *fdev = DEVICE_DT_GET(DT_CHOSEN(zephyr_flash_controller));
+
 	zassert_not_null(fdev, "Unable to find a driver to modify MPI area");
 
 	int err = flash_write(fdev, SUIT_STORAGE_APP_NVV_OFFSET, nvv_sample, sizeof(nvv_sample));
+
 	zassert_equal(0, err, "Unable to store sample NVV contents before test execution");
 }
 
@@ -160,10 +176,12 @@ void write_empty_area_app(void)
 
 	/* Write the digest of application area filled with 0xFF */
 	const struct device *fdev = DEVICE_DT_GET(DT_CHOSEN(zephyr_flash_controller));
+
 	zassert_not_null(fdev, "Unable to find a driver to modify MPI area");
 
 	int err = flash_write(fdev, SUIT_STORAGE_APP_OFFSET + SUIT_STORAGE_APP_MPI_SIZE, app_digest,
 			      sizeof(app_digest));
+
 	zassert_equal(0, err, "Unable to store application MPI digest before test execution");
 }
 
@@ -179,10 +197,12 @@ void write_empty_area_rad(void)
 
 	/* Write the digest of radio area filled with 0xFF */
 	const struct device *fdev = DEVICE_DT_GET(DT_CHOSEN(zephyr_flash_controller));
+
 	zassert_not_null(fdev, "Unable to find a driver to modify MPI area");
 
 	int err = flash_write(fdev, SUIT_STORAGE_RAD_OFFSET + SUIT_STORAGE_RAD_MPI_SIZE, rad_digest,
 			      sizeof(rad_digest));
+
 	zassert_equal(0, err, "Unable to store radio MPI digest before test execution");
 }
 
@@ -213,9 +233,11 @@ void write_area_app_root(void)
 
 	/* Write the sample application area (just the root MPI) and corresponding digest */
 	const struct device *fdev = DEVICE_DT_GET(DT_CHOSEN(zephyr_flash_controller));
+
 	zassert_not_null(fdev, "Unable to find a driver to modify MPI area");
 
 	int err = flash_write(fdev, SUIT_STORAGE_APP_OFFSET, mpi_root, sizeof(mpi_root));
+
 	zassert_equal(0, err,
 		      "Unable to store application root MPI contents before test execution");
 
@@ -251,9 +273,11 @@ void write_area_rad(void)
 
 	/* Write the sample radio area (just one MPI entry) and corresponding digest */
 	const struct device *fdev = DEVICE_DT_GET(DT_CHOSEN(zephyr_flash_controller));
+
 	zassert_not_null(fdev, "Unable to find a driver to modify MPI area");
 
 	int err = flash_write(fdev, SUIT_STORAGE_RAD_OFFSET, mpi_rad, sizeof(mpi_rad));
+
 	zassert_equal(0, err, "Unable to store radio root MPI contents before test execution");
 
 	err = flash_write(fdev, SUIT_STORAGE_RAD_OFFSET + SUIT_STORAGE_RAD_MPI_SIZE, rad_digest,
@@ -290,9 +314,11 @@ void write_area_nordic_root(void)
 
 	/* Write the sample application backup area (just the root MPI) and corresponding digest */
 	const struct device *fdev = DEVICE_DT_GET(DT_CHOSEN(zephyr_flash_controller));
+
 	zassert_not_null(fdev, "Unable to find a driver to modify MPI area");
 
 	int err = flash_write(fdev, mpi_root_backup_offset, mpi_root, sizeof(mpi_root));
+
 	zassert_equal(0, err,
 		      "Unable to store application backup root MPI contents before test execution");
 
@@ -330,9 +356,11 @@ void write_area_nordic_rad(void)
 
 	/* Write the sample radio backup area (just one MPI entry) and corresponding digest */
 	const struct device *fdev = DEVICE_DT_GET(DT_CHOSEN(zephyr_flash_controller));
+
 	zassert_not_null(fdev, "Unable to find a driver to modify MPI area");
 
 	int err = flash_write(fdev, mpi_rad_backup_offset, mpi_rad, sizeof(mpi_rad));
+
 	zassert_equal(0, err,
 		      "Unable to store radio backup root MPI contents before test execution");
 
@@ -368,11 +396,14 @@ void write_area_nordic_old_root(void)
 	};
 
 	/* Write the sample application backup area (just the root MPI with altered class) and
-	 * corresponding digest */
+	 * corresponding digest
+	 */
 	const struct device *fdev = DEVICE_DT_GET(DT_CHOSEN(zephyr_flash_controller));
+
 	zassert_not_null(fdev, "Unable to find a driver to modify MPI area");
 
 	int err = flash_write(fdev, mpi_root_backup_offset, mpi_root, sizeof(mpi_root));
+
 	zassert_equal(0, err,
 		      "Unable to store application backup root MPI contents before test execution");
 
@@ -408,11 +439,14 @@ void write_area_nordic_old_rad(void)
 	};
 
 	/* Write the sample radio backup area (just the sample MPI with altered class) and
-	 * corresponding digest */
+	 * corresponding digest
+	 */
 	const struct device *fdev = DEVICE_DT_GET(DT_CHOSEN(zephyr_flash_controller));
+
 	zassert_not_null(fdev, "Unable to find a driver to modify MPI area");
 
 	int err = flash_write(fdev, mpi_rad_backup_offset, mpi_rad, sizeof(mpi_rad));
+
 	zassert_equal(0, err,
 		      "Unable to store radio backup sample MPI contents before test execution");
 
@@ -428,6 +462,7 @@ void assert_nordic_classes(void)
 
 	/* ASSERT that it is possible to fetch list of supported manifest classes and roles */
 	int err = suit_storage_mpi_class_ids_get(class_infos, &class_infos_len);
+
 	zassert_equal(err, SUIT_PLAT_SUCCESS,
 		      "Failed to fetch list of supported manifest classes (%d).", err);
 	/* ... and MPI reports at least 3 class IDs */
@@ -457,6 +492,7 @@ void assert_sample_root_class(void)
 
 	/* ASSERT that it is possible to fetch list of supported manifest classes and roles */
 	int err = suit_storage_mpi_class_ids_get(class_infos, &class_infos_len);
+
 	zassert_equal(err, SUIT_PLAT_SUCCESS,
 		      "Failed to fetch list of supported manifest classes (%d).", err);
 	/* ... and MPI reports 4 supported class IDs */
@@ -477,6 +513,7 @@ void assert_sample_root_rad_class(void)
 
 	/* ASSERT that it is possible to fetch list of supported manifest classes and roles */
 	int err = suit_storage_mpi_class_ids_get(class_infos, &class_infos_len);
+
 	zassert_equal(err, SUIT_PLAT_SUCCESS,
 		      "Failed to fetch list of supported manifest classes (%d).", err);
 	/* ... and MPI reports 5 supported class IDs */

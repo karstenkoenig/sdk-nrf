@@ -15,9 +15,10 @@
 static uint8_t data_mem[] = {0xde, 0xad, 0xbe, 0xef};
 
 /* Matching value of the content parameter for a MEM component.
-   Note it has the same value as @ref data, however it is kept
-   as a separate value to ensure comparison is done byte by
-   byte, not via pointer comparison.  */
+ * Note it has the same value as @ref data, however it is kept
+ * as a separate value to ensure comparison is done byte by
+ * byte, not via pointer comparison.
+ */
 static uint8_t matching_content_value_mem[] = {0xde, 0xad, 0xbe, 0xef};
 
 /* Matching content parameter for a MEM component. */
@@ -50,9 +51,11 @@ ZTEST(suit_check_content_tests, test_mem_matching)
 
 	suit_component_t component;
 	int err = suit_plat_create_component_handle(&matching_src_component_id, &component);
+
 	zassert_equal(SUIT_SUCCESS, err, "test error - create_component_handle failed: %d", err);
 
 	void *impl_data = NULL;
+
 	err = suit_plat_component_impl_data_get(component, &impl_data);
 	zassert_equal(SUIT_SUCCESS, err, "test error - suit_plat_component_impl_data_get: %d", err);
 
@@ -86,9 +89,11 @@ ZTEST(suit_check_content_tests, test_mem_different_size)
 
 	suit_component_t component;
 	int err = suit_plat_create_component_handle(&valid_src_component_id, &component);
+
 	zassert_equal(SUIT_SUCCESS, err, "test error - create_component_handle failed: %d", err);
 
 	void *impl_data = NULL;
+
 	err = suit_plat_component_impl_data_get(component, &impl_data);
 	zassert_equal(SUIT_SUCCESS, err, "test error - suit_plat_component_impl_data_get: %d", err);
 
@@ -123,9 +128,11 @@ ZTEST(suit_check_content_tests, test_mem_not_matching)
 
 	suit_component_t component;
 	int err = suit_plat_create_component_handle(&not_matching_src_component_id, &component);
+
 	zassert_equal(SUIT_SUCCESS, err, "test error - create_component_handle failed: %d", err);
 
 	void *impl_data = NULL;
+
 	err = suit_plat_component_impl_data_get(component, &impl_data);
 	zassert_equal(SUIT_SUCCESS, err, "test error - suit_plat_component_impl_data_get: %d", err);
 

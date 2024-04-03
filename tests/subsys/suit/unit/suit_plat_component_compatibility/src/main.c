@@ -632,7 +632,7 @@ ZTEST(suit_plat_component_compatibility_tests, test_special_type_invalid_decode_
 }
 
 ZTEST(suit_plat_component_compatibility_tests,
-      test_special_type_invalid_validate_platform_specific_component_rights)
+	test_special_type_invalid_validate_platform_specific_component_rights)
 {
 	suit_mci_manifest_class_id_validate_fake.custom_fake =
 		suit_mci_manifest_class_id_validate_correct_fake_func;
@@ -773,7 +773,7 @@ ZTEST(suit_plat_component_compatibility_tests, test_cand_mfst_type_OK)
 }
 
 ZTEST(suit_plat_component_compatibility_tests,
-      test_instld_mfst_type_invalid_suit_plat_decode_manifest_class_id)
+	test_instld_mfst_type_invalid_suit_plat_decode_manifest_class_id)
 {
 	suit_mci_manifest_class_id_validate_fake.custom_fake =
 		suit_mci_manifest_class_id_validate_correct_fake_func;

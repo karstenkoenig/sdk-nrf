@@ -11,10 +11,12 @@
 #include <suit_dfu_cache.h>
 
 /*
-  {"http://source1.com": h'4235623423462346456234623487723572702975',
-	"http://source2.com.no": h'25672519384710',
-	"ftp://altsource.com": h'92384859284720'}
-*/
+ * {
+ *   "http://source1.com": h'4235623423462346456234623487723572702975',
+ *   "http://source2.com.no": h'25672519384710',
+ *   "ftp://altsource.com": h'92384859284720'
+ * }
+ */
 static const uint8_t cache[] = {
 	0xBF, 0x72, 0x68, 0x74, 0x74, 0x70, 0x3A, 0x2F, 0x2F, 0x73, 0x6F, 0x75, 0x72, 0x63, 0x65,
 	0x31, 0x2E, 0x63, 0x6F, 0x6D, 0x54, 0x42, 0x35, 0x62, 0x34, 0x23, 0x46, 0x23, 0x46, 0x45,
@@ -26,10 +28,12 @@ static const uint8_t cache[] = {
 static const size_t cache_len = sizeof(cache);
 
 /*
-	{"http://databucket.com": h'4360021135853785764409444542662512368400086117',
-	"http://storagehole.com": h'053714514299994946548928821768209760220451452304',
-	"#file.bin": h'12358902317049812091623890476012378490701892365192830986701923'}
-*/
+ * {
+ *   "http://databucket.com": h'4360021135853785764409444542662512368400086117',
+ *   "http://storagehole.com": h'053714514299994946548928821768209760220451452304',
+ *   "#file.bin": h'12358902317049812091623890476012378490701892365192830986701923'
+ * }
+ */
 static const uint8_t cache2[] = {
 	0xA3, 0x75, 0x68, 0x74, 0x74, 0x70, 0x3A, 0x2F, 0x2F, 0x64, 0x61, 0x74, 0x61, 0x62,
 	0x75, 0x63, 0x6B, 0x65, 0x74, 0x2E, 0x63, 0x6F, 0x6D, 0x57, 0x43, 0x60, 0x02, 0x11,
@@ -58,6 +62,7 @@ static void test_suite_before(void *f)
 	dfu_caches.pools_count = 2;
 
 	int rc = suit_dfu_cache_initialize(&dfu_caches);
+
 	zassert_equal(rc, SUIT_PLAT_SUCCESS, "Failed to initialize cache: %i", rc);
 }
 
@@ -78,6 +83,7 @@ ZTEST(cache_streamer_tests, test_cache_streamer_ok)
 	size_t payload_size = 0;
 
 	int ret = suit_memptr_storage_get(&handle);
+
 	zassert_equal(ret, SUIT_PLAT_SUCCESS, "suit_memptr_storage_get failed - error %i", ret);
 
 	ret = suit_memptr_sink_get(&memptr_sink, handle);
@@ -104,6 +110,7 @@ ZTEST(cache_streamer_tests, test_cache_streamer_nok)
 	size_t nok_uri_len = sizeof("http://data123.com");
 
 	int ret = suit_memptr_storage_get(&handle);
+
 	zassert_equal(ret, SUIT_PLAT_SUCCESS, "suit_memptr_storage_get failed - error %i", ret);
 
 	ret = suit_memptr_sink_get(&memptr_sink, handle);

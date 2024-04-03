@@ -12,9 +12,9 @@
 #include <zephyr/drivers/flash.h>
 #include <suit_memptr_storage.h>
 
-#define TEST_ARBITRARY_WRITE_SIZE 21 
-#define TEST_REQUESTED_AREA 0x1000
-#define WRITE_ADDR	    suit_plat_mem_nvm_ptr_get(SUIT_DFU_PARTITION_OFFSET)
+#define TEST_ARBITRARY_WRITE_SIZE 21
+#define TEST_REQUESTED_AREA	  0x1000
+#define WRITE_ADDR		  suit_plat_mem_nvm_ptr_get(SUIT_DFU_PARTITION_OFFSET)
 
 #define SUIT_DFU_PARTITION_OFFSET FIXED_PARTITION_OFFSET(dfu_partition)
 #define SUIT_DFU_PARTITION_SIZE	  FIXED_PARTITION_SIZE(dfu_partition)
@@ -28,9 +28,11 @@ static void test_setup_flash(void *arg)
 {
 	/* Erase the area, to met the preconditions in the next test. */
 	const struct device *fdev = DEVICE_DT_GET(DT_CHOSEN(zephyr_flash_controller));
+
 	zassert_not_null(fdev, "Unable to find a driver to erase area");
 
 	int rc = flash_erase(fdev, SUIT_DFU_PARTITION_OFFSET, SUIT_DFU_PARTITION_SIZE);
+
 	zassert_equal(rc, 0, "Unable to erase memory before test execution");
 }
 
@@ -41,6 +43,7 @@ ZTEST(flash_sink_tests, test_suit_flash_sink_get_OK)
 	struct stream_sink flash_sink;
 
 	int err = suit_flash_sink_get(&flash_sink, WRITE_ADDR, TEST_REQUESTED_AREA);
+
 	zassert_equal(err, SUIT_PLAT_SUCCESS, "suit_flash_sink_get failed - error %i", err);
 	zassert_not_equal(flash_sink.ctx, NULL, "suit_flash_sink_get failed - ctx is NULL");
 
@@ -53,6 +56,7 @@ ZTEST(flash_sink_tests, test_suit_flash_sink_get_NOK)
 	struct stream_sink flash_sink;
 
 	int err = suit_flash_sink_get(&flash_sink, NULL, TEST_REQUESTED_AREA);
+
 	zassert_not_equal(err, SUIT_PLAT_SUCCESS,
 			  "suit_flash_sink_get should have failed - dst == NULL");
 
@@ -66,6 +70,7 @@ ZTEST(flash_sink_tests, test_flash_sink_release_NOK)
 	struct stream_sink flash_sink;
 
 	int err = suit_flash_sink_get(&flash_sink, WRITE_ADDR, TEST_REQUESTED_AREA);
+
 	zassert_equal(err, SUIT_PLAT_SUCCESS, "suit_flash_sink_get failed - error %i", err);
 
 	err = flash_sink.release(NULL);
@@ -81,6 +86,7 @@ ZTEST(flash_sink_tests, test_flash_sink_seek_OK)
 	struct stream_sink flash_sink;
 
 	int err = suit_flash_sink_get(&flash_sink, WRITE_ADDR, TEST_REQUESTED_AREA);
+
 	zassert_equal(err, SUIT_PLAT_SUCCESS, "suit_flash_sink_get failed - error %i", err);
 
 	err = flash_sink.seek(flash_sink.ctx, 0);
@@ -101,6 +107,7 @@ ZTEST(flash_sink_tests, test_flash_sink_seek_NOK)
 	struct stream_sink flash_sink;
 
 	int err = suit_flash_sink_get(&flash_sink, WRITE_ADDR, TEST_REQUESTED_AREA);
+
 	zassert_equal(err, SUIT_PLAT_SUCCESS, "suit_flash_sink_get failed - error %i", err);
 
 	err = flash_sink.seek(flash_sink.ctx, TEST_REQUESTED_AREA);
@@ -121,6 +128,7 @@ ZTEST(flash_sink_tests, test_flash_sink_used_storage_OK)
 	size_t used_storage = 0;
 
 	int err = suit_flash_sink_get(&flash_sink, WRITE_ADDR, TEST_REQUESTED_AREA);
+
 	zassert_equal(err, SUIT_PLAT_SUCCESS, "suit_flash_sink_get failed - error %i", err);
 
 	err = flash_sink.used_storage(flash_sink.ctx, &used_storage);
@@ -136,6 +144,7 @@ ZTEST(flash_sink_tests, test_flash_sink_used_storage_NOK)
 	struct stream_sink flash_sink;
 
 	int err = suit_flash_sink_get(&flash_sink, WRITE_ADDR, TEST_REQUESTED_AREA);
+
 	zassert_equal(err, SUIT_PLAT_SUCCESS, "suit_flash_sink_get failed - error %i", err);
 
 	err = flash_sink.used_storage(flash_sink.ctx, NULL);
@@ -152,6 +161,7 @@ ZTEST(flash_sink_tests, test_flash_sink_write_OK)
 	size_t used_storage = 0;
 
 	int err = suit_flash_sink_get(&flash_sink, WRITE_ADDR, TEST_REQUESTED_AREA);
+
 	zassert_equal(err, SUIT_PLAT_SUCCESS, "suit_flash_sink_get failed - error %i", err);
 
 	err = flash_sink.write(flash_sink.ctx, test_data, TEST_ARBITRARY_WRITE_SIZE);
@@ -159,8 +169,8 @@ ZTEST(flash_sink_tests, test_flash_sink_write_OK)
 
 	err = flash_sink.used_storage(flash_sink.ctx, &used_storage);
 	zassert_equal(err, SUIT_PLAT_SUCCESS, "flash_sink.use_storage failed - error %i", err);
-	zassert_equal(used_storage, TEST_ARBITRARY_WRITE_SIZE, "flash_sink.use_storage failed - value %d",
-		      used_storage);
+	zassert_equal(used_storage, TEST_ARBITRARY_WRITE_SIZE,
+		      "flash_sink.use_storage failed - value %d", used_storage);
 
 	err = flash_sink.seek(flash_sink.ctx, TEST_ARBITRARY_WRITE_SIZE + 7);
 	zassert_equal(err, SUIT_PLAT_SUCCESS, "flash_sink.seek failed - error %i", err);
@@ -168,7 +178,8 @@ ZTEST(flash_sink_tests, test_flash_sink_write_OK)
 	err = flash_sink.used_storage(flash_sink.ctx, &used_storage);
 	zassert_equal(err, SUIT_PLAT_SUCCESS, "flash_sink.use_storage failed - error %i", err);
 
-	err = flash_sink.write(flash_sink.ctx, &test_data[TEST_ARBITRARY_WRITE_SIZE], TEST_ARBITRARY_WRITE_SIZE);
+	err = flash_sink.write(flash_sink.ctx, &test_data[TEST_ARBITRARY_WRITE_SIZE],
+			       TEST_ARBITRARY_WRITE_SIZE);
 	zassert_equal(err, SUIT_PLAT_SUCCESS, "flash_sink.write failed - error %i", err);
 
 	err = flash_sink.release(flash_sink.ctx);
@@ -180,6 +191,7 @@ ZTEST(flash_sink_tests, test_flash_sink_write_NOK)
 	struct stream_sink flash_sink;
 
 	int err = suit_flash_sink_get(&flash_sink, WRITE_ADDR, TEST_REQUESTED_AREA);
+
 	zassert_equal(err, SUIT_PLAT_SUCCESS, "suit_flash_sink_get failed - error %i", err);
 
 	err = flash_sink.write(flash_sink.ctx, test_data, 0);

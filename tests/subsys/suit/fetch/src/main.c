@@ -19,10 +19,12 @@ static uint8_t test_data[] = {0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12
 			      48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63};
 
 /*
-  {"http://source1.com": h'4235623423462346456234623487723572702975',
-	"http://source2.com.no": h'25672519384710',
-	"ftp://altsource.com": h'92384859284720'}
-*/
+ * {
+ *    "http://source1.com": h'4235623423462346456234623487723572702975',
+ *    "http://source2.com.no": h'25672519384710',
+ *    "ftp://altsource.com": h'92384859284720'
+ * }
+ */
 static const uint8_t cache[] = {
 	0xBF, 0x72, 0x68, 0x74, 0x74, 0x70, 0x3A, 0x2F, 0x2F, 0x73, 0x6F, 0x75, 0x72, 0x63, 0x65,
 	0x31, 0x2E, 0x63, 0x6F, 0x6D, 0x54, 0x42, 0x35, 0x62, 0x34, 0x23, 0x46, 0x23, 0x46, 0x45,
@@ -34,10 +36,12 @@ static const uint8_t cache[] = {
 static const size_t cache_len = sizeof(cache);
 
 /*
-	{"http://databucket.com": h'4360021135853785764409444542662512368400086117',
-	"http://storagehole.com": h'053714514299994946548928821768209760220451452304',
-	"#file.bin": h'12358902317049812091623890476012378490701892365192830986701923'}
-*/
+ * {
+ *    "http://databucket.com": h'4360021135853785764409444542662512368400086117',
+ *    "http://storagehole.com": h'053714514299994946548928821768209760220451452304',
+ *    "#file.bin": h'12358902317049812091623890476012378490701892365192830986701923'
+ * }
+ */
 static const uint8_t cache2[] = {
 	0xA3, 0x75, 0x68, 0x74, 0x74, 0x70, 0x3A, 0x2F, 0x2F, 0x64, 0x61, 0x74, 0x61, 0x62,
 	0x75, 0x63, 0x6B, 0x65, 0x74, 0x2E, 0x63, 0x6F, 0x6D, 0x57, 0x43, 0x60, 0x02, 0x11,
@@ -66,6 +70,7 @@ static void setup_cache_with_sample_entries(void)
 	dfu_caches.pools_count = 2;
 
 	suit_plat_err_t rc = suit_dfu_cache_initialize(&dfu_caches);
+
 	zassert_equal(rc, SUIT_PLAT_SUCCESS, "Failed to initialize cache: %i", rc);
 }
 
@@ -86,6 +91,7 @@ ZTEST(fetch_tests, test_integrated_fetch_to_memptr_OK)
 	};
 
 	int ret = suit_plat_create_component_handle(&valid_component_id, &component_handle);
+
 	zassert_equal(ret, SUIT_SUCCESS, "create_component_handle failed - error %i", ret);
 
 	ret = suit_plat_fetch_integrated(component_handle, &source);
@@ -123,6 +129,7 @@ ZTEST(fetch_tests, test_fetch_to_memptr_OK)
 	};
 
 	int ret = suit_plat_create_component_handle(&valid_component_id, &component_handle);
+
 	zassert_equal(ret, SUIT_SUCCESS, "create_component_handle failed - error %i", ret);
 
 	setup_cache_with_sample_entries();
@@ -151,6 +158,7 @@ ZTEST(fetch_tests, test_fetch_to_memptr_NOK_uri_not_in_cache)
 	};
 
 	int ret = suit_plat_create_component_handle(&valid_component_id, &component_handle);
+
 	zassert_equal(ret, SUIT_SUCCESS, "create_component_handle failed - error %i", ret);
 
 	setup_cache_with_sample_entries();
@@ -171,8 +179,8 @@ ZTEST(fetch_tests, test_fetch_to_memptr_NOK_invalid_component_id)
 	struct zcbor_string uri = {.value = "http://databucket.com",
 				   .len = sizeof("http://databucket.com")};
 	/* [h'MEM', h'01', h'1A00080000', h'08'] */
-	uint8_t valid_value[] = {0x84, 0x44, 0x63, 'M',	 'E',  'M',  0x41, 0x01, 0x45, 0x1A,
-				 0x00, 0x08, 0x00, 0x00, 0x41, 0x08};
+	uint8_t valid_value[] = {0x84, 0x44, 0x63, 'M',	 'E',  'M',  0x41, 0x01,
+				 0x45, 0x1A, 0x00, 0x08, 0x00, 0x00, 0x41, 0x08};
 
 	struct zcbor_string valid_component_id = {
 		.value = valid_value,
@@ -180,6 +188,7 @@ ZTEST(fetch_tests, test_fetch_to_memptr_NOK_invalid_component_id)
 	};
 
 	int ret = suit_plat_create_component_handle(&valid_component_id, &component_handle);
+
 	zassert_equal(ret, SUIT_SUCCESS, "create_component_handle failed - error %i", ret);
 
 	setup_cache_with_sample_entries();
@@ -208,6 +217,7 @@ ZTEST(fetch_tests, test_integrated_fetch_to_memptr_NOK_data_ptr_NULL)
 	};
 
 	int ret = suit_plat_create_component_handle(&valid_component_id, &component_handle);
+
 	zassert_equal(ret, SUIT_SUCCESS, "create_component_handle failed - error %i", ret);
 
 	ret = suit_plat_fetch_integrated(component_handle, &source);
@@ -232,6 +242,7 @@ ZTEST(fetch_tests, test_integrated_fetch_to_memptr_NOK_data_size_zero)
 	};
 
 	int ret = suit_plat_create_component_handle(&valid_component_id, &component_handle);
+
 	zassert_equal(ret, SUIT_SUCCESS, "create_component_handle failed - error %i", ret);
 
 	ret = suit_plat_fetch_integrated(component_handle, &source);
@@ -255,6 +266,7 @@ ZTEST(fetch_tests, test_integrated_fetch_to_memptr_NOK_handle_NULL)
 	};
 
 	int ret = suit_plat_create_component_handle(&valid_component_id, &component_handle);
+
 	zassert_equal(ret, SUIT_SUCCESS, "create_component_handle failed - error %i", ret);
 
 	ret = suit_plat_fetch_integrated(component_handle, &source);

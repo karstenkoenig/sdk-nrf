@@ -26,6 +26,7 @@ ZTEST(memptr_streamer_tests, test_memptr_streamer_OK)
 	memptr_storage_handle_t handle = NULL;
 
 	int err = suit_memptr_storage_get(&handle);
+
 	zassert_equal(err, SUIT_PLAT_SUCCESS, "suit_memptr_storage_get failed - error %i", err);
 
 	err = suit_memptr_sink_get(&memptr_sink, handle);
@@ -44,6 +45,7 @@ ZTEST(memptr_streamer_tests, test_memptr_streamer_NOK)
 	memptr_storage_handle_t handle = NULL;
 
 	int err = suit_memptr_storage_get(&handle);
+
 	zassert_equal(err, SUIT_PLAT_SUCCESS, "suit_memptr_storage_get failed - error %i", err);
 
 	err = suit_memptr_sink_get(&memptr_sink, handle);

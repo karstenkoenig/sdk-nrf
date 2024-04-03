@@ -34,9 +34,9 @@ struct zcbor_string valid_cand_mfst_id = {
 };
 
 static memptr_storage_handle_t valid_memptr_storage_handle;
-static intptr_t memptr_address = (intptr_t) NULL;
+static intptr_t memptr_address = (intptr_t)NULL;
 
-static suit_component_type_t component_type = 0;
+static suit_component_type_t component_type;
 
 static suit_component_t component_handles[SUIT_MAX_NUM_COMPONENT_PARAMS];
 
@@ -57,7 +57,7 @@ static void test_before(void *data)
 	/* Reset common FFF internal structures */
 	FFF_RESET_HISTORY();
 
-	memptr_address = (intptr_t) NULL;
+	memptr_address = (intptr_t)NULL;
 	component_type = 0;
 
 	mocks_return_values_reset();
@@ -68,7 +68,8 @@ static void test_before(void *data)
 	}
 
 	/* Reset mocks and history again - releasing component handles could
-	   have influenced them */
+	 * have influenced them
+	 */
 	mocks_reset();
 	FFF_RESET_HISTORY();
 	mocks_return_values_reset();
@@ -101,7 +102,7 @@ static int suit_plat_decode_address_size_correct_fake_func(struct zcbor_string *
 	zassert_not_null(size, "The API must provide valid pointers");
 
 	*run_address = memptr_address;
-	(void) size; /* Returned size isn't used and can be ignored */
+	(void)size; /* Returned size isn't used and can be ignored */
 
 	return SUIT_PLAT_SUCCESS;
 }
@@ -112,8 +113,7 @@ static void create_valid_component(suit_component_type_t type)
 
 	component_type = type;
 
-	suit_memptr_storage_get_fake.custom_fake =
-		suit_memptr_storage_get_correct_fake_func;
+	suit_memptr_storage_get_fake.custom_fake = suit_memptr_storage_get_correct_fake_func;
 	suit_plat_decode_component_type_fake.custom_fake =
 		suit_plat_decode_component_type_correct_fake_func;
 	ret = suit_plat_create_component_handle(&valid_mem_component_id, &component_handles[0]);
@@ -141,7 +141,6 @@ ZTEST(suit_plat_components_tests, test_create_component_handle_null_component_ha
 		      "incorrect number of suit_plat_decode_address_size() calls");
 	zassert_equal(suit_memptr_storage_ptr_store_fake.call_count, 0,
 		      "incorrect number of suit_memptr_storage_ptr_store() calls");
-
 }
 
 ZTEST(suit_plat_components_tests, test_create_component_handle_null_component_id)
@@ -166,7 +165,8 @@ ZTEST(suit_plat_components_tests, test_create_component_handle_too_many_componen
 	int ret;
 
 	for (size_t i = 0; i < SUIT_MAX_NUM_COMPONENT_PARAMS; i++) {
-		ret = suit_plat_create_component_handle(&valid_mem_component_id, &component_handles[i]);
+		ret = suit_plat_create_component_handle(&valid_mem_component_id,
+							&component_handles[i]);
 		zassert_equal(SUIT_SUCCESS, ret, "Failed to create valid component handle");
 	}
 
@@ -177,8 +177,9 @@ ZTEST(suit_plat_components_tests, test_create_component_handle_too_many_componen
 
 	ret = suit_plat_create_component_handle(&valid_mem_component_id, &test_handle);
 
-	zassert_equal(SUIT_ERR_UNSUPPORTED_COMPONENT_ID, ret, "Failed to record overflow in "
-							      "components count");
+	zassert_equal(SUIT_ERR_UNSUPPORTED_COMPONENT_ID, ret,
+		      "Failed to record overflow in "
+		      "components count");
 
 	zassert_equal(suit_plat_decode_component_type_fake.call_count, 0,
 		      "Incorrect number of suit_plat_decode_component_type() calls");
@@ -221,8 +222,7 @@ ZTEST(suit_plat_components_tests, test_create_component_handle_mem_ok)
 
 	suit_plat_decode_component_type_fake.custom_fake =
 		suit_plat_decode_component_type_correct_fake_func;
-	suit_memptr_storage_get_fake.custom_fake =
-		suit_memptr_storage_get_correct_fake_func;
+	suit_memptr_storage_get_fake.custom_fake = suit_memptr_storage_get_correct_fake_func;
 	suit_plat_decode_address_size_fake.custom_fake =
 		suit_plat_decode_address_size_correct_fake_func;
 
@@ -232,7 +232,6 @@ ZTEST(suit_plat_components_tests, test_create_component_handle_mem_ok)
 	ret = suit_plat_create_component_handle(&valid_mem_component_id, &component_handles[0]);
 
 	zassert_equal(SUIT_SUCCESS, ret, "Failed to create valid component handle");
-
 
 	zassert_equal(suit_plat_decode_component_type_fake.call_count, 1,
 		      "Incorrect number of suit_plat_decode_component_type() calls");
@@ -249,10 +248,8 @@ ZTEST(suit_plat_components_tests, test_create_component_handle_mem_ok)
 
 	zassert_equal_ptr(suit_memptr_storage_ptr_store_fake.arg0_val,
 			  &valid_memptr_storage_handle);
-	zassert_equal_ptr(suit_memptr_storage_ptr_store_fake.arg1_val,
-			  (uint8_t*) memptr_address);
-	zassert_equal(suit_memptr_storage_ptr_store_fake.arg2_val,
-		      0);
+	zassert_equal_ptr(suit_memptr_storage_ptr_store_fake.arg1_val, (uint8_t *)memptr_address);
+	zassert_equal(suit_memptr_storage_ptr_store_fake.arg2_val, 0);
 
 	suit_plat_component_impl_data_get(component_handles[0], &impl_data);
 	zassert_equal_ptr(impl_data, &valid_memptr_storage_handle);
@@ -269,7 +266,6 @@ ZTEST(suit_plat_components_tests, test_create_component_handle_mem_decode_compon
 
 	zassert_equal(SUIT_ERR_UNSUPPORTED_COMPONENT_ID, ret, "Incorrect returned error code");
 
-
 	zassert_equal(suit_plat_decode_component_type_fake.call_count, 1,
 		      "Incorrect number of suit_plat_decode_component_type() calls");
 	zassert_equal(suit_plat_decode_address_size_fake.call_count, 0,
@@ -282,7 +278,8 @@ ZTEST(suit_plat_components_tests, test_create_component_handle_mem_decode_compon
 	/* Make sure the component is not allocated */
 	ret = suit_plat_component_impl_data_get(component_handles[0], &impl_data);
 	zassert_equal(ret, SUIT_ERR_UNSUPPORTED_COMPONENT_ID,
-	"Retrieving impl_data did not fail with appropriate error after failed component creation");
+		      "Retrieving impl_data did not fail with appropriate error after failed "
+		      "component creation");
 }
 
 ZTEST(suit_plat_components_tests, test_create_component_handle_mem_decode_address_size_fail)
@@ -300,7 +297,6 @@ ZTEST(suit_plat_components_tests, test_create_component_handle_mem_decode_addres
 
 	zassert_equal(SUIT_ERR_UNSUPPORTED_COMPONENT_ID, ret, "Incorrect returned error code");
 
-
 	zassert_equal(suit_plat_decode_component_type_fake.call_count, 1,
 		      "Incorrect number of suit_plat_decode_component_type() calls");
 	zassert_equal(suit_plat_decode_address_size_fake.call_count, 1,
@@ -313,7 +309,8 @@ ZTEST(suit_plat_components_tests, test_create_component_handle_mem_decode_addres
 	/* Make sure the component is not allocated */
 	ret = suit_plat_component_impl_data_get(component_handles[0], &impl_data);
 	zassert_equal(ret, SUIT_ERR_UNSUPPORTED_COMPONENT_ID,
-	"Retrieving impl_data did not fail with appropriate error after failed component creation");
+		      "Retrieving impl_data did not fail with appropriate error after failed "
+		      "component creation");
 }
 
 ZTEST(suit_plat_components_tests, test_create_component_handle_mem_memptr_storage_get_fail)
@@ -334,7 +331,6 @@ ZTEST(suit_plat_components_tests, test_create_component_handle_mem_memptr_storag
 
 	zassert_equal(SUIT_ERR_CRASH, ret, "Incorrect returned error code");
 
-
 	zassert_equal(suit_plat_decode_component_type_fake.call_count, 1,
 		      "Incorrect number of suit_plat_decode_component_type() calls");
 	zassert_equal(suit_plat_decode_address_size_fake.call_count, 1,
@@ -347,7 +343,8 @@ ZTEST(suit_plat_components_tests, test_create_component_handle_mem_memptr_storag
 	/* Make sure the component is not allocated */
 	ret = suit_plat_component_impl_data_get(component_handles[0], &impl_data);
 	zassert_equal(ret, SUIT_ERR_UNSUPPORTED_COMPONENT_ID,
-	"Retrieving impl_data did not fail with appropriate error after failed component creation");
+		      "Retrieving impl_data did not fail with appropriate error after failed "
+		      "component creation");
 }
 
 ZTEST(suit_plat_components_tests, test_create_component_handle_cand_img_memptr_storage_get_fail)
@@ -365,7 +362,6 @@ ZTEST(suit_plat_components_tests, test_create_component_handle_cand_img_memptr_s
 
 	zassert_equal(SUIT_ERR_CRASH, ret, "Incorrect returned error code");
 
-
 	zassert_equal(suit_plat_decode_component_type_fake.call_count, 1,
 		      "Incorrect number of suit_plat_decode_component_type() calls");
 	zassert_equal(suit_plat_decode_address_size_fake.call_count, 0,
@@ -378,7 +374,8 @@ ZTEST(suit_plat_components_tests, test_create_component_handle_cand_img_memptr_s
 	/* Make sure the component is not allocated */
 	ret = suit_plat_component_impl_data_get(component_handles[0], &impl_data);
 	zassert_equal(ret, SUIT_ERR_UNSUPPORTED_COMPONENT_ID,
-	"Retrieving impl_data did not fail with appropriate error after failed component creation");
+		      "Retrieving impl_data did not fail with appropriate error after failed "
+		      "component creation");
 }
 
 ZTEST(suit_plat_components_tests, test_create_component_handle_mem_memptr_storage_store_fail)
@@ -390,8 +387,7 @@ ZTEST(suit_plat_components_tests, test_create_component_handle_mem_memptr_storag
 		suit_plat_decode_component_type_correct_fake_func;
 	suit_plat_decode_address_size_fake.custom_fake =
 		suit_plat_decode_address_size_correct_fake_func;
-	suit_memptr_storage_get_fake.custom_fake =
-		suit_memptr_storage_get_correct_fake_func;
+	suit_memptr_storage_get_fake.custom_fake = suit_memptr_storage_get_correct_fake_func;
 	suit_memptr_storage_ptr_store_fake.return_val = SUIT_MEMPTR_STORAGE_ERR_UNALLOCATED_RECORD;
 
 	component_type = SUIT_COMPONENT_TYPE_MEM;
@@ -400,7 +396,6 @@ ZTEST(suit_plat_components_tests, test_create_component_handle_mem_memptr_storag
 	ret = suit_plat_create_component_handle(&valid_mem_component_id, &component_handles[0]);
 
 	zassert_equal(SUIT_ERR_CRASH, ret, "Incorrect returned error code");
-
 
 	zassert_equal(suit_plat_decode_component_type_fake.call_count, 1,
 		      "Incorrect number of suit_plat_decode_component_type() calls");
@@ -420,7 +415,8 @@ ZTEST(suit_plat_components_tests, test_create_component_handle_mem_memptr_storag
 	/* Make sure the component is not allocated */
 	ret = suit_plat_component_impl_data_get(component_handles[0], &impl_data);
 	zassert_equal(ret, SUIT_ERR_UNSUPPORTED_COMPONENT_ID,
-	"Retrieving impl_data did not fail with appropriate error after failed component creation");
+		      "Retrieving impl_data did not fail with appropriate error after failed "
+		      "component creation");
 }
 
 ZTEST(suit_plat_components_tests, test_create_component_handle_cand_img_ok)
@@ -430,15 +426,13 @@ ZTEST(suit_plat_components_tests, test_create_component_handle_cand_img_ok)
 
 	suit_plat_decode_component_type_fake.custom_fake =
 		suit_plat_decode_component_type_correct_fake_func;
-	suit_memptr_storage_get_fake.custom_fake =
-		suit_memptr_storage_get_correct_fake_func;
+	suit_memptr_storage_get_fake.custom_fake = suit_memptr_storage_get_correct_fake_func;
 
 	component_type = SUIT_COMPONENT_TYPE_CAND_IMG;
 
 	ret = suit_plat_create_component_handle(&valid_cand_img_id, &component_handles[0]);
 
 	zassert_equal(SUIT_SUCCESS, ret, "Failed to create valid component handle");
-
 
 	zassert_equal(suit_plat_decode_component_type_fake.call_count, 1,
 		      "Incorrect number of suit_plat_decode_component_type() calls");
@@ -460,15 +454,13 @@ ZTEST(suit_plat_components_tests, test_create_component_handle_cand_mfst_ok)
 
 	suit_plat_decode_component_type_fake.custom_fake =
 		suit_plat_decode_component_type_correct_fake_func;
-	suit_memptr_storage_get_fake.custom_fake =
-		suit_memptr_storage_get_correct_fake_func;
+	suit_memptr_storage_get_fake.custom_fake = suit_memptr_storage_get_correct_fake_func;
 
 	component_type = SUIT_COMPONENT_TYPE_CAND_MFST;
 
 	ret = suit_plat_create_component_handle(&valid_cand_mfst_id, &component_handles[0]);
 
 	zassert_equal(SUIT_SUCCESS, ret, "Failed to create valid component handle");
-
 
 	zassert_equal(suit_plat_decode_component_type_fake.call_count, 1,
 		      "Incorrect number of suit_plat_decode_component_type() calls");
@@ -488,11 +480,11 @@ ZTEST(suit_plat_components_tests, test_release_component_handle_invalid_handle)
 	int ret;
 
 	/* Handle address to low */
-	ret = suit_plat_release_component_handle((suit_component_t) 0);
+	ret = suit_plat_release_component_handle((suit_component_t)0);
 	zassert_equal(SUIT_ERR_UNSUPPORTED_COMPONENT_ID, ret, "Incorrect returned error code");
 
 	/* Handle address to high */
-	ret = suit_plat_release_component_handle((suit_component_t) 0xFFFFFF00);
+	ret = suit_plat_release_component_handle((suit_component_t)0xFFFFFF00);
 	zassert_equal(SUIT_ERR_UNSUPPORTED_COMPONENT_ID, ret, "Incorrect returned error code");
 
 	zassert_equal(suit_plat_decode_component_type_fake.call_count, 0,
@@ -508,7 +500,8 @@ ZTEST(suit_plat_components_tests, test_release_component_handle_invalid_handle)
 	FFF_RESET_HISTORY();
 	mocks_return_values_reset();
 
-	ret = suit_plat_release_component_handle((suit_component_t)((intptr_t) component_handles[0] + 1));
+	ret = suit_plat_release_component_handle(
+		(suit_component_t)((intptr_t)component_handles[0] + 1));
 	zassert_equal(SUIT_ERR_UNSUPPORTED_COMPONENT_ID, ret, "Incorrect returned error code");
 
 	zassert_equal(suit_plat_decode_component_type_fake.call_count, 0,
@@ -610,9 +603,9 @@ ZTEST(suit_plat_components_tests, test_release_component_handle_mem_mapped_ok)
 		      "Incorrect number of suit_memptr_storage_release() calls");
 
 	ret = suit_plat_component_impl_data_get(component_handles[0], &impl_data);
-	zassert_equal(ret, SUIT_ERR_UNSUPPORTED_COMPONENT_ID,
-		 "Retrieving impl_data did not fail with appropriate error after releasing handle");
-
+	zassert_equal(
+		ret, SUIT_ERR_UNSUPPORTED_COMPONENT_ID,
+		"Retrieving impl_data did not fail with appropriate error after releasing handle");
 
 	/* TYPE CAND_IMG */
 	create_valid_component(SUIT_COMPONENT_TYPE_CAND_IMG);
@@ -630,8 +623,9 @@ ZTEST(suit_plat_components_tests, test_release_component_handle_mem_mapped_ok)
 		      "Incorrect number of suit_memptr_storage_release() calls");
 
 	ret = suit_plat_component_impl_data_get(component_handles[0], &impl_data);
-	zassert_equal(ret, SUIT_ERR_UNSUPPORTED_COMPONENT_ID,
-		 "Retrieving impl_data did not fail with appropriate error after releasing handle");
+	zassert_equal(
+		ret, SUIT_ERR_UNSUPPORTED_COMPONENT_ID,
+		"Retrieving impl_data did not fail with appropriate error after releasing handle");
 
 	/* TYPE CAND_MFST */
 	create_valid_component(SUIT_COMPONENT_TYPE_CAND_MFST);
@@ -649,9 +643,9 @@ ZTEST(suit_plat_components_tests, test_release_component_handle_mem_mapped_ok)
 		      "Incorrect number of suit_memptr_storage_release() calls");
 
 	ret = suit_plat_component_impl_data_get(component_handles[0], &impl_data);
-	zassert_equal(ret, SUIT_ERR_UNSUPPORTED_COMPONENT_ID,
-		 "Retrieving impl_data did not fail with appropriate error after releasing handle");
-
+	zassert_equal(
+		ret, SUIT_ERR_UNSUPPORTED_COMPONENT_ID,
+		"Retrieving impl_data did not fail with appropriate error after releasing handle");
 }
 
 ZTEST(suit_plat_components_tests, test_release_component_handle_other_type_ok)
@@ -660,7 +654,8 @@ ZTEST(suit_plat_components_tests, test_release_component_handle_other_type_ok)
 	int ret;
 
 	/* Currently releasing component of unsupported type will succeed but will not
-	   do anything apart marking the component as not used. */
+	 * do anything apart marking the component as not used.
+	 */
 	create_valid_component(SUIT_COMPONENT_TYPE_SOC_SPEC);
 
 	component_type = SUIT_COMPONENT_TYPE_SOC_SPEC;
@@ -677,8 +672,9 @@ ZTEST(suit_plat_components_tests, test_release_component_handle_other_type_ok)
 		      "Incorrect number of suit_memptr_storage_release() calls");
 
 	ret = suit_plat_component_impl_data_get(component_handles[0], &impl_data);
-	zassert_equal(ret, SUIT_ERR_UNSUPPORTED_COMPONENT_ID,
-		 "Retrieving impl_data did not fail with appropriate error after releasing handle");
+	zassert_equal(
+		ret, SUIT_ERR_UNSUPPORTED_COMPONENT_ID,
+		"Retrieving impl_data did not fail with appropriate error after releasing handle");
 }
 
 ZTEST(suit_plat_components_tests, test_impl_data_set_component_not_created)
@@ -693,9 +689,9 @@ ZTEST(suit_plat_components_tests, test_impl_data_set_component_not_created)
 ZTEST(suit_plat_components_tests, test_impl_data_get_component_not_created)
 {
 	int ret;
-	uint8_t* data_out;
+	uint8_t *data_out;
 
-	ret = suit_plat_component_impl_data_get(component_handles[0], (void**) &data_out);
+	ret = suit_plat_component_impl_data_get(component_handles[0], (void **)&data_out);
 	zassert_equal(SUIT_ERR_UNSUPPORTED_COMPONENT_ID, ret, "Incorrect returned error code");
 }
 
@@ -703,14 +699,14 @@ ZTEST(suit_plat_components_tests, test_impl_data_set_get_ok)
 {
 	int ret;
 	uint8_t data;
-	uint8_t* data_out;
+	uint8_t *data_out;
 
 	create_valid_component(SUIT_COMPONENT_TYPE_MEM);
 
 	ret = suit_plat_component_impl_data_set(component_handles[0], &data);
 	zassert_equal(SUIT_SUCCESS, ret, "Setting implementation data failed");
 
-	ret = suit_plat_component_impl_data_get(component_handles[0], (void**) &data_out);
+	ret = suit_plat_component_impl_data_get(component_handles[0], (void **)&data_out);
 	zassert_equal(SUIT_SUCCESS, ret, "Getting implementation data failed");
 
 	zassert_equal_ptr(&data, data_out);
@@ -753,6 +749,7 @@ ZTEST(suit_plat_components_tests, test_type_get_decoding_failed)
 {
 	int ret;
 	suit_component_type_t type_out;
+
 	create_valid_component(SUIT_COMPONENT_TYPE_MEM);
 
 	suit_plat_decode_component_type_fake.return_val = SUIT_PLAT_ERR_CBOR_DECODING;
@@ -768,6 +765,7 @@ ZTEST(suit_plat_components_tests, test_type_get_mem_ok)
 {
 	int ret;
 	suit_component_type_t type_out;
+
 	create_valid_component(SUIT_COMPONENT_TYPE_MEM);
 
 	suit_plat_decode_component_type_fake.custom_fake =

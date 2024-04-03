@@ -57,6 +57,7 @@ ZTEST_SUITE(suit_platform_authorize_process_dependency_tests, NULL, NULL, test_b
 ZTEST(suit_platform_authorize_process_dependency_tests, test_null_parent_component_id)
 {
 	int class_id_decode_results[] = {SUIT_PLAT_ERR_INVAL};
+
 	SET_RETURN_SEQ(suit_plat_decode_manifest_class_id, class_id_decode_results,
 		       ARRAY_SIZE(class_id_decode_results));
 
@@ -82,6 +83,7 @@ ZTEST(suit_platform_authorize_process_dependency_tests, test_null_parent_compone
 ZTEST(suit_platform_authorize_process_dependency_tests, test_null_child_component_id)
 {
 	int class_id_decode_results[] = {SUIT_PLAT_SUCCESS, SUIT_PLAT_ERR_INVAL};
+
 	SET_RETURN_SEQ(suit_plat_decode_manifest_class_id, class_id_decode_results,
 		       ARRAY_SIZE(class_id_decode_results));
 

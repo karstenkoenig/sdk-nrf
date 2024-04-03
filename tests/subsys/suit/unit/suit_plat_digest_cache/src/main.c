@@ -61,8 +61,7 @@ static int add_digest_for_component(int index)
 	struct zcbor_string component_id;
 	struct zcbor_string digest;
 
-	if (index < sizeof(component_id_lengths)/sizeof(size_t))
-	{
+	if (index < sizeof(component_id_lengths) / sizeof(size_t)) {
 		component_id.len = component_id_lengths[index];
 		component_id.value = component_ids_mem[index];
 		digest.len = digest_lengths[index];
@@ -79,8 +78,7 @@ static int remove_digest(int index)
 	int ret;
 	struct zcbor_string component_id;
 
-	if (index < sizeof(component_id_lengths)/sizeof(size_t))
-	{
+	if (index < sizeof(component_id_lengths) / sizeof(size_t)) {
 		component_id.len = component_id_lengths[index];
 		component_id.value = component_ids_mem[index];
 
@@ -106,22 +104,23 @@ static void verify_matching_component_in_cache(int index)
 {
 	int ret;
 	/* The data of the component_id and digest is copied to make sure the cache compares
-	   the contents of the strings, not their pointers */
+	 * the contents of the strings, not their pointers
+	 */
 	struct zcbor_string component_id_copy;
 	struct zcbor_string digest_copy;
 
-	if (index < sizeof(component_id_lengths)/sizeof(size_t))
-	{
+	if (index < sizeof(component_id_lengths) / sizeof(size_t)) {
 		component_id_copy.len = component_id_lengths[index];
 		component_id_copy.value = component_id_copies_mem[index];
 		digest_copy.len = digest_lengths[index];
 		digest_copy.value = digest_copies_mem[index];
 
+		ret = suit_plat_digest_cache_compare(&component_id_copy, suit_cose_sha256,
+						     &digest_copy);
 
-		ret = suit_plat_digest_cache_compare(&component_id_copy, suit_cose_sha256, &digest_copy);
-
-		zassert_equal(SUIT_SUCCESS, ret, "Matching digest for a given component ID"
-						 " was not found");
+		zassert_equal(SUIT_SUCCESS, ret,
+			      "Matching digest for a given component ID"
+			      " was not found");
 	}
 }
 
@@ -131,33 +130,32 @@ static void verify_component_missing_from_cache(int index)
 
 	struct zcbor_string component_id;
 
-	if (index < sizeof(component_id_lengths)/sizeof(size_t))
-	{
+	if (index < sizeof(component_id_lengths) / sizeof(size_t)) {
 		component_id.len = component_id_lengths[index];
 		component_id.value = component_ids_mem[index];
 
 		/* Value of the digest does not matter, it won't be verified due to the missing
-		   component ID */
+		 * component ID
+		 */
 		ret = suit_plat_digest_cache_compare(&component_id, suit_cose_sha256, NULL);
 
 		zassert_equal(SUIT_ERR_MISSING_COMPONENT, ret,
-			  "Attempt to retrieve missing does not report correctly");
+			      "Attempt to retrieve missing does not report correctly");
 	}
 }
-
 
 static void verify_cache_is_empty(void)
 {
 	int ret;
 	struct zcbor_string component_id;
 
-	for (size_t i = 0; i < sizeof(component_id_lengths)/sizeof(size_t); i++)
-	{
+	for (size_t i = 0; i < sizeof(component_id_lengths) / sizeof(size_t); i++) {
 		component_id.len = component_id_lengths[i];
 		component_id.value = component_ids_mem[i];
 
 		/* Value of the digest does not matter, it won't be verified due to the missing
-		   component ID */
+		 * component ID
+		 */
 		ret = suit_plat_digest_cache_compare(&component_id, suit_cose_sha256, NULL);
 		zassert_equal(SUIT_ERR_MISSING_COMPONENT, ret, "Cache is not empty");
 	}
@@ -202,7 +200,7 @@ ZTEST(suit_plat_digest_cache_tests, test_cache_add_when_full)
 
 	ret = add_digest_for_component(3);
 	zassert_equal(SUIT_ERR_OVERFLOW, ret,
-			  "Adding element to full cache does not return overflow");
+		      "Adding element to full cache does not return overflow");
 
 	verify_component_missing_from_cache(3);
 
@@ -266,7 +264,7 @@ ZTEST(suit_plat_digest_cache_tests, test_replace_existing_component)
 	digest.len = digest_lengths[4];
 	digest.value = digests_mem[4];
 
-	// Replace the component digest with a new digest
+	/* Replace the component digest with a new digest */
 	ret = suit_plat_digest_cache_add(&component_id, suit_cose_sha256, &digest);
 	zassert_equal(SUIT_SUCCESS, ret, "Replacing the component digest failed");
 
@@ -295,8 +293,9 @@ ZTEST(suit_plat_digest_cache_tests, test_not_matching_same_length)
 	mismatched_digest.value = digests_mem[3];
 
 	ret = suit_plat_digest_cache_compare(&component_id, suit_cose_sha256, &mismatched_digest);
-	zassert_equal(SUIT_FAIL_CONDITION, ret, "Comparing against a mismatched digest"
-						" does not return the correct error code");
+	zassert_equal(SUIT_FAIL_CONDITION, ret,
+		      "Comparing against a mismatched digest"
+		      " does not return the correct error code");
 
 	zassert_equal(k_mutex_lock_fake.call_count, k_mutex_unlock_fake.call_count);
 }
@@ -317,12 +316,12 @@ ZTEST(suit_plat_digest_cache_tests, test_not_matching_same_content_different_len
 	mismatched_digest.value = digests_mem[0];
 
 	ret = suit_plat_digest_cache_compare(&component_id, suit_cose_sha256, &mismatched_digest);
-	zassert_equal(SUIT_FAIL_CONDITION, ret, "Comparing against a mismatched digest"
-						" does not return the correct error code");
+	zassert_equal(SUIT_FAIL_CONDITION, ret,
+		      "Comparing against a mismatched digest"
+		      " does not return the correct error code");
 
 	zassert_equal(k_mutex_lock_fake.call_count, k_mutex_unlock_fake.call_count);
 }
-
 
 ZTEST(suit_plat_digest_cache_tests, test_remove_single)
 {
@@ -358,9 +357,11 @@ ZTEST(suit_plat_digest_cache_tests, test_removing_from_full_cache_frees_slot)
 ZTEST(suit_plat_digest_cache_tests, test_remove_all)
 {
 	int ret;
+
 	fill_cache();
 
 	ret = suit_plat_digest_cache_remove_all();
+
 	zassert_equal(SUIT_SUCCESS, ret, "Removing all elements from cache failed");
 
 	verify_cache_is_empty();
@@ -371,6 +372,7 @@ ZTEST(suit_plat_digest_cache_tests, test_remove_all)
 ZTEST(suit_plat_digest_cache_tests, test_remove_all_one_by_one)
 {
 	int ret;
+
 	fill_cache();
 
 	ret = remove_digest(0);
@@ -391,7 +393,7 @@ ZTEST(suit_plat_digest_cache_tests, test_suit_plat_digest_cache_remove_by_handle
 {
 	int ret;
 	int dummy = 0;
-	suit_component_t handle = (intptr_t) &dummy; // just ensure that it's a valid address
+	suit_component_t handle = (intptr_t)&dummy; /* just ensure that it's a valid address */
 
 	fill_cache();
 
@@ -400,11 +402,11 @@ ZTEST(suit_plat_digest_cache_tests, test_suit_plat_digest_cache_remove_by_handle
 	ret = suit_plat_digest_cache_remove_by_handle(handle);
 
 	zassert_equal(SUIT_ERR_MISSING_COMPONENT, ret,
-			  "Removing based on unavailable handle does not report correctly");
+		      "Removing based on unavailable handle does not report correctly");
 	zassert_equal(suit_plat_component_id_get_fake.call_count, 1,
 		      "Incorrect number of suit_plat_component_id_get() calls");
 	zassert_equal(suit_plat_component_id_get_fake.arg0_val, handle,
-			  "Incorrect handle passed to suit_plat_component_id_get()");
+		      "Incorrect handle passed to suit_plat_component_id_get()");
 
 	zassert_equal(k_mutex_lock_fake.call_count, k_mutex_unlock_fake.call_count);
 }
@@ -413,7 +415,7 @@ ZTEST(suit_plat_digest_cache_tests, test_suit_plat_digest_cache_remove_by_handle
 {
 	int ret;
 	int dummy = 0;
-	suit_component_t handle = (intptr_t) &dummy; // just ensure that it's a valid address
+	suit_component_t handle = (intptr_t)&dummy; /* just ensure that it's a valid address */
 
 	fill_cache();
 
@@ -425,14 +427,14 @@ ZTEST(suit_plat_digest_cache_tests, test_suit_plat_digest_cache_remove_by_handle
 	ret = suit_plat_digest_cache_remove_by_handle(handle);
 
 	zassert_equal(SUIT_SUCCESS, ret,
-			  "Removing based on unavailable handle does not report correctly");
+		      "Removing based on unavailable handle does not report correctly");
 	zassert_equal(suit_plat_component_id_get_fake.call_count, 1,
 		      "Incorrect number of suit_plat_component_id_get() calls");
 	zassert_equal(suit_plat_component_id_get_fake.arg0_val, handle,
-			  "Incorrect handle passed to suit_plat_component_id_get()");
+		      "Incorrect handle passed to suit_plat_component_id_get()");
 
 	verify_component_missing_from_cache(0);
-	verify_matching_component_in_cache(1); // Verify other components were not deleted
+	verify_matching_component_in_cache(1); /* Verify other components were not deleted */
 
 	zassert_equal(k_mutex_lock_fake.call_count, k_mutex_unlock_fake.call_count);
 }
@@ -441,7 +443,7 @@ ZTEST(suit_plat_digest_cache_tests, test_suit_plat_digest_cache_remove_by_handle
 {
 	int ret;
 	int dummy = 0;
-	suit_component_t handle = (intptr_t) &dummy; // just ensure that it's a valid address
+	suit_component_t handle = (intptr_t)&dummy; /* just ensure that it's a valid address */
 
 	fill_cache();
 
@@ -453,11 +455,11 @@ ZTEST(suit_plat_digest_cache_tests, test_suit_plat_digest_cache_remove_by_handle
 	ret = suit_plat_digest_cache_remove_by_handle(handle);
 
 	zassert_equal(SUIT_SUCCESS, ret,
-			  "Removing based on unavailable handle does not report correctly");
+		      "Removing based on unavailable handle does not report correctly");
 	zassert_equal(suit_plat_component_id_get_fake.call_count, 1,
 		      "Incorrect number of suit_plat_component_id_get() calls");
 	zassert_equal(suit_plat_component_id_get_fake.arg0_val, handle,
-			  "Incorrect handle passed to suit_plat_component_id_get()");
+		      "Incorrect handle passed to suit_plat_component_id_get()");
 
 	verify_component_missing_from_cache(1);
 
@@ -519,7 +521,7 @@ ZTEST(suit_plat_digest_cache_tests, test_remove_by_handle_mutex_lock_failed)
 {
 	int ret = 0;
 	int dummy = 0;
-	suit_component_t handle = (intptr_t) &dummy; // just ensure that it's a valid address
+	suit_component_t handle = (intptr_t)&dummy; /* just ensure that it's a valid address */
 
 	fill_cache();
 	suit_plat_component_id_get_fake.custom_fake = suit_plat_component_id_get_correct_fake_func;

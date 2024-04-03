@@ -28,10 +28,12 @@ static void test_suite_before(void *f)
 {
 	/* Execute SUIT storage init, so the MPI area is copied into a backup region. */
 	int err = suit_storage_init();
+
 	zassert_equal(SUIT_PLAT_SUCCESS, err, "Failed to init and backup suit storage (%d)", err);
 
 	/* Clear the whole nordic area */
 	const struct device *fdev = DEVICE_DT_GET(DT_CHOSEN(zephyr_flash_controller));
+
 	zassert_not_null(fdev, "Unable to find a driver to erase storage area");
 
 	err = flash_erase(fdev, SUIT_STORAGE_OFFSET, SUIT_STORAGE_SIZE);

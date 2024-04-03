@@ -35,9 +35,11 @@ ZTEST(sink_selector_tests, test_select_memptr_sink_OK)
 	struct stream_sink sink;
 
 	int ret = suit_plat_create_component_handle(&valid_component_id, &handle);
+
 	zassert_equal(ret, SUIT_SUCCESS, "create_component_handle failed - error %i", ret);
 
 	int err = suit_sink_select(handle, &sink);
+
 	zassert_equal(err, SUIT_SUCCESS, "sink_selector: selecting memptr_sink failed - error %i",
 		      err);
 }
@@ -46,8 +48,8 @@ ZTEST(sink_selector_tests, test_select_flash_sink_OK)
 {
 	suit_component_t handle;
 	/* [h'MEM', h'02', h'1A00080000', h'191000'] */
-	uint8_t valid_value[] = {0x84, 0x44, 0x63, 'M',	 'E',  'M',  0x41, 0x02, 0x45, 0x1A,
-				 0x00, 0x08, 0x00, 0x00, 0x43, 0x19, 0x10, 0x00};
+	uint8_t valid_value[] = {0x84, 0x44, 0x63, 'M',	 'E',  'M',  0x41, 0x02, 0x45,
+				 0x1A, 0x00, 0x08, 0x00, 0x00, 0x43, 0x19, 0x10, 0x00};
 	struct zcbor_string valid_component_id = {
 		.value = valid_value,
 		.len = sizeof(valid_value),
@@ -55,9 +57,11 @@ ZTEST(sink_selector_tests, test_select_flash_sink_OK)
 	struct stream_sink sink;
 
 	int ret = suit_plat_create_component_handle(&valid_component_id, &handle);
+
 	zassert_equal(ret, SUIT_SUCCESS, "create_component_handle failed - error %i", ret);
 
 	int err = suit_sink_select(handle, &sink);
+
 	zassert_equal(err, SUIT_SUCCESS, "sink_selector: selecting flash_sink failed - error %i",
 		      err);
 }
@@ -67,8 +71,8 @@ ZTEST(sink_selector_tests, test_select_ram_sink_OK)
 	suit_component_t handle;
 
 	/* ['MEM', h'02', h'1A20000000', h'191000'] */
-	uint8_t valid_value[] = {0x84, 0x44, 0x63, 'M',	 'E',  'M',  0x41, 0x02, 0x45, 0x1A,
-				 0x20, 0x00, 0x00, 0x00, 0x43, 0x19, 0x10, 0x00};
+	uint8_t valid_value[] = {0x84, 0x44, 0x63, 'M',	 'E',  'M',  0x41, 0x02, 0x45,
+				 0x1A, 0x20, 0x00, 0x00, 0x00, 0x43, 0x19, 0x10, 0x00};
 
 	struct zcbor_string valid_component_id = {
 		.value = valid_value,
@@ -77,9 +81,11 @@ ZTEST(sink_selector_tests, test_select_ram_sink_OK)
 	struct stream_sink sink;
 
 	int ret = suit_plat_create_component_handle(&valid_component_id, &handle);
+
 	zassert_equal(ret, SUIT_SUCCESS, "create_component_handle failed - error %i", ret);
 
 	int err = suit_sink_select(handle, &sink);
+
 	zassert_equal(err, SUIT_SUCCESS, "sink_selector: selecting flash_sink failed - error %i",
 		      err);
 }
@@ -98,9 +104,11 @@ ZTEST(sink_selector_tests, test_select_sdfw_sink_OK)
 	struct stream_sink sink;
 
 	int ret = suit_plat_create_component_handle(&valid_component_id, &handle);
+
 	zassert_equal(ret, SUIT_SUCCESS, "create_component_handle failed - error %i", ret);
 
 	int err = suit_sink_select(handle, &sink);
+
 	zassert_equal(err, SUIT_SUCCESS, "sink_selector: selecting swdf_sink failed - error %i",
 		      err);
 }
@@ -111,14 +119,15 @@ ZTEST(sink_selector_tests, test_select_invalid_component_id)
 {
 	suit_component_t handle;
 	/* [h'MEM', h'02', h'1000080000', h'08'] */
-	uint8_t invalid_value[] = {0x84, 0x44, 0x63, 'M',  'E',	 'M',  0x41, 0x02, 0x45, 0x10,
-				   0x00, 0x08, 0x00, 0x00, 0x41, 0x08};
+	uint8_t invalid_value[] = {0x84, 0x44, 0x63, 'M',  'E',	 'M',  0x41, 0x02,
+				   0x45, 0x10, 0x00, 0x08, 0x00, 0x00, 0x41, 0x08};
 	struct zcbor_string invalid_component_id = {
 		.value = invalid_value,
 		.len = sizeof(invalid_value),
 	};
 
 	int ret = suit_plat_create_component_handle(&invalid_component_id, &handle);
+
 	zassert_equal(ret, SUIT_ERR_UNSUPPORTED_COMPONENT_ID,
 		      "create_component_handle unexpected error %i", ret);
 }
@@ -138,9 +147,11 @@ ZTEST(sink_selector_tests, test_select_unsupported_component)
 	struct stream_sink sink;
 
 	int ret = suit_plat_create_component_handle(&invalid_component_id, &handle);
+
 	zassert_equal(ret, SUIT_SUCCESS, "create_component_handle failed - error %i", ret);
 
 	int err = suit_sink_select(handle, &sink);
+
 	zassert_not_equal(err, SUIT_SUCCESS,
 			  "sink_selector should have failed - unsupported component");
 }
@@ -151,5 +162,6 @@ ZTEST(sink_selector_tests, test_suit_sink_select_invalid_handle)
 	struct stream_sink sink;
 
 	int err = suit_sink_select(handle, &sink);
+
 	zassert_not_equal(err, SUIT_SUCCESS, "sink_selector should have failed - invalid handle");
 }

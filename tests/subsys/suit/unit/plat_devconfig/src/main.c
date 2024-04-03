@@ -117,7 +117,8 @@ static mci_err_t suit_mci_downgrade_prevention_policy_get_unsupported_fake_func(
 ZTEST(suit_platform_devconfig_seq_tests, test_null_arg)
 {
 	/* WHEN platform is asked for authorization of INSTALL sequence from manifest with sequence
-	 * number 1 and NULL component ID */
+	 * number 1 and NULL component ID
+	 */
 	int ret = suit_plat_authorize_sequence_num(SUIT_SEQ_INSTALL, NULL, 1);
 
 	/* THEN manifest is not authorized... */
@@ -146,7 +147,8 @@ ZTEST(suit_platform_devconfig_seq_tests, test_null_component_id)
 	invalid_manifest_component_id.len = 123;
 
 	/* WHEN platform is asked for authorization of INSTALL sequence from manifest with sequence
-	 * number 1 */
+	 * number 1
+	 */
 	int ret = suit_plat_authorize_sequence_num(SUIT_SEQ_INSTALL, &invalid_manifest_component_id,
 						   1);
 
@@ -174,7 +176,8 @@ ZTEST(suit_platform_devconfig_seq_tests, test_invalid_manifest_component_id)
 		suit_plat_decode_manifest_class_id_invalid_fake_func;
 
 	/* WHEN platform is asked for authorization of INSTALL sequence from manifest with sequence
-	 * number 1 */
+	 * number 1
+	 */
 	int ret =
 		suit_plat_authorize_sequence_num(SUIT_SEQ_INSTALL, &valid_manifest_component_id, 1);
 
@@ -205,7 +208,8 @@ ZTEST(suit_platform_devconfig_seq_tests, test_unsupported_class_id)
 	suit_mci_manifest_class_id_validate_fake.return_val = MCI_ERR_MANIFESTCLASSID;
 
 	/* WHEN platform is asked for authorization of INSTALL sequence from manifest with sequence
-	 * number 1 */
+	 * number 1
+	 */
 	int ret =
 		suit_plat_authorize_sequence_num(SUIT_SEQ_INSTALL, &valid_manifest_component_id, 1);
 
@@ -258,7 +262,8 @@ ZTEST(suit_platform_devconfig_seq_tests, test_boot_no_installed_envelope)
 			suit_mci_downgrade_prevention_policy_get_enabled_fake_func;
 
 		/* WHEN platform is asked for authorization of VALIDATE, LOAD or INVOKE sequence
-		 * from manifest with sequence number 1 */
+		 * from manifest with sequence number 1
+		 */
 		int ret = suit_plat_authorize_sequence_num(suit_seq[i],
 							   &valid_manifest_component_id, 1);
 
@@ -313,7 +318,8 @@ ZTEST(suit_platform_devconfig_seq_tests, test_update_no_installed_envelope)
 			suit_mci_downgrade_prevention_policy_get_enabled_fake_func;
 
 		/* WHEN platform is asked for authorization of PARSE, SHARED, DEP_RESOLUTION,
-		 * PAYLOAD_FETCH, INSTALL, sequence from manifest with sequence number 1 */
+		 * PAYLOAD_FETCH, INSTALL, sequence from manifest with sequence number 1
+		 */
 		int ret = suit_plat_authorize_sequence_num(suit_seq[i],
 							   &valid_manifest_component_id, 1);
 
@@ -365,7 +371,8 @@ ZTEST(suit_platform_devconfig_seq_tests, test_decode_busy)
 			suit_processor_get_manifest_metadata_decoder_busy_fake_func;
 
 		/* WHEN platform is asked for authorization of any sequence from manifest with
-		 * sequence number 1 */
+		 * sequence number 1
+		 */
 		int ret = suit_plat_authorize_sequence_num(suit_seq[i],
 							   &valid_manifest_component_id, 1);
 
@@ -411,7 +418,8 @@ ZTEST(suit_platform_devconfig_seq_tests, test_manifest_present_no_downgrade_poli
 	suit_mci_downgrade_prevention_policy_get_fake.return_val = MCI_ERR_MANIFESTCLASSID;
 
 	/* WHEN platform is asked for authorization of INSTALL sequence from manifest with sequence
-	 * number 1 */
+	 * number 1
+	 */
 	int ret =
 		suit_plat_authorize_sequence_num(SUIT_SEQ_INSTALL, &valid_manifest_component_id, 1);
 
@@ -455,7 +463,8 @@ ZTEST(suit_platform_devconfig_seq_tests, test_manifest_present_unsupported_downg
 		suit_mci_downgrade_prevention_policy_get_unsupported_fake_func;
 
 	/* WHEN platform is asked for authorization of INSTALL sequence from manifest with sequence
-	 * number 1 */
+	 * number 1
+	 */
 	int ret =
 		suit_plat_authorize_sequence_num(SUIT_SEQ_INSTALL, &valid_manifest_component_id, 1);
 
@@ -512,7 +521,8 @@ ZTEST(suit_platform_devconfig_seq_tests, test_update_manifest_present_disabled_d
 				suit_mci_downgrade_prevention_policy_get_disabled_fake_func;
 
 			/* WHEN platform is asked for authorization of any sequence from manifest
-			 * with any sequence number */
+			 * with any sequence number
+			 */
 			int ret = suit_plat_authorize_sequence_num(
 				suit_seq[i], &valid_manifest_component_id, seq_num);
 
@@ -535,7 +545,8 @@ ZTEST(suit_platform_devconfig_seq_tests, test_update_manifest_present_disabled_d
 				suit_storage_installed_envelope_get_fake.call_count, 1,
 				"Incorrect number of suit_storage_installed_envelope_get() calls");
 			/* ... and class ID is extracted from the envelope stored inside SUIT
-			 * storage */
+			 * storage
+			 */
 			zassert_equal(
 				suit_processor_get_manifest_metadata_fake.call_count, 1,
 				"Incorrect number of suit_processor_get_manifest_metadata() calls");
@@ -580,7 +591,8 @@ ZTEST(suit_platform_devconfig_seq_tests, test_boot_manifest_present_disabled_dow
 				suit_mci_downgrade_prevention_policy_get_disabled_fake_func;
 
 			/* WHEN platform is asked for authorization of any sequence from manifest
-			 * with any sequence number */
+			 * with any sequence number
+			 */
 			int ret = suit_plat_authorize_sequence_num(
 				suit_seq[i], &valid_manifest_component_id, seq_num);
 
@@ -594,7 +606,8 @@ ZTEST(suit_platform_devconfig_seq_tests, test_boot_manifest_present_disabled_dow
 					      suit_seq[i], seq_num);
 
 				/* ... and manifest class ID is decoded from the manifest component
-				 * ID */
+				 * ID
+				 */
 				zassert_equal(suit_plat_decode_manifest_class_id_fake.call_count, 1,
 					      "Incorrect number of "
 					      "suit_plat_decode_manifest_class_id() calls");
@@ -610,7 +623,8 @@ ZTEST(suit_platform_devconfig_seq_tests, test_boot_manifest_present_disabled_dow
 					      "Incorrect number of "
 					      "suit_storage_installed_envelope_get() calls");
 				/* ... and class ID is extracted from the envelope stored inside
-				 * SUIT storage */
+				 * SUIT storage
+				 */
 				zassert_equal(suit_processor_get_manifest_metadata_fake.call_count,
 					      1,
 					      "Incorrect number of "
@@ -633,7 +647,8 @@ ZTEST(suit_platform_devconfig_seq_tests, test_boot_manifest_present_disabled_dow
 					      suit_seq[i], seq_num);
 
 				/* ... and manifest class ID is decoded from the manifest component
-				 * ID */
+				 * ID
+				 */
 				zassert_equal(suit_plat_decode_manifest_class_id_fake.call_count, 1,
 					      "Incorrect number of "
 					      "suit_plat_decode_manifest_class_id() calls");
@@ -649,7 +664,8 @@ ZTEST(suit_platform_devconfig_seq_tests, test_boot_manifest_present_disabled_dow
 					      "Incorrect number of "
 					      "suit_storage_installed_envelope_get() calls");
 				/* ... and class ID is extracted from the envelope stored inside
-				 * SUIT storage */
+				 * SUIT storage
+				 */
 				zassert_equal(suit_processor_get_manifest_metadata_fake.call_count,
 					      1,
 					      "Incorrect number of "
@@ -696,13 +712,15 @@ ZTEST(suit_platform_devconfig_seq_tests, test_update_manifest_present_enabled_do
 				suit_mci_downgrade_prevention_policy_get_enabled_fake_func;
 
 			/* WHEN platform is asked for authorization of any sequence from manifest
-			 * with any sequence number */
+			 * with any sequence number
+			 */
 			int ret = suit_plat_authorize_sequence_num(
 				suit_seq[i], &valid_manifest_component_id, seq_num);
 
 			if (seq_num >= 1) {
 				/* .. and the sequence number is not smaller than the installed
-				 * envelope sequence */
+				 * envelope sequence
+				 */
 
 				/* THEN manifest is authorized... */
 				zassert_equal(SUIT_SUCCESS, ret,
@@ -711,7 +729,8 @@ ZTEST(suit_platform_devconfig_seq_tests, test_update_manifest_present_enabled_do
 					      suit_seq[i], seq_num);
 
 				/* ... and manifest class ID is decoded from the manifest component
-				 * ID */
+				 * ID
+				 */
 				zassert_equal(suit_plat_decode_manifest_class_id_fake.call_count, 1,
 					      "Incorrect number of "
 					      "suit_plat_decode_manifest_class_id() calls");
@@ -727,7 +746,8 @@ ZTEST(suit_platform_devconfig_seq_tests, test_update_manifest_present_enabled_do
 					      "Incorrect number of "
 					      "suit_storage_installed_envelope_get() calls");
 				/* ... and class ID is extracted from the envelope stored inside
-				 * SUIT storage */
+				 * SUIT storage
+				 */
 				zassert_equal(suit_processor_get_manifest_metadata_fake.call_count,
 					      1,
 					      "Incorrect number of "
@@ -750,7 +770,8 @@ ZTEST(suit_platform_devconfig_seq_tests, test_update_manifest_present_enabled_do
 					      suit_seq[i], seq_num);
 
 				/* ... and manifest class ID is decoded from the manifest component
-				 * ID */
+				 * ID
+				 */
 				zassert_equal(suit_plat_decode_manifest_class_id_fake.call_count, 1,
 					      "Incorrect number of "
 					      "suit_plat_decode_manifest_class_id() calls");
@@ -766,7 +787,8 @@ ZTEST(suit_platform_devconfig_seq_tests, test_update_manifest_present_enabled_do
 					      "Incorrect number of "
 					      "suit_storage_installed_envelope_get() calls");
 				/* ... and class ID is extracted from the envelope stored inside
-				 * SUIT storage */
+				 * SUIT storage
+				 */
 				zassert_equal(suit_processor_get_manifest_metadata_fake.call_count,
 					      1,
 					      "Incorrect number of "

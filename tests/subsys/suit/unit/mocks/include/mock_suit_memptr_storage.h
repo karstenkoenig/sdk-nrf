@@ -14,8 +14,10 @@
 
 FAKE_VALUE_FUNC(int, suit_memptr_storage_get, memptr_storage_handle_t *);
 FAKE_VALUE_FUNC(int, suit_memptr_storage_release, memptr_storage_handle_t);
-FAKE_VALUE_FUNC(int, suit_memptr_storage_ptr_store, memptr_storage_handle_t, const uint8_t *, size_t);
-FAKE_VALUE_FUNC(int, suit_memptr_storage_ptr_get, memptr_storage_handle_t, const uint8_t **, size_t *);
+FAKE_VALUE_FUNC(int, suit_memptr_storage_ptr_store, memptr_storage_handle_t, const uint8_t *,
+		size_t);
+FAKE_VALUE_FUNC(int, suit_memptr_storage_ptr_get, memptr_storage_handle_t, const uint8_t **,
+		size_t *);
 
 static inline void mock_suit_memptr_storage_reset(void)
 {

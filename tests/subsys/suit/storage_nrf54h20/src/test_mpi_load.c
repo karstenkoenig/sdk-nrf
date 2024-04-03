@@ -12,6 +12,7 @@ static void test_suite_before(void *f)
 {
 	/* Reinitialize MPI, so it clears all internal state variables. */
 	suit_plat_err_t err = suit_storage_mpi_init();
+
 	zassert_equal(err, SUIT_PLAT_SUCCESS, "Failed to init SUIT MPI module (%d)", err);
 }
 

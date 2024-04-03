@@ -6,7 +6,8 @@
 
 /* @brief File with copies of selected function headers
  * to satisfy the compiler. The real header includes unneeded bloat from
- * zephyr/device.h */
+ * zephyr/device.h
+ */
 
 #ifndef SUIT_MEMORY_LAYOUT_H__
 #define SUIT_MEMORY_LAYOUT_H__

@@ -26,6 +26,7 @@ extern const size_t manifest_len;
 static void *test_suit_setup(void)
 {
 	int err = suit_mci_init();
+
 	zassert_equal(err, SUIT_PLAT_SUCCESS, "Unable to initialize MCI module");
 
 #ifdef CONFIG_ARCH_POSIX

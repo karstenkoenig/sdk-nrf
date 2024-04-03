@@ -15,11 +15,11 @@
 #include <suit_plat_mem_util.h>
 #include <suit_memory_layout.h>
 
-#define DFU_PARTITION_OFFSET  FIXED_PARTITION_OFFSET(dfu_partition)
-#define FLASH_WRITE_ADDR (suit_plat_mem_nvm_ptr_get(DFU_PARTITION_OFFSET))
-#define RAM_WRITE_ADDR ((uint8_t*)suit_memory_global_address_to_ram_address(0x2003EC00))
+#define DFU_PARTITION_OFFSET FIXED_PARTITION_OFFSET(dfu_partition)
+#define FLASH_WRITE_ADDR     (suit_plat_mem_nvm_ptr_get(DFU_PARTITION_OFFSET))
+#define RAM_WRITE_ADDR	     ((uint8_t *)suit_memory_global_address_to_ram_address(0x2003EC00))
 
-static uint8_t test_data[] = {0xDE, 0xAD, 0xBE, 0xEF };
+static uint8_t test_data[] = {0xDE, 0xAD, 0xBE, 0xEF};
 
 ZTEST_SUITE(write_tests, NULL, NULL, NULL, NULL, NULL);
 
@@ -30,8 +30,8 @@ ZTEST(write_tests, test_write_to_flash_sink_OK)
 	/* Create handle that will be used as destination */
 	suit_component_t dst_handle;
 	/* [h'MEM', h'02', h'1A000FE000', h'191000'] */
-	uint8_t valid_dst_value[] = {0x84, 0x44, 0x63, 'M',  'E',  'M',	 0x41, 0x02, 0x45, 0x1A,
-				     0x00, 0x0F, 0xE0, 0x00, 0x43, 0x19, 0x10, 0x00};
+	uint8_t valid_dst_value[] = {0x84, 0x44, 0x63, 'M',  'E',  'M',	 0x41, 0x02, 0x45,
+				     0x1A, 0x00, 0x0F, 0xE0, 0x00, 0x43, 0x19, 0x10, 0x00};
 
 	struct zcbor_string valid_dst_component_id = {
 		.value = valid_dst_value,
@@ -39,6 +39,7 @@ ZTEST(write_tests, test_write_to_flash_sink_OK)
 	};
 
 	int ret = suit_plat_create_component_handle(&valid_dst_component_id, &dst_handle);
+
 	zassert_equal(ret, SUIT_SUCCESS, "create_component_handle failed - error %i", ret);
 
 	ret = suit_plat_write(dst_handle, &source);
@@ -46,7 +47,8 @@ ZTEST(write_tests, test_write_to_flash_sink_OK)
 
 	ret = suit_plat_release_component_handle(dst_handle);
 	zassert_equal(ret, SUIT_SUCCESS, "dst_handle release failed - error %i", ret);
-	zassert_mem_equal(FLASH_WRITE_ADDR, test_data, sizeof(test_data), "Data in destination is invalid");
+	zassert_mem_equal(FLASH_WRITE_ADDR, test_data, sizeof(test_data),
+			  "Data in destination is invalid");
 }
 
 ZTEST(write_tests, test_write_to_ram_sink_OK)
@@ -56,8 +58,8 @@ ZTEST(write_tests, test_write_to_ram_sink_OK)
 	/* Create handle that will be used as destination */
 	suit_component_t dst_handle;
 	/* [h'MEM', h'02', h'1A20000000', h'191000'] */
-	uint8_t valid_dst_value[] = {0x84, 0x44, 0x63, 'M',  'E',  'M',	 0x41, 0x02, 0x45, 0x1A,
-				     0x20, 0x03, 0xEC, 0x00, 0x43, 0x19, 0x10, 0x00};
+	uint8_t valid_dst_value[] = {0x84, 0x44, 0x63, 'M',  'E',  'M',	 0x41, 0x02, 0x45,
+				     0x1A, 0x20, 0x03, 0xEC, 0x00, 0x43, 0x19, 0x10, 0x00};
 
 	struct zcbor_string valid_dst_component_id = {
 		.value = valid_dst_value,
@@ -65,6 +67,7 @@ ZTEST(write_tests, test_write_to_ram_sink_OK)
 	};
 
 	int ret = suit_plat_create_component_handle(&valid_dst_component_id, &dst_handle);
+
 	zassert_equal(ret, SUIT_SUCCESS, "create_component_handle failed - error %i", ret);
 
 	ret = suit_plat_write(dst_handle, &source);
@@ -72,7 +75,8 @@ ZTEST(write_tests, test_write_to_ram_sink_OK)
 
 	ret = suit_plat_release_component_handle(dst_handle);
 	zassert_equal(ret, SUIT_SUCCESS, "dst_handle release failed - error %i", ret);
-	zassert_mem_equal(RAM_WRITE_ADDR, test_data, sizeof(test_data), "Data in destination is invalid");
+	zassert_mem_equal(RAM_WRITE_ADDR, test_data, sizeof(test_data),
+			  "Data in destination is invalid");
 }
 
 ZTEST(write_tests, test_write_flash_sink_NOK_size_not_aligned)
@@ -82,8 +86,8 @@ ZTEST(write_tests, test_write_flash_sink_NOK_size_not_aligned)
 	/* Create handle that will be used as destination */
 	suit_component_t dst_handle;
 	/* [h'MEM', h'02', h'1A000FE000', h'10'] */
-	uint8_t valid_dst_value[] = {0x84, 0x44, 0x63, 'M',  'E',  'M',	 0x41, 0x02, 0x45, 0x1A,
-				     0x00, 0x0F, 0xE0, 0x00, 0x41, 0x10};
+	uint8_t valid_dst_value[] = {0x84, 0x44, 0x63, 'M',  'E',  'M',	 0x41, 0x02,
+				     0x45, 0x1A, 0x00, 0x0F, 0xE0, 0x00, 0x41, 0x10};
 
 	struct zcbor_string valid_dst_component_id = {
 		.value = valid_dst_value,
@@ -91,6 +95,7 @@ ZTEST(write_tests, test_write_flash_sink_NOK_size_not_aligned)
 	};
 
 	int ret = suit_plat_create_component_handle(&valid_dst_component_id, &dst_handle);
+
 	zassert_equal(ret, SUIT_SUCCESS, "create_component_handle failed - error %i", ret);
 
 	ret = suit_plat_write(dst_handle, &source);
@@ -108,6 +113,7 @@ ZTEST(write_tests, test_write_flash_sink_NOK_handle_released)
 	suit_component_t dst_handle = 0;
 
 	int ret = suit_plat_write(dst_handle, &source);
+
 	zassert_not_equal(ret, SUIT_SUCCESS, "suit_plat_write should have failed - invalid handle");
 }
 
@@ -116,8 +122,8 @@ ZTEST(write_tests, test_write_to_flash_sink_NOK_source_null)
 	/* Create handle that will be used as destination */
 	suit_component_t dst_handle;
 	/* [h'MEM', h'02', h'1A000FE000', h'191000'] */
-	uint8_t valid_dst_value[] = {0x84, 0x44, 0x63, 'M',  'E',  'M',	 0x41, 0x02, 0x45, 0x1A,
-				     0x00, 0x0F, 0xE0, 0x00, 0x43, 0x19, 0x10, 0x00};
+	uint8_t valid_dst_value[] = {0x84, 0x44, 0x63, 'M',  'E',  'M',	 0x41, 0x02, 0x45,
+				     0x1A, 0x00, 0x0F, 0xE0, 0x00, 0x43, 0x19, 0x10, 0x00};
 
 	struct zcbor_string valid_dst_component_id = {
 		.value = valid_dst_value,
@@ -125,6 +131,7 @@ ZTEST(write_tests, test_write_to_flash_sink_NOK_source_null)
 	};
 
 	int ret = suit_plat_create_component_handle(&valid_dst_component_id, &dst_handle);
+
 	zassert_equal(ret, SUIT_SUCCESS, "create_component_handle failed - error %i", ret);
 
 	ret = suit_plat_write(dst_handle, NULL);
@@ -141,8 +148,8 @@ ZTEST(write_tests, test_write_to_flash_sink_NOK_source_value_null)
 	/* Create handle that will be used as destination */
 	suit_component_t dst_handle;
 	/* [h'MEM', h'02', h'1A000FE000', h'191000'] */
-	uint8_t valid_dst_value[] = {0x84, 0x44, 0x63, 'M',  'E',  'M',	 0x41, 0x02, 0x45, 0x1A,
-				     0x00, 0x0F, 0xE0, 0x00, 0x43, 0x19, 0x10, 0x00};
+	uint8_t valid_dst_value[] = {0x84, 0x44, 0x63, 'M',  'E',  'M',	 0x41, 0x02, 0x45,
+				     0x1A, 0x00, 0x0F, 0xE0, 0x00, 0x43, 0x19, 0x10, 0x00};
 
 	struct zcbor_string valid_dst_component_id = {
 		.value = valid_dst_value,
@@ -150,10 +157,12 @@ ZTEST(write_tests, test_write_to_flash_sink_NOK_source_value_null)
 	};
 
 	int ret = suit_plat_create_component_handle(&valid_dst_component_id, &dst_handle);
+
 	zassert_equal(ret, SUIT_SUCCESS, "create_component_handle failed - error %i", ret);
 
 	ret = suit_plat_write(dst_handle, &source);
-	zassert_not_equal(ret, SUIT_SUCCESS, "suit_plat_write should have failed - source value null");
+	zassert_not_equal(ret, SUIT_SUCCESS,
+			  "suit_plat_write should have failed - source value null");
 
 	ret = suit_plat_release_component_handle(dst_handle);
 	zassert_equal(ret, SUIT_SUCCESS, "dst_handle release failed - error %i", ret);
@@ -166,8 +175,8 @@ ZTEST(write_tests, test_write_to_flash_sink_NOK_source_len_0)
 	/* Create handle that will be used as destination */
 	suit_component_t dst_handle;
 	/* [h'MEM', h'02', h'1A000FE000', h'191000'] */
-	uint8_t valid_dst_value[] = {0x84, 0x44, 0x63, 'M',  'E',  'M',	 0x41, 0x02, 0x45, 0x1A,
-				     0x00, 0x0F, 0xE0, 0x00, 0x43, 0x19, 0x10, 0x00};
+	uint8_t valid_dst_value[] = {0x84, 0x44, 0x63, 'M',  'E',  'M',	 0x41, 0x02, 0x45,
+				     0x1A, 0x00, 0x0F, 0xE0, 0x00, 0x43, 0x19, 0x10, 0x00};
 
 	struct zcbor_string valid_dst_component_id = {
 		.value = valid_dst_value,
@@ -175,6 +184,7 @@ ZTEST(write_tests, test_write_to_flash_sink_NOK_source_len_0)
 	};
 
 	int ret = suit_plat_create_component_handle(&valid_dst_component_id, &dst_handle);
+
 	zassert_equal(ret, SUIT_SUCCESS, "create_component_handle failed - error %i", ret);
 
 	ret = suit_plat_write(dst_handle, &source);

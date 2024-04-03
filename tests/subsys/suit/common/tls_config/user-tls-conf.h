@@ -17,6 +17,10 @@
  *  This file is part of mbed TLS (https://tls.mbed.org)
  */
 
+/*
+ * NOTICE: This file has been modified by Nordic Semiconductor ASA.
+ */
+
 #ifndef USER_MBEDTLS_CONFIG_H
 #define USER_MBEDTLS_CONFIG_H
 
@@ -46,7 +50,7 @@
  * Requires MBEDTLS_ENTROPY_C, MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES
  *
  */
-// #define MBEDTLS_TEST_NULL_ENTROPY
+/* #define MBEDTLS_TEST_NULL_ENTROPY */
 
 /**
  * \def MBEDTLS_NO_PLATFORM_ENTROPY

@@ -51,7 +51,7 @@ static int suit_plat_component_id_get_valid_component_fake_func(suit_component_t
 
 static suit_plat_err_t
 suit_plat_decode_component_type_unknown_fake_func(struct zcbor_string *component_id,
-							      suit_component_type_t *type)
+						  suit_component_type_t *type)
 {
 	zassert_equal(component_id, TEST_COMPONENT_ID, "Unexpected component ID value");
 	zassert_not_equal(type, NULL, "API must provide valid address to get component type value");
@@ -61,7 +61,7 @@ suit_plat_decode_component_type_unknown_fake_func(struct zcbor_string *component
 
 static suit_plat_err_t
 suit_plat_decode_component_type_unsupported_fake_func(struct zcbor_string *component_id,
-								  suit_component_type_t *type)
+						      suit_component_type_t *type)
 {
 	zassert_equal(component_id, TEST_COMPONENT_ID, "Unexpected component ID value");
 	zassert_not_equal(type, NULL, "API must provide valid address to get component type value");
@@ -73,7 +73,7 @@ suit_plat_decode_component_type_unsupported_fake_func(struct zcbor_string *compo
 
 static suit_plat_err_t
 suit_plat_decode_component_type_mem_fake_func(struct zcbor_string *component_id,
-							  suit_component_type_t *type)
+					      suit_component_type_t *type)
 {
 	zassert_equal(component_id, TEST_COMPONENT_ID, "Unexpected component ID value");
 	zassert_not_equal(type, NULL, "API must provide valid address to get component type value");
@@ -85,7 +85,7 @@ suit_plat_decode_component_type_mem_fake_func(struct zcbor_string *component_id,
 
 static suit_plat_err_t
 suit_plat_decode_component_type_cand_img_fake_func(struct zcbor_string *component_id,
-							       suit_component_type_t *type)
+						   suit_component_type_t *type)
 {
 	zassert_equal(component_id, TEST_COMPONENT_ID, "Unexpected component ID value");
 	zassert_not_equal(type, NULL, "API must provide valid address to get component type value");
@@ -97,7 +97,7 @@ suit_plat_decode_component_type_cand_img_fake_func(struct zcbor_string *componen
 
 static suit_plat_err_t
 suit_plat_decode_component_type_instld_fake_func(struct zcbor_string *component_id,
-							     suit_component_type_t *type)
+						 suit_component_type_t *type)
 {
 	zassert_equal(component_id, TEST_COMPONENT_ID, "Unexpected component ID value");
 	zassert_not_equal(type, NULL, "API must provide valid address to get component type value");
@@ -109,7 +109,7 @@ suit_plat_decode_component_type_instld_fake_func(struct zcbor_string *component_
 
 static suit_plat_err_t
 suit_plat_decode_component_type_cand_fake_func(struct zcbor_string *component_id,
-							   suit_component_type_t *type)
+					       suit_component_type_t *type)
 {
 	zassert_equal(component_id, TEST_COMPONENT_ID, "Unexpected component ID value");
 	zassert_not_equal(type, NULL, "API must provide valid address to get component type value");
@@ -132,7 +132,7 @@ suit_plat_decode_manifest_class_id_invalid_fake_func(struct zcbor_string *compon
 
 static suit_plat_err_t
 suit_plat_decode_manifest_class_id_valid_fake_func(struct zcbor_string *component_id,
-							       suit_manifest_class_id_t **class_id)
+						   suit_manifest_class_id_t **class_id)
 {
 	zassert_equal(component_id, TEST_COMPONENT_ID, "Unexpected component ID value");
 	zassert_not_equal(class_id, NULL,
@@ -773,7 +773,8 @@ ZTEST(suit_platform_retrieve_manifest_tests, test_cand_manifest_no_ptr)
 	suit_plat_component_impl_data_get_fake.custom_fake =
 		suit_plat_component_impl_data_get_data_fake_func;
 	/* ... and there is no data in memory pointer storage */
-	suit_memptr_storage_ptr_get_fake.custom_fake = suit_memptr_storage_ptr_get_no_data_fake_func;
+	suit_memptr_storage_ptr_get_fake.custom_fake =
+		suit_memptr_storage_ptr_get_no_data_fake_func;
 
 	/* WHEN platform is asked to return manifest */
 	int ret = suit_plat_retrieve_manifest(TEST_COMPONENT_HANDLE, &envelope_str, &envelope_len);
@@ -816,7 +817,8 @@ ZTEST(suit_platform_retrieve_manifest_tests, test_cand_manifest_invalid_addr)
 	suit_plat_component_impl_data_get_fake.custom_fake =
 		suit_plat_component_impl_data_get_data_fake_func;
 	/* ... and there is data in memory pointer storage */
-	suit_memptr_storage_ptr_get_fake.custom_fake = suit_memptr_storage_ptr_get_invalid_addr_fake_func;
+	suit_memptr_storage_ptr_get_fake.custom_fake =
+		suit_memptr_storage_ptr_get_invalid_addr_fake_func;
 
 	/* WHEN platform is asked to return manifest */
 	int ret = suit_plat_retrieve_manifest(TEST_COMPONENT_HANDLE, &envelope_str, &envelope_len);
@@ -859,7 +861,8 @@ ZTEST(suit_platform_retrieve_manifest_tests, test_cand_manifest_invalid_size)
 	suit_plat_component_impl_data_get_fake.custom_fake =
 		suit_plat_component_impl_data_get_data_fake_func;
 	/* ... and there is data in memory pointer storage */
-	suit_memptr_storage_ptr_get_fake.custom_fake = suit_memptr_storage_ptr_get_invalid_size_fake_func;
+	suit_memptr_storage_ptr_get_fake.custom_fake =
+		suit_memptr_storage_ptr_get_invalid_size_fake_func;
 
 	/* WHEN platform is asked to return manifest */
 	int ret = suit_plat_retrieve_manifest(TEST_COMPONENT_HANDLE, &envelope_str, &envelope_len);
@@ -905,7 +908,7 @@ ZTEST(suit_platform_retrieve_manifest_tests, test_cand_manifest_valid)
 	suit_memptr_storage_ptr_get_fake.custom_fake = suit_memptr_storage_ptr_get_valid_fake_func;
 
 	/* WHEN platform is asked to return manifest */
-	int ret = suit_plat_retrieve_manifest(TEST_COMPONENT_HANDLE, (const uint8_t*) &envelope_str,
+	int ret = suit_plat_retrieve_manifest(TEST_COMPONENT_HANDLE, (const uint8_t *)&envelope_str,
 					      &envelope_len);
 
 	/* THEN manifest is not returned... */
@@ -957,7 +960,7 @@ ZTEST(suit_platform_retrieve_manifest_tests, test_cand_manifest_in_external_memo
 	suit_memory_global_address_is_in_external_memory_fake.return_val = true;
 
 	/* WHEN platform is asked to return manifest */
-	int ret = suit_plat_retrieve_manifest(TEST_COMPONENT_HANDLE, (const uint8_t*) &envelope_str,
+	int ret = suit_plat_retrieve_manifest(TEST_COMPONENT_HANDLE, (const uint8_t *)&envelope_str,
 					      &envelope_len);
 
 	/* THEN manifest is not returned... */

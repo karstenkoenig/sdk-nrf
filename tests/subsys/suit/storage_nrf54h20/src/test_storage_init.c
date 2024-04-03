@@ -15,6 +15,7 @@ ZTEST_SUITE(suit_storage_nrf54h20_init_tests, NULL, NULL, NULL, NULL, NULL);
 ZTEST(suit_storage_nrf54h20_init_tests, test_empty_storage)
 {
 	uint8_t nvv_erased[SUIT_STORAGE_APP_NVV_SIZE];
+
 	memset(nvv_erased, 0xff, sizeof(nvv_erased));
 
 	/* GIVEN the whole SUIT storage area is erased (unprovisioned device) */
@@ -38,6 +39,7 @@ ZTEST(suit_storage_nrf54h20_init_tests, test_empty_storage)
 ZTEST(suit_storage_nrf54h20_init_tests, test_empty_app_rad_with_digest)
 {
 	uint8_t nvv_erased[SUIT_STORAGE_APP_NVV_SIZE];
+
 	memset(nvv_erased, 0xff, sizeof(nvv_erased));
 
 	/* GIVEN the device is provisioned with empty application and radio MPI */
@@ -76,7 +78,8 @@ ZTEST(suit_storage_nrf54h20_init_tests, test_empty_app_rad_with_digest)
 ZTEST(suit_storage_nrf54h20_init_tests, test_with_root_rad)
 {
 	/* GIVEN the device is provisioned with application MPI with root config and sample radio
-	 * MPI entry */
+	 * MPI entry
+	 */
 	erase_area_nordic();
 	erase_area_rad();
 	erase_area_app();
@@ -118,7 +121,8 @@ ZTEST(suit_storage_nrf54h20_init_tests, test_with_root_rad)
 ZTEST(suit_storage_nrf54h20_init_tests, test_with_root_rad_backup)
 {
 	/* GIVEN the device was provisioned with application and radio MPI with root and sample
-	 * radio config */
+	 * radio config
+	 */
 	erase_area_nordic();
 	write_area_nordic_root();
 	write_area_nordic_rad();
@@ -161,12 +165,14 @@ ZTEST(suit_storage_nrf54h20_init_tests, test_with_root_rad_backup)
 ZTEST(suit_storage_nrf54h20_init_tests, test_with_old_root_rad_backup)
 {
 	/* GIVEN the device was provisioned with application MPI with old root and sample radio
-	 * config */
+	 * config
+	 */
 	erase_area_nordic();
 	write_area_nordic_old_root();
 	write_area_nordic_old_rad();
 	/* .. and the device is provisioned with new application MPI with root config without radio
-	 * config */
+	 * config
+	 */
 	erase_area_rad();
 	erase_area_app();
 	write_area_app_empty_nvv_backup();
@@ -209,12 +215,14 @@ ZTEST(suit_storage_nrf54h20_init_tests, test_with_old_root_rad_backup)
 ZTEST(suit_storage_nrf54h20_init_tests, test_app_with_old_root_new_rad_nvv_backup)
 {
 	/* GIVEN the device was provisioned with application MPI with old root and sample radio
-	 * config */
+	 * config
+	 */
 	erase_area_nordic();
 	write_area_nordic_old_root();
 	write_area_nordic_rad();
 	/* .. and the device is provisioned with new application MPI with root config without radio
-	 * config */
+	 * config
+	 */
 	erase_area_rad();
 	erase_area_app();
 	write_area_app_empty_nvv_backup();

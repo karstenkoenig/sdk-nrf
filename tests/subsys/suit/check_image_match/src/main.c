@@ -57,12 +57,13 @@ ZTEST(check_image_match_tests, test_mem_valid)
 		.value = component_id_value,
 		.len = sizeof(component_id_value),
 	};
-
+	void *impl_data = NULL;
 	suit_component_t component;
+
 	int err = suit_plat_create_component_handle(&valid_src_component_id, &component);
+
 	zassert_equal(SUIT_SUCCESS, err, "test error - create_component_handle failed: %d", err);
 
-	void *impl_data = NULL;
 	err = suit_plat_component_impl_data_get(component, &impl_data);
 	zassert_equal(SUIT_SUCCESS, err, "test error - suit_plat_component_impl_data_get: %d", err);
 
@@ -92,12 +93,13 @@ ZTEST(check_image_match_tests, test_mem_wrong_size)
 		.value = component_id_value,
 		.len = sizeof(component_id_value),
 	};
-
+	void *impl_data = NULL;
 	suit_component_t component;
+
 	int err = suit_plat_create_component_handle(&valid_src_component_id, &component);
+
 	zassert_equal(SUIT_SUCCESS, err, "test error - create_component_handle failed: %d", err);
 
-	void *impl_data = NULL;
 	err = suit_plat_component_impl_data_get(component, &impl_data);
 	zassert_equal(SUIT_SUCCESS, err, "test error - suit_plat_component_impl_data_get: %d", err);
 
@@ -129,12 +131,13 @@ ZTEST(check_image_match_tests, test_mem_wrong_digest)
 		.value = component_id_value,
 		.len = sizeof(component_id_value),
 	};
-
+	void *impl_data = NULL;
 	suit_component_t component;
+
 	int err = suit_plat_create_component_handle(&valid_src_component_id, &component);
+
 	zassert_equal(SUIT_SUCCESS, err, "test error - create_component_handle failed: %d", err);
 
-	void *impl_data = NULL;
 	err = suit_plat_component_impl_data_get(component, &impl_data);
 	zassert_equal(SUIT_SUCCESS, err, "test error - suit_plat_component_impl_data_get: %d", err);
 
@@ -178,12 +181,15 @@ ZTEST(check_image_match_tests, test_mem_invalid_component)
 
 ZTEST(check_image_match_tests, test_cand_img_match)
 {
+	void *impl_data = NULL;
+
 	/* GIVEN CAND_IMG component pointing to the data */
 	suit_component_t component;
+
 	int err = suit_plat_create_component_handle(&valid_cand_img_component_id, &component);
+
 	zassert_equal(SUIT_SUCCESS, err, "test error - create_component_handle failed: %d", err);
 
-	void *impl_data = NULL;
 	err = suit_plat_component_impl_data_get(component, &impl_data);
 	zassert_equal(SUIT_SUCCESS, err,
 		      "test error - suit_plat_component_impl_data_get failed: %d", err);
@@ -206,12 +212,14 @@ ZTEST(check_image_match_tests, test_cand_img_match)
 
 ZTEST(check_image_match_tests, test_cand_img_mismatch)
 {
+	void *impl_data = NULL;
 	/* GIVEN CAND_IMG component pointing to the data */
 	suit_component_t component;
+
 	int err = suit_plat_create_component_handle(&valid_cand_img_component_id, &component);
+
 	zassert_equal(SUIT_SUCCESS, err, "test error - create_component_handle failed: %d", err);
 
-	void *impl_data = NULL;
 	err = suit_plat_component_impl_data_get(component, &impl_data);
 	zassert_equal(SUIT_SUCCESS, err,
 		      "test error - suit_plat_component_impl_data_get failed: %d", err);
@@ -242,12 +250,13 @@ ZTEST(check_image_match_tests, test_soc_spec_1)
 		.value = component_id_value,
 		.len = sizeof(component_id_value),
 	};
-
+	void *impl_data = NULL;
 	suit_component_t component;
+
 	int err = suit_plat_create_component_handle(&component_id, &component);
+
 	zassert_equal(SUIT_SUCCESS, err, "test error - create_component_handle failed: %d", err);
 
-	void *impl_data = NULL;
 	err = suit_plat_component_impl_data_get(component, &impl_data);
 	zassert_equal(SUIT_SUCCESS, err,
 		      "test error - suit_plat_component_impl_data_get failed: %d", err);
@@ -273,13 +282,15 @@ ZTEST(check_image_match_tests, test_soc_spec_2)
 		.value = component_id_value,
 		.len = sizeof(component_id_value),
 	};
-
+	void *impl_data = NULL;
 	suit_component_t component;
+
 	int err = suit_plat_create_component_handle(&component_id, &component);
+
 	zassert_equal(SUIT_SUCCESS, err, "test error - create_component_handle failed: %d", err);
 
-	void *impl_data = NULL;
 	err = suit_plat_component_impl_data_get(component, &impl_data);
+
 	zassert_equal(SUIT_SUCCESS, err,
 		      "test error - suit_plat_component_impl_data_get failed: %d", err);
 
@@ -304,12 +315,13 @@ ZTEST(check_image_match_tests, test_soc_spec_3)
 		.value = component_id_value,
 		.len = sizeof(component_id_value),
 	};
-
+	void *impl_data = NULL;
 	suit_component_t component;
+
 	int err = suit_plat_create_component_handle(&component_id, &component);
+
 	zassert_equal(SUIT_SUCCESS, err, "test error - create_component_handle failed: %d", err);
 
-	void *impl_data = NULL;
 	err = suit_plat_component_impl_data_get(component, &impl_data);
 	zassert_equal(SUIT_SUCCESS, err,
 		      "test error - suit_plat_component_impl_data_get failed: %d", err);
@@ -334,12 +346,13 @@ ZTEST(check_image_match_tests, test_soc_spec_none)
 		.value = component_id_value,
 		.len = sizeof(component_id_value),
 	};
-
+	void *impl_data = NULL;
 	suit_component_t component;
+
 	int err = suit_plat_create_component_handle(&component_id, &component);
+
 	zassert_equal(SUIT_SUCCESS, err, "test error - create_component_handle failed: %d", err);
 
-	void *impl_data = NULL;
 	err = suit_plat_component_impl_data_get(component, &impl_data);
 	zassert_equal(SUIT_SUCCESS, err,
 		      "test error - suit_plat_component_impl_data_get failed: %d", err);
@@ -360,7 +373,8 @@ ZTEST(check_image_match_tests, test_soc_spec_none)
 ZTEST(check_image_match_tests, test_unhandled_component)
 {
 	/* NOTE: This test will need to be reworked once the installed manifest component will be
-	 * handled */
+	 * handled
+	 */
 
 	/* GIVEN unhandled component */
 	uint8_t component_id_value[] = {0x82, 0x4c, 0x6b, 'I',	'N',  'S',  'T',  'L',
@@ -373,7 +387,9 @@ ZTEST(check_image_match_tests, test_unhandled_component)
 		.len = sizeof(component_id_value),
 	};
 	suit_component_t component;
+
 	int err = suit_plat_create_component_handle(&valid_src_component_id, &component);
+
 	zassert_equal(SUIT_SUCCESS, err, "test error - create_component_handle failed: %d", err);
 
 	/* WHEN a check image match function is called */

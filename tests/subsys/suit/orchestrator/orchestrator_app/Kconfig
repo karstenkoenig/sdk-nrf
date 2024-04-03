@@ -5,11 +5,11 @@
 #
 
 menuconfig TESTS_SUIT_ORCHESTRATOR_APP_MINIMAL_PROCESSING
-    bool "Run tests for minimal envelope processing by the SUIT application orchestrator"
-    default n
+	bool "Run tests for minimal envelope processing by the SUIT application orchestrator"
+	default n
 
 menuconfig TESTS_SUIT_ORCHESTRATOR_APP_FULL_PROCESSING
-    bool "Run tests for full envelope processing by the SUIT application orchestrator"
-    default n
+	bool "Run tests for full envelope processing by the SUIT application orchestrator"
+	default n
 
 source "Kconfig.zephyr"

@@ -10,7 +10,6 @@
 #include <suit_memptr_sink.h>
 #include <suit_memptr_storage.h>
 
-
 static uint8_t test_data[] = {0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15,
 			      16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
 			      32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47,
@@ -24,6 +23,7 @@ ZTEST(memptr_sink_tests, test_suit_memptr_sink_get_OK)
 	memptr_storage_handle_t handle = NULL;
 
 	int err = suit_memptr_storage_get(&handle);
+
 	zassert_equal(err, SUIT_PLAT_SUCCESS, "suit_memptr_storage_get failed - error %i", err);
 
 	err = suit_memptr_sink_get(&memptr_sink, handle);
@@ -39,6 +39,7 @@ ZTEST(memptr_sink_tests, test_suit_memptr_sink_get_NOK)
 	memptr_storage_handle_t handle = NULL;
 
 	int err = suit_memptr_storage_get(&handle);
+
 	zassert_equal(err, SUIT_PLAT_SUCCESS, "suit_memptr_storage_get failed - error %i", err);
 
 	err = suit_memptr_sink_get(NULL, handle);
@@ -61,6 +62,7 @@ ZTEST(memptr_sink_tests, test_memptr_sink_write_OK)
 	memptr_storage_handle_t handle = NULL;
 
 	int err = suit_memptr_storage_get(&handle);
+
 	zassert_equal(err, SUIT_PLAT_SUCCESS, "suit_memptr_storage_get failed - error %i", err);
 
 	err = suit_memptr_sink_get(&memptr_sink, handle);
@@ -86,6 +88,7 @@ ZTEST(memptr_sink_tests, test_memptr_sink_write_NOK)
 	memptr_storage_handle_t handle = NULL;
 
 	int err = suit_memptr_storage_get(&handle);
+
 	zassert_equal(err, SUIT_PLAT_SUCCESS, "suit_memptr_storage_get failed - error %i", err);
 
 	err = suit_memptr_sink_get(&memptr_sink, handle);
@@ -118,6 +121,7 @@ ZTEST(memptr_sink_tests, test_memptr_sink_used_storage_OK)
 	size_t size = 0;
 
 	int err = suit_memptr_storage_get(&handle);
+
 	zassert_equal(err, SUIT_PLAT_SUCCESS, "suit_memptr_storage_get failed - error %i", err);
 
 	err = suit_memptr_sink_get(&memptr_sink, handle);
@@ -146,6 +150,7 @@ ZTEST(memptr_sink_tests, test_memptr_sink_used_storage_NOK)
 	size_t size = 0;
 
 	int err = suit_memptr_storage_get(&handle);
+
 	zassert_equal(err, SUIT_PLAT_SUCCESS, "suit_memptr_storage_get failed - error %i", err);
 
 	err = suit_memptr_sink_get(&memptr_sink, handle);

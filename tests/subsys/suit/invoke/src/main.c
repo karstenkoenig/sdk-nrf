@@ -16,12 +16,12 @@ ZTEST(invoke_tests, test_invoke_OK)
 	suit_component_t handle;
 #ifdef CONFIG_SOC_NRF54H20
 	/* [h'MEM', h'02', h'1A00080000', h'09'] */
-	uint8_t valid_value[] = {0x84, 0x44, 0x63, 'M',	 'E',  'M',  0x41, 0x00, 0x45, 0x1A,
-				 0x00, 0x08, 0x00, 0x00, 0x41, 0x08};
+	uint8_t valid_value[] = {0x84, 0x44, 0x63, 'M',	 'E',  'M',  0x41, 0x00,
+				 0x45, 0x1A, 0x00, 0x08, 0x00, 0x00, 0x41, 0x08};
 #else  /* CONFIG_SOC_NRF54H20 */
 	/* [h'MEM', h'00', h'1A00080000', h'08'] */
-	uint8_t valid_value[] = {0x84, 0x44, 0x63, 'M',	 'E',  'M',  0x41, 0x00, 0x45, 0x1A,
-				 0x00, 0x08, 0x00, 0x00, 0x41, 0x08};
+	uint8_t valid_value[] = {0x84, 0x44, 0x63, 'M',	 'E',  'M',  0x41, 0x00,
+				 0x45, 0x1A, 0x00, 0x08, 0x00, 0x00, 0x41, 0x08};
 #endif /* CONFIG_SOC_NRF54H20 */
 
 	struct zcbor_string valid_component_id = {
@@ -30,6 +30,7 @@ ZTEST(invoke_tests, test_invoke_OK)
 	};
 
 	int ret = suit_plat_create_component_handle(&valid_component_id, &handle);
+
 	zassert_equal(ret, SUIT_SUCCESS, "create_component_handle failed - error %i", ret);
 
 	ret = suit_plat_invoke(handle, NULL);
@@ -52,6 +53,7 @@ ZTEST(invoke_tests, test_invoke_NOK_unsupported_component_type)
 	};
 
 	int ret = suit_plat_create_component_handle(&valid_component_id, &handle);
+
 	zassert_equal(ret, SUIT_SUCCESS, "create_component_handle failed - error %i", ret);
 
 	ret = suit_plat_invoke(handle, NULL);
@@ -63,8 +65,8 @@ ZTEST(invoke_tests, test_invoke_NOK_unsupported_cpu_id)
 {
 	suit_component_t handle;
 	/* [h'MEM', h'06', h'1A00080000', h'08'] */
-	uint8_t valid_value[] = {0x84, 0x44, 0x63, 'M',	 'E',  'M',  0x41, 0x06, 0x45, 0x1A,
-				 0x00, 0x08, 0x00, 0x00, 0x41, 0x08};
+	uint8_t valid_value[] = {0x84, 0x44, 0x63, 'M',	 'E',  'M',  0x41, 0x06,
+				 0x45, 0x1A, 0x00, 0x08, 0x00, 0x00, 0x41, 0x08};
 
 	struct zcbor_string valid_component_id = {
 		.value = valid_value,
@@ -72,6 +74,7 @@ ZTEST(invoke_tests, test_invoke_NOK_unsupported_cpu_id)
 	};
 
 	int ret = suit_plat_create_component_handle(&valid_component_id, &handle);
+
 	zassert_equal(ret, SUIT_SUCCESS, "create_component_handle failed - error %i", ret);
 
 	ret = suit_plat_invoke(handle, NULL);

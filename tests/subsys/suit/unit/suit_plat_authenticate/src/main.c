@@ -205,12 +205,12 @@ static int sdfw_builtin_keys_verify_message_invalid_fake_func(mbedtls_svc_key_id
 /****** suit_plat_authenticate_manifest ******/
 ZTEST(suit_platform_crypto_psa_authenticate_tests, test_null_args)
 {
-	int ret =
-		suit_plat_authenticate_manifest(NULL, // struct zcbor_string *manifest_component_id
-						valid_cose_alg, // enum suit_cose_alg alg_id
-						NULL,		// struct zcbor_string *key_id
-						NULL,		// struct zcbor_string *signature
-						NULL);		// struct zcbor_string *data
+	int ret = suit_plat_authenticate_manifest(
+		NULL,		/* struct zcbor_string *manifest_component_id */
+		valid_cose_alg, /* enum suit_cose_alg alg_id */
+		NULL,		/* struct zcbor_string *key_id */
+		NULL,		/* struct zcbor_string *signature */
+		NULL);		/* struct zcbor_string *data */
 
 	/* Manifest authentication fails */
 	zassert_equal(SUIT_ERR_DECODING, ret, "Failed to catch null argument");
@@ -236,11 +236,11 @@ ZTEST(suit_platform_crypto_psa_authenticate_tests, test_null_manifest_component_
 	};
 
 	int ret = suit_plat_authenticate_manifest(
-		&invalid_manifest_component_id, // struct zcbor_string *manifest_component_id
-		valid_cose_alg,			// enum suit_cose_alg alg_id
-		NULL,				// struct zcbor_string *key_id
-		NULL,				// struct zcbor_string *signature
-		NULL);				// struct zcbor_string *data
+		&invalid_manifest_component_id, /* struct zcbor_string *manifest_component_id */
+		valid_cose_alg,			/* enum suit_cose_alg alg_id */
+		NULL,				/* struct zcbor_string *key_id */
+		NULL,				/* struct zcbor_string *signature */
+		NULL);				/* struct zcbor_string *data */
 
 	/* Manifest authentication fails */
 	zassert_equal(SUIT_ERR_DECODING, ret, "Failed to catch null argument");
@@ -266,11 +266,11 @@ ZTEST(suit_platform_crypto_psa_authenticate_tests, test_null_key_id)
 	};
 
 	int ret = suit_plat_authenticate_manifest(
-		&valid_manifest_component_id, // struct zcbor_string *manifest_component_id
-		valid_cose_alg,		      // enum suit_cose_alg alg_id
-		&invalid_key_id,	      // struct zcbor_string *key_id
-		NULL,			      // struct zcbor_string *signature
-		NULL);			      // struct zcbor_string *data
+		&valid_manifest_component_id, /* struct zcbor_string *manifest_component_id */
+		valid_cose_alg,		      /* enum suit_cose_alg alg_id */
+		&invalid_key_id,	      /* struct zcbor_string *key_id */
+		NULL,			      /* struct zcbor_string *signature */
+		NULL);			      /* struct zcbor_string *data */
 
 	/* Manifest authentication fails */
 	zassert_equal(SUIT_ERR_DECODING, ret, "Failed to catch null argument");
@@ -296,11 +296,11 @@ ZTEST(suit_platform_crypto_psa_authenticate_tests, test_null_signature)
 	};
 
 	int ret = suit_plat_authenticate_manifest(
-		&valid_manifest_component_id, // struct zcbor_string *manifest_component_id
-		valid_cose_alg,		      // enum suit_cose_alg alg_id
-		&valid_key_id,		      // struct zcbor_string *key_id
-		&invalid_signature,	      // struct zcbor_string *signature
-		NULL);			      // struct zcbor_string *data
+		&valid_manifest_component_id, /* struct zcbor_string *manifest_component_id */
+		valid_cose_alg,		      /* enum suit_cose_alg alg_id */
+		&valid_key_id,		      /* struct zcbor_string *key_id */
+		&invalid_signature,	      /* struct zcbor_string *signature */
+		NULL);			      /* struct zcbor_string *data */
 
 	/* Manifest authentication fails */
 	zassert_equal(SUIT_ERR_DECODING, ret, "Failed to catch null argument");
@@ -326,11 +326,11 @@ ZTEST(suit_platform_crypto_psa_authenticate_tests, test_null_data)
 	};
 
 	int ret = suit_plat_authenticate_manifest(
-		&valid_manifest_component_id, // struct zcbor_string *manifest_component_id
-		valid_cose_alg,		      // enum suit_cose_alg alg_id
-		&valid_key_id,		      // struct zcbor_string *key_id
-		&valid_signature,	      // struct zcbor_string *signature
-		&invalid_data);		      // struct zcbor_string *data
+		&valid_manifest_component_id, /* struct zcbor_string *manifest_component_id */
+		valid_cose_alg,		      /* enum suit_cose_alg alg_id */
+		&valid_key_id,		      /* struct zcbor_string *key_id */
+		&valid_signature,	      /* struct zcbor_string *signature */
+		&invalid_data);		      /* struct zcbor_string *data */
 
 	/* Manifest authentication fails */
 	zassert_equal(SUIT_ERR_DECODING, ret, "Failed to catch null argument");
@@ -354,11 +354,11 @@ ZTEST(suit_platform_crypto_psa_authenticate_tests, test_invalid_decode_manifest_
 		suit_plat_decode_manifest_class_id_invalid_fake_func;
 
 	int ret = suit_plat_authenticate_manifest(
-		&valid_manifest_component_id, // struct zcbor_string *manifest_component_id
-		valid_cose_alg,		      // enum suit_cose_alg alg_id
-		&valid_key_id,		      // struct zcbor_string *key_id
-		&valid_signature,	      // struct zcbor_string *signature
-		&valid_data);		      // struct zcbor_string *data
+		&valid_manifest_component_id, /* struct zcbor_string *manifest_component_id */
+		valid_cose_alg,		      /* enum suit_cose_alg alg_id */
+		&valid_key_id,		      /* struct zcbor_string *key_id */
+		&valid_signature,	      /* struct zcbor_string *signature */
+		&valid_data);		      /* struct zcbor_string *data */
 
 	/* Manifest authentication fails */
 	zassert_equal(SUIT_ERR_UNSUPPORTED_COMPONENT_ID, ret,
@@ -385,11 +385,11 @@ ZTEST(suit_platform_crypto_psa_authenticate_tests, test_invalid_validate_manifes
 		suit_mci_manifest_class_id_validate_invalid_fake_func;
 
 	int ret = suit_plat_authenticate_manifest(
-		&valid_manifest_component_id, // struct zcbor_string *manifest_component_id
-		valid_cose_alg,		      // enum suit_cose_alg alg_id
-		&valid_key_id,		      // struct zcbor_string *key_id
-		&valid_signature,	      // struct zcbor_string *signature
-		&valid_data);		      // struct zcbor_string *data
+		&valid_manifest_component_id, /* struct zcbor_string *manifest_component_id */
+		valid_cose_alg,		      /* enum suit_cose_alg alg_id */
+		&valid_key_id,		      /* struct zcbor_string *key_id */
+		&valid_signature,	      /* struct zcbor_string *signature */
+		&valid_data);		      /* struct zcbor_string *data */
 
 	/* Manifest authentication fails */
 	zassert_equal(SUIT_ERR_UNSUPPORTED_COMPONENT_ID, ret,
@@ -419,11 +419,11 @@ ZTEST(suit_platform_crypto_psa_authenticate_tests, test_invalid_decode_key_id)
 	suit_plat_decode_key_id_fake.custom_fake = suit_plat_decode_key_id_invalid_fake_func;
 
 	int ret = suit_plat_authenticate_manifest(
-		&valid_manifest_component_id, // struct zcbor_string *manifest_component_id
-		valid_cose_alg,		      // enum suit_cose_alg alg_id
-		&valid_key_id,		      // struct zcbor_string *key_id
-		&valid_signature,	      // struct zcbor_string *signature
-		&valid_data);		      // struct zcbor_string *data
+		&valid_manifest_component_id, /* struct zcbor_string *manifest_component_id */
+		valid_cose_alg,		      /* enum suit_cose_alg alg_id */
+		&valid_key_id,		      /* struct zcbor_string *key_id */
+		&valid_signature,	      /* struct zcbor_string *signature */
+		&valid_data);		      /* struct zcbor_string *data */
 
 	/* Manifest authentication fails */
 	zassert_equal(SUIT_ERR_UNSUPPORTED_PARAMETER, ret, "Failed to catch invalid key ID");
@@ -455,11 +455,11 @@ ZTEST(suit_platform_crypto_psa_authenticate_tests, test_invalid_key_id_validatio
 		       ARRAY_SIZE(key_id_validation_results));
 
 	int ret = suit_plat_authenticate_manifest(
-		&valid_manifest_component_id, // struct zcbor_string *manifest_component_id
-		valid_cose_alg,		      // enum suit_cose_alg alg_id
-		&valid_key_id,		      // struct zcbor_string *key_id
-		&valid_signature,	      // struct zcbor_string *signature
-		&valid_data);		      // struct zcbor_string *data
+		&valid_manifest_component_id, /* struct zcbor_string *manifest_component_id */
+		valid_cose_alg,		      /* enum suit_cose_alg alg_id */
+		&valid_key_id,		      /* struct zcbor_string *key_id */
+		&valid_signature,	      /* struct zcbor_string *signature */
+		&valid_data);		      /* struct zcbor_string *data */
 
 	/* Manifest authentication fails */
 	zassert_equal(SUIT_ERR_AUTHENTICATION, ret, "Failed to catch unsupported key ID");
@@ -492,16 +492,17 @@ ZTEST(suit_platform_crypto_psa_authenticate_tests, test_invalid_psa_verify_messa
 	suit_plat_decode_key_id_fake.custom_fake = suit_plat_decode_key_id_correct_fake_func;
 	/* Do not allow to skip signature verification, accept the sample key ID. */
 	int key_id_validation_results[2] = {SUIT_PLAT_ERR_AUTHENTICATION, SUIT_PLAT_SUCCESS};
+
 	SET_RETURN_SEQ(suit_mci_signing_key_id_validate, key_id_validation_results,
 		       ARRAY_SIZE(key_id_validation_results));
 	psa_verify_message_fake.custom_fake = psa_verify_message_invalid_fake_func;
 
 	int ret = suit_plat_authenticate_manifest(
-		&valid_manifest_component_id, // struct zcbor_string *manifest_component_id
-		valid_cose_alg,		      // enum suit_cose_alg alg_id
-		&valid_key_id,		      // struct zcbor_string *key_id
-		&valid_signature,	      // struct zcbor_string *signature
-		&valid_data);		      // struct zcbor_string *data
+		&valid_manifest_component_id, /* struct zcbor_string *manifest_component_id */
+		valid_cose_alg,		      /* enum suit_cose_alg alg_id */
+		&valid_key_id,		      /* struct zcbor_string *key_id */
+		&valid_signature,	      /* struct zcbor_string *signature */
+		&valid_data);		      /* struct zcbor_string *data */
 
 	/* Manifest authentication fails */
 	zassert_not_equal(SUIT_SUCCESS, ret, "Verification should have failed");
@@ -538,16 +539,17 @@ ZTEST(suit_platform_crypto_psa_authenticate_tests, test_OK)
 	suit_plat_decode_key_id_fake.custom_fake = suit_plat_decode_key_id_correct_fake_func;
 	/* Do not allow to skip signature verification, accept the sample key ID. */
 	int key_id_validation_results[2] = {SUIT_PLAT_ERR_AUTHENTICATION, SUIT_PLAT_SUCCESS};
+
 	SET_RETURN_SEQ(suit_mci_signing_key_id_validate, key_id_validation_results,
 		       ARRAY_SIZE(key_id_validation_results));
 	psa_verify_message_fake.custom_fake = psa_verify_message_correct_fake_func;
 
 	int ret = suit_plat_authenticate_manifest(
-		&valid_manifest_component_id, // struct zcbor_string *manifest_component_id
-		valid_cose_alg,		      // enum suit_cose_alg alg_id
-		&valid_key_id,		      // struct zcbor_string *key_id
-		&valid_signature,	      // struct zcbor_string *signature
-		&valid_data);		      // struct zcbor_string *data
+		&valid_manifest_component_id, /* struct zcbor_string *manifest_component_id */
+		valid_cose_alg,		      /* enum suit_cose_alg alg_id */
+		&valid_key_id,		      /* struct zcbor_string *key_id */
+		&valid_signature,	      /* struct zcbor_string *signature */
+		&valid_data);		      /* struct zcbor_string *data */
 
 	/* Manifest authentication succeeds */
 	zassert_equal(SUIT_SUCCESS, ret, "Authentication should have succeeded");
@@ -584,16 +586,17 @@ ZTEST(suit_platform_crypto_psa_authenticate_tests, test_OK_EdDSA)
 	suit_plat_decode_key_id_fake.custom_fake = suit_plat_decode_key_id_correct_fake_func;
 	/* Do not allow to skip signature verification, accept the sample key ID. */
 	int key_id_validation_results[2] = {SUIT_PLAT_ERR_AUTHENTICATION, SUIT_PLAT_SUCCESS};
+
 	SET_RETURN_SEQ(suit_mci_signing_key_id_validate, key_id_validation_results,
 		       ARRAY_SIZE(key_id_validation_results));
 	psa_verify_message_fake.custom_fake = psa_verify_message_correct_eddsa_fake_func;
 
 	int ret = suit_plat_authenticate_manifest(
-		&valid_manifest_component_id, // struct zcbor_string *manifest_component_id
-		suit_cose_EdDSA,	      // enum suit_cose_alg alg_id
-		&valid_key_id,		      // struct zcbor_string *key_id
-		&valid_signature,	      // struct zcbor_string *signature
-		&valid_data);		      // struct zcbor_string *data
+		&valid_manifest_component_id, /* struct zcbor_string *manifest_component_id */
+		suit_cose_EdDSA,	      /* enum suit_cose_alg alg_id */
+		&valid_key_id,		      /* struct zcbor_string *key_id */
+		&valid_signature,	      /* struct zcbor_string *signature */
+		&valid_data);		      /* struct zcbor_string *data */
 
 	/* Manifest authentication succeeds */
 	zassert_equal(SUIT_SUCCESS, ret, "Authentication should have succeeded");
@@ -624,11 +627,11 @@ ZTEST(suit_platform_crypto_psa_authenticate_tests, test_OK_EdDSA)
 ZTEST(suit_platform_crypto_psa_authenticate_tests, test_unsupported_alg)
 {
 	int ret = suit_plat_authenticate_manifest(
-		&valid_manifest_component_id, // struct zcbor_string *manifest_component_id
-		0xAA,			      // enum suit_cose_alg alg_id
-		&valid_key_id,		      // struct zcbor_string *key_id
-		&valid_signature,	      // struct zcbor_string *signature
-		&valid_data);		      // struct zcbor_string *data
+		&valid_manifest_component_id, /* struct zcbor_string *manifest_component_id */
+		0xAA,			      /* enum suit_cose_alg alg_id */
+		&valid_key_id,		      /* struct zcbor_string *key_id */
+		&valid_signature,	      /* struct zcbor_string *signature */
+		&valid_data);		      /* struct zcbor_string *data */
 
 	/* Manifest authentication succeeds */
 	zassert_equal(SUIT_ERR_DECODING, ret, "Authentication should have failed");
@@ -656,11 +659,11 @@ ZTEST(suit_platform_crypto_psa_authenticate_tests, test_signed_manifest_without_
 		suit_mci_signing_key_id_validate_0_correct_fake_func;
 
 	int ret = suit_plat_authenticate_manifest(
-		&valid_manifest_component_id, // struct zcbor_string *manifest_component_id
-		valid_cose_alg,		      // enum suit_cose_alg alg_id
-		&valid_key_id,		      // struct zcbor_string *key_id
-		&valid_signature,	      // struct zcbor_string *signature
-		&valid_data);		      // struct zcbor_string *data
+		&valid_manifest_component_id, /* struct zcbor_string *manifest_component_id */
+		valid_cose_alg,		      /* enum suit_cose_alg alg_id */
+		&valid_key_id,		      /* struct zcbor_string *key_id */
+		&valid_signature,	      /* struct zcbor_string *signature */
+		&valid_data);		      /* struct zcbor_string *data */
 
 	/* Unsigned manifest authentication succeeds */
 	zassert_equal(SUIT_SUCCESS, ret, "Verification should have succeeded");

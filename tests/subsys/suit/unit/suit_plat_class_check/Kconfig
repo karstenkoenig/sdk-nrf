@@ -13,7 +13,7 @@ config MAX_NUMBER_OF_MANIFEST_CLASS_IDS
 	default 8 if SOC_NRF54H20
 	default 5 if SOC_NRF52840
 	default 5 if SOC_POSIX
-	help 
-		Check SUIT_STORAGE_N_ENVELOPES 
+	help
+	  Check SUIT_STORAGE_N_ENVELOPES
 
 source "Kconfig.zephyr"

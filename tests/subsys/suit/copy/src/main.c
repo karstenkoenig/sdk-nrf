@@ -35,6 +35,7 @@ ZTEST(copy_tests, test_integrated_fetch_to_memptr_and_copy_to_msink_OK)
 	};
 
 	int ret = suit_plat_create_component_handle(&valid_src_component_id, &src_handle);
+
 	zassert_equal(ret, SUIT_SUCCESS, "create_component_handle failed - error %i", ret);
 
 	ret = suit_plat_fetch_integrated(src_handle, &source);
@@ -57,8 +58,8 @@ ZTEST(copy_tests, test_integrated_fetch_to_memptr_and_copy_to_msink_OK)
 	/* Create handle that will be used as destination */
 	suit_component_t dst_handle;
 	/* [h'MEM', h'02', h'1A00080000', h'191000'] */
-	uint8_t valid_dst_value[] = {0x84, 0x44, 0x63, 'M',  'E',  'M',	 0x41, 0x02, 0x45, 0x1A,
-				     0x00, 0x08, 0x00, 0x00, 0x43, 0x19, 0x10, 0x00};
+	uint8_t valid_dst_value[] = {0x84, 0x44, 0x63, 'M',  'E',  'M',	 0x41, 0x02, 0x45,
+				     0x1A, 0x00, 0x08, 0x00, 0x00, 0x43, 0x19, 0x10, 0x00};
 
 	struct zcbor_string valid_dst_component_id = {
 		.value = valid_dst_value,
@@ -99,6 +100,7 @@ ZTEST(copy_tests, test_integrated_fetch_to_memptr_and_copy_to_msink_NOK_dst_hand
 	};
 
 	int ret = suit_plat_create_component_handle(&valid_src_component_id, &src_handle);
+
 	zassert_equal(ret, SUIT_SUCCESS, "create_component_handle failed - error %i", ret);
 
 	ret = suit_plat_fetch_integrated(src_handle, &source);
@@ -121,8 +123,8 @@ ZTEST(copy_tests, test_integrated_fetch_to_memptr_and_copy_to_msink_NOK_dst_hand
 	/* Create handle that will be used as destination */
 	suit_component_t dst_handle;
 	/* [h'MEM', h'02', h'1A00080000', h'191000'] */
-	uint8_t valid_dst_value[] = {0x84, 0x44, 0x63, 'M',  'E',  'M',	 0x41, 0x02, 0x45, 0x1A,
-				     0x00, 0x08, 0x00, 0x00, 0x43, 0x19, 0x10, 0x00};
+	uint8_t valid_dst_value[] = {0x84, 0x44, 0x63, 'M',  'E',  'M',	 0x41, 0x02, 0x45,
+				     0x1A, 0x00, 0x08, 0x00, 0x00, 0x43, 0x19, 0x10, 0x00};
 
 	struct zcbor_string valid_dst_component_id = {
 		.value = valid_dst_value,
@@ -163,6 +165,7 @@ ZTEST(copy_tests, test_integrated_fetch_to_memptr_and_copy_to_msink_NOK_src_hand
 	};
 
 	int ret = suit_plat_create_component_handle(&valid_src_component_id, &src_handle);
+
 	zassert_equal(ret, SUIT_SUCCESS, "create_component_handle failed - error %i", ret);
 
 	ret = suit_plat_fetch_integrated(src_handle, &source);
@@ -185,8 +188,8 @@ ZTEST(copy_tests, test_integrated_fetch_to_memptr_and_copy_to_msink_NOK_src_hand
 	/* Create handle that will be used as destination */
 	suit_component_t dst_handle;
 	/* [h'MEM', h'02', h'1A00080000', h'191000'] */
-	uint8_t valid_dst_value[] = {0x84, 0x44, 0x63, 'M',  'E',  'M',	 0x41, 0x02, 0x45, 0x1A,
-				     0x00, 0x08, 0x00, 0x00, 0x43, 0x19, 0x10, 0x00};
+	uint8_t valid_dst_value[] = {0x84, 0x44, 0x63, 'M',  'E',  'M',	 0x41, 0x02, 0x45,
+				     0x1A, 0x00, 0x08, 0x00, 0x00, 0x43, 0x19, 0x10, 0x00};
 
 	struct zcbor_string valid_dst_component_id = {
 		.value = valid_dst_value,
@@ -224,13 +227,14 @@ ZTEST(copy_tests, test_integrated_fetch_to_memptr_and_copy_to_msink_NOK_memptr_e
 	};
 
 	int ret = suit_plat_create_component_handle(&valid_src_component_id, &src_handle);
+
 	zassert_equal(ret, SUIT_SUCCESS, "create_component_handle failed - error %i", ret);
 
 	/* Create handle that will be used as destination */
 	suit_component_t dst_handle;
 	/* [h'MEM', h'02', h'1A00080000', h'191000'] */
-	uint8_t valid_dst_value[] = {0x84, 0x44, 0x63, 'M',  'E',  'M',	 0x41, 0x02, 0x45, 0x1A,
-				     0x00, 0x08, 0x00, 0x00, 0x43, 0x19, 0x10, 0x00};
+	uint8_t valid_dst_value[] = {0x84, 0x44, 0x63, 'M',  'E',  'M',	 0x41, 0x02, 0x45,
+				     0x1A, 0x00, 0x08, 0x00, 0x00, 0x43, 0x19, 0x10, 0x00};
 
 	struct zcbor_string valid_dst_component_id = {
 		.value = valid_dst_value,

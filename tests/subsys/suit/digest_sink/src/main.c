@@ -42,6 +42,7 @@ ZTEST(digest_sink_tests, test_digest_sink_get_NOK)
 	struct stream_sink digest_sink;
 
 	suit_plat_err_t err = suit_digest_sink_get(NULL, valid_algorithm, valid_digest);
+
 	zassert_not_equal(err, SUIT_PLAT_SUCCESS,
 			  "suit_digest_sink_get should have failed - sink == null");
 
@@ -80,6 +81,7 @@ ZTEST(digest_sink_tests, test_digest_sink_write_NOK)
 	struct stream_sink digest_sink;
 
 	suit_plat_err_t err = suit_digest_sink_get(&digest_sink, valid_algorithm, valid_digest);
+
 	zassert_equal(err, SUIT_PLAT_SUCCESS, "Unexpected error code");
 
 	err = digest_sink.write(NULL, valid_payload, sizeof(valid_payload));
@@ -107,6 +109,7 @@ ZTEST(digest_sink_tests, test_digest_sink_match_OK)
 	struct stream_sink digest_sink;
 
 	suit_plat_err_t err = suit_digest_sink_get(&digest_sink, valid_algorithm, valid_digest);
+
 	zassert_equal(err, SUIT_PLAT_SUCCESS, "Unexpected error code");
 
 	err = digest_sink.write(digest_sink.ctx, valid_payload, sizeof(valid_payload));
@@ -124,6 +127,7 @@ ZTEST(digest_sink_tests, test_digest_sink_match_NOK)
 	struct stream_sink digest_sink;
 
 	suit_plat_err_t err = suit_digest_sink_get(&digest_sink, valid_algorithm, valid_digest);
+
 	zassert_equal(err, SUIT_PLAT_SUCCESS, "Unexpected error code");
 
 	err = digest_sink.write(digest_sink.ctx, valid_payload, sizeof(valid_payload));
@@ -146,6 +150,7 @@ ZTEST(digest_sink_tests, test_digest_sink_release_NOK)
 	struct stream_sink digest_sink;
 
 	suit_plat_err_t err = suit_digest_sink_get(&digest_sink, valid_algorithm, invalid_digest);
+
 	zassert_equal(err, SUIT_PLAT_SUCCESS, "Unexpected error code");
 
 	err = digest_sink.release(NULL);
