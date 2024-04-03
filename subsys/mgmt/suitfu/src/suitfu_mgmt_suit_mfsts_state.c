@@ -81,7 +81,7 @@ int suitfu_mgmt_suit_manifest_state_read(struct smp_streamer *ctx)
 	int rc = 0;
 
 	suit_manifest_role_t role = 0;
-	suit_ssf_manifest_class_info_t class_info  = {0};
+	suit_ssf_manifest_class_info_t class_info = {0};
 	unsigned int seq_num = 0;
 	suit_semver_raw_t semver_raw = {0};
 	suit_digest_status_t digest_status = SUIT_DIGEST_UNKNOWN;
@@ -120,19 +120,19 @@ int suitfu_mgmt_suit_manifest_state_read(struct smp_streamer *ctx)
 	}
 
 	ok = zcbor_tstr_put_term(zse, "downgrade_prevention_policy") &&
-		 zcbor_uint32_put(zse, class_info.downgrade_prevention_policy);
+	     zcbor_uint32_put(zse, class_info.downgrade_prevention_policy);
 	if (!ok) {
 		return MGMT_ERR_EMSGSIZE;
 	}
 
 	ok = zcbor_tstr_put_term(zse, "independent_updateability_policy") &&
-		 zcbor_uint32_put(zse, class_info.independent_updateability_policy);
+	     zcbor_uint32_put(zse, class_info.independent_updateability_policy);
 	if (!ok) {
 		return MGMT_ERR_EMSGSIZE;
 	}
 
 	ok = zcbor_tstr_put_term(zse, "signature_verification_policy") &&
-		 zcbor_uint32_put(zse, class_info.signature_verification_policy);
+	     zcbor_uint32_put(zse, class_info.signature_verification_policy);
 	if (!ok) {
 		return MGMT_ERR_EMSGSIZE;
 	}
@@ -140,8 +140,8 @@ int suitfu_mgmt_suit_manifest_state_read(struct smp_streamer *ctx)
 	digest.mem = digest_buf;
 	digest.size = sizeof(digest_buf);
 
-	rc = suit_get_installed_manifest_info(&class_info.class_id, &seq_num, &semver_raw, &digest_status,
-					      &digest_alg_id, &digest);
+	rc = suit_get_installed_manifest_info(&class_info.class_id, &seq_num, &semver_raw,
+					      &digest_status, &digest_alg_id, &digest);
 
 	if (rc == SUIT_PLAT_SUCCESS) {
 		zcs.value = digest.mem;

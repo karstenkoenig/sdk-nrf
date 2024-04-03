@@ -35,8 +35,8 @@ int suitfu_mgmt_suit_envelope_upload(struct smp_streamer *ctx)
 {
 	zcbor_state_t *zsd = ctx->reader->zs;
 	zcbor_state_t *zse = ctx->writer->zs;
-	static size_t image_size = 0;
-	static size_t offset_in_image = 0;
+	static size_t image_size;
+	static size_t offset_in_image;
 
 	size_t decoded = 0;
 	suitfu_mgmt_envelope_upload_req_t req = {
@@ -46,6 +46,7 @@ int suitfu_mgmt_suit_envelope_upload(struct smp_streamer *ctx)
 	};
 
 	int rc = suitfu_mgmt_is_dfu_partition_ready();
+
 	if (rc != MGMT_ERR_EOK) {
 		LOG_ERR("DFU Partition in not ready");
 		return rc;

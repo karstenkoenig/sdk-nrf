@@ -24,7 +24,7 @@
 #include <zephyr/logging/log.h>
 LOG_MODULE_DECLARE(suitfu_mgmt, CONFIG_MGMT_SUITFU_LOG_LEVEL);
 
-#define OS_MGMT_ID_BOOTLOADER_INFO	8
+#define OS_MGMT_ID_BOOTLOADER_INFO 8
 
 static const struct mgmt_handler suit_mgmt_handlers[] = {
 
@@ -53,7 +53,6 @@ static const struct mgmt_handler suit_mgmt_os_handlers[] = {
 	[OS_MGMT_ID_BOOTLOADER_INFO] = {.mh_read = suitfu_mgmt_suit_bootloader_info_read,
 					.mh_write = NULL},
 };
-
 
 static struct mgmt_group suit_mgmt_group = {
 	.mg_handlers = (struct mgmt_handler *)suit_mgmt_handlers,

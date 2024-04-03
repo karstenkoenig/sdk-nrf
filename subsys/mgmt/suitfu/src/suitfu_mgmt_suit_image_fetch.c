@@ -29,12 +29,12 @@ LOG_MODULE_DECLARE(suitfu_mgmt, CONFIG_MGMT_SUITFU_LOG_LEVEL);
 static K_MUTEX_DEFINE(component_state_mutex);
 static K_CONDVAR_DEFINE(transfer_completed_cvar);
 
-static inline void component_lock()
+static inline void component_lock(void)
 {
 	k_mutex_lock(&component_state_mutex, K_FOREVER);
 }
 
-static inline void component_unlock()
+static inline void component_unlock(void)
 {
 	k_mutex_unlock(&component_state_mutex);
 }
@@ -137,8 +137,8 @@ int suitfu_mgmt_suit_missing_image_upload(struct smp_streamer *ctx)
 	stream_session_t *session = &stream_session;
 	zcbor_state_t *zsd = ctx->reader->zs;
 	zcbor_state_t *zse = ctx->writer->zs;
-	static size_t image_size = 0;
-	static size_t offset_in_image = 0;
+	static size_t image_size;
+	static size_t offset_in_image;
 
 	size_t decoded = 0;
 	suitfu_mgmt_missing_img_upload_req_t req = {
