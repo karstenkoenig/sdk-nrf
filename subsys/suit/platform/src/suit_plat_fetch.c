@@ -128,6 +128,7 @@ int suit_plat_fetch(suit_component_t dst_handle, struct zcbor_string *uri)
 	 *	Like decryption and/or decompression sinks.
 	 */
 	if (dst_sink.erase != NULL) {
+		ret = dst_sink.erase(dst_sink.ctx);
 		if (ret != SUIT_PLAT_SUCCESS) {
 			LOG_ERR("Sink mem erase failed: %i", ret);
 			return suit_plat_err_to_processor_err_convert(ret);
