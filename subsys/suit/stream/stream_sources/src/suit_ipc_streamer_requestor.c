@@ -85,7 +85,7 @@ typedef struct {
 		chunk_processing_state[CONFIG_SUIT_STREAM_IPC_REQUESTOR_MAX_CHUNKS];
 } image_request_state_t;
 
-static uint32_t last_used_stream_session_id = 0;
+static uint32_t last_used_stream_session_id;
 static K_MUTEX_DEFINE(image_request_state_mutex);
 static K_SEM_DEFINE(image_request_data_loop_kick_sem, 0, 1);
 
@@ -94,18 +94,18 @@ static image_request_state_t image_request_state = {
 	.stage = STAGE_IDLE,
 };
 
-static suit_ipc_streamer_chunk_status_notify_fn chunk_status_notify_fn = NULL;
-static void *chunk_status_notify_context = 0;
+static suit_ipc_streamer_chunk_status_notify_fn chunk_status_notify_fn;
+static void *chunk_status_notify_context;
 
-static suit_ipc_streamer_missing_image_notify_fn missing_image_notify_fn = NULL;
-static void *missing_image_notify_context = 0;
+static suit_ipc_streamer_missing_image_notify_fn missing_image_notify_fn;
+static void *missing_image_notify_context;
 
-static inline void image_request_state_lock()
+static inline void image_request_state_lock(void)
 {
 	k_mutex_lock(&image_request_state_mutex, K_FOREVER);
 }
 
-static inline void image_request_state_unlock()
+static inline void image_request_state_unlock(void)
 {
 	k_mutex_unlock(&image_request_state_mutex);
 }
@@ -117,7 +117,8 @@ static chunk_processing_state_t *pending_chunk_get_next(image_request_state_t *i
 
 	for (int i = 0; i < CONFIG_SUIT_STREAM_IPC_REQUESTOR_MAX_CHUNKS; i++) {
 		chunk_processing_state_t *cps = &irs->chunk_processing_state[i];
-		if (CHUNK_PENDING == cps->status &&
+
+		if (cps->status == CHUNK_PENDING &&
 		    cps->arrival_number == irs->last_processed_number + 1) {
 			return cps;
 		}
@@ -132,7 +133,8 @@ static chunk_processing_state_t *empty_chunk_slot_get(image_request_state_t *irs
 
 	for (int i = 0; i < CONFIG_SUIT_STREAM_IPC_REQUESTOR_MAX_CHUNKS; i++) {
 		chunk_processing_state_t *cps = &irs->chunk_processing_state[i];
-		if (CHUNK_SLOT_EMPTY == cps->status) {
+
+		if (cps->status == CHUNK_SLOT_EMPTY) {
 			return cps;
 		}
 	}
@@ -150,9 +152,9 @@ static chunk_processing_state_t *non_empty_chunk_slot_get_next(image_request_sta
 	for (int i = 0; i < CONFIG_SUIT_STREAM_IPC_REQUESTOR_MAX_CHUNKS; i++) {
 		chunk_processing_state_t *cps = &irs->chunk_processing_state[i];
 
-		if (CHUNK_SLOT_EMPTY != cps->status) {
+		if (cps->status != CHUNK_SLOT_EMPTY) {
 			if (cps->arrival_number >= min_arrival_number) {
-				if (NULL == found_cps ||
+				if (found_cps == NULL ||
 				    found_cps->arrival_number > cps->arrival_number) {
 					found_cps = cps;
 				}
@@ -172,7 +174,7 @@ static int non_empty_chunk_slot_count_get(image_request_state_t *irs)
 	for (int i = 0; i < CONFIG_SUIT_STREAM_IPC_REQUESTOR_MAX_CHUNKS; i++) {
 		chunk_processing_state_t *cps = &irs->chunk_processing_state[i];
 
-		if (CHUNK_SLOT_EMPTY != cps->status) {
+		if (cps->status != CHUNK_SLOT_EMPTY) {
 			count++;
 		}
 	}
@@ -214,6 +216,27 @@ static void missing_image_notify(image_request_state_t *irs)
 	}
 }
 
+static suit_plat_err_t irs_seek(image_request_state_t *irs, size_t offset)
+{
+	suit_plat_err_t sink_error = SUIT_PLAT_SUCCESS;
+
+	if (irs->sink->seek != NULL) {
+		image_request_state_unlock();
+		sink_error = irs->sink->seek(irs->sink->ctx, offset);
+		image_request_state_lock();
+
+		if (sink_error == SUIT_PLAT_SUCCESS) {
+			irs->current_sink_write_offset = offset;
+		}
+	} else {
+		/* seek is necessary but sink does not support it
+		 */
+		sink_error = SUIT_PLAT_ERR_UNSUPPORTED;
+	}
+
+	return sink_error;
+}
+
 /* Assumption - function is called with access to image_request_state initially locked.
  * image_request_state will also be locked on function exit.
  * Function will release image_request_state for blocking operation
@@ -242,9 +265,10 @@ static suit_plat_err_t data_loop(image_request_state_t *irs)
 
 		/* Pushing the chunk to sink - if chunk is available
 		 */
-		if (STAGE_IN_PROGRESS == irs->stage) {
+		if (irs->stage == STAGE_IN_PROGRESS) {
 			chunk_processing_state_t *cps = pending_chunk_get_next(irs);
-			if (NULL != cps) {
+
+			if (cps != NULL) {
 				suit_plat_err_t sink_error = SUIT_PLAT_SUCCESS;
 
 				bool seek_needed = (irs->current_sink_write_offset != cps->offset)
@@ -252,37 +276,24 @@ static suit_plat_err_t data_loop(image_request_state_t *irs)
 							   : false;
 
 				if (seek_needed) {
-
-					if (NULL != irs->sink->seek) {
-						image_request_state_unlock();
-						sink_error = irs->sink->seek(irs->sink->ctx,
-									     cps->offset);
-						image_request_state_lock();
-
-						if (SUIT_PLAT_SUCCESS == sink_error) {
-							irs->current_sink_write_offset =
-								cps->offset;
-						}
-					} else {
-						/* seek is necessary but sink does not support it
-						 */
-						sink_error = SUIT_PLAT_ERR_UNSUPPORTED;
-					}
+					sink_error = irs_seek(irs, cps->offset);
 				}
 
-				if (SUIT_PLAT_SUCCESS == sink_error && NULL != cps->address && 0 != cps->size) {
+				if (sink_error == SUIT_PLAT_SUCCESS && cps->address != NULL &&
+				    cps->size != 0) {
 
 					image_request_state_unlock();
-					sink_error = irs->sink->write(irs->sink->ctx, cps->address, cps->size);
+					sink_error = irs->sink->write(irs->sink->ctx, cps->address,
+								      cps->size);
 					image_request_state_lock();
 
-					if (SUIT_PLAT_SUCCESS == sink_error) {
+					if (sink_error == SUIT_PLAT_SUCCESS) {
 						irs->current_sink_write_offset =
 							cps->offset + cps->size;
 					}
 				}
 
-				if (SUIT_PLAT_SUCCESS == sink_error) {
+				if (sink_error == SUIT_PLAT_SUCCESS) {
 
 					irs->last_processed_number = cps->arrival_number;
 
@@ -304,12 +315,12 @@ static suit_plat_err_t data_loop(image_request_state_t *irs)
 
 		/* Let's check if it is time to transit to complete
 		 */
-		if (STAGE_CLOSING == irs->stage) {
+		if (irs->stage == STAGE_CLOSING) {
 
 			for (int i = 0; i < CONFIG_SUIT_STREAM_IPC_REQUESTOR_MAX_CHUNKS; i++) {
 				chunk_processing_state_t *cps = &irs->chunk_processing_state[i];
 
-				if (CHUNK_PENDING == cps->status) {
+				if (cps->status == CHUNK_PENDING) {
 					cps->status = CHUNK_PROCESSED_FAIL;
 				}
 			}
@@ -317,14 +328,15 @@ static suit_plat_err_t data_loop(image_request_state_t *irs)
 			chunk_status_notify(irs);
 
 			suit_plat_err_t retval = irs->completion_error_code;
+
 			irs->stage = STAGE_IDLE;
 			return retval;
 		}
 
 		/* Managing image request notifications
 		 */
-		if (STAGE_PENDING_FIRST_RESPONSE == irs->stage) {
-			if (0 == irs->last_request_ts ||
+		if (irs->stage == STAGE_PENDING_FIRST_RESPONSE) {
+			if (irs->last_request_ts == 0 ||
 			    current_ts - irs->last_request_ts >= irs->requesting_period_ms) {
 				missing_image_notify(irs);
 				irs->last_request_ts = current_ts;
@@ -332,6 +344,7 @@ static suit_plat_err_t data_loop(image_request_state_t *irs)
 
 			uint32_t sleep_period_ms_candidate =
 				irs->last_request_ts + irs->requesting_period_ms - current_ts;
+
 			sleep_period_ms = (sleep_period_ms_candidate < sleep_period_ms)
 						  ? sleep_period_ms_candidate
 						  : sleep_period_ms;
@@ -342,13 +355,14 @@ static suit_plat_err_t data_loop(image_request_state_t *irs)
 		if (current_ts - irs->last_response_ts >= irs->inter_chunk_timeout_ms) {
 			irs->stage = STAGE_IDLE;
 			return SUIT_PLAT_ERR_TIME;
-		} else {
-			uint32_t sleep_period_ms_candidate =
-				irs->last_response_ts + irs->inter_chunk_timeout_ms - current_ts;
-			sleep_period_ms = (sleep_period_ms_candidate < sleep_period_ms)
-						  ? sleep_period_ms_candidate
-						  : sleep_period_ms;
 		}
+
+		uint32_t sleep_period_ms_candidate =
+			irs->last_response_ts + irs->inter_chunk_timeout_ms - current_ts;
+
+		sleep_period_ms = (sleep_period_ms_candidate < sleep_period_ms)
+					  ? sleep_period_ms_candidate
+					  : sleep_period_ms;
 	}
 
 	return SUIT_PLAT_ERR_UNREACHABLE_PATH;
@@ -363,6 +377,7 @@ static image_request_state_t *image_request_state_allocate(const uint8_t *resour
 							   uint32_t requesting_period_ms)
 {
 	image_request_state_t *irs = &image_request_state;
+
 	if (irs->stage != STAGE_IDLE) {
 		return NULL;
 	}
@@ -394,6 +409,7 @@ static image_request_state_t *image_request_state_allocate(const uint8_t *resour
 
 	for (int i = 0; i < CONFIG_SUIT_STREAM_IPC_REQUESTOR_MAX_CHUNKS; i++) {
 		chunk_processing_state_t *cps = &irs->chunk_processing_state[i];
+
 		cps->status = CHUNK_SLOT_EMPTY;
 	}
 
@@ -404,7 +420,7 @@ suit_plat_err_t suit_ipc_streamer_stream(const uint8_t *resource_id, size_t reso
 					 struct stream_sink *sink, uint32_t inter_chunk_timeout_ms,
 					 uint32_t requesting_period_ms)
 {
-	if (NULL == resource_id || 0 == resource_id_length || NULL == sink || NULL == sink->write) {
+	if (resource_id == NULL || resource_id_length == 0 || sink == NULL || sink->write == NULL) {
 		return SUIT_PLAT_ERR_INVAL;
 	}
 
@@ -412,12 +428,13 @@ suit_plat_err_t suit_ipc_streamer_stream(const uint8_t *resource_id, size_t reso
 	image_request_state_t *irs =
 		image_request_state_allocate(resource_id, resource_id_length, sink,
 					     inter_chunk_timeout_ms, requesting_period_ms);
-	if (NULL == irs) {
+	if (irs == NULL) {
 		image_request_state_unlock();
 		return SUIT_PLAT_ERR_NO_RESOURCES;
 	}
 
 	suit_plat_err_t err = data_loop(irs);
+
 	image_request_state_unlock();
 
 	return err;
@@ -428,14 +445,15 @@ suit_plat_err_t suit_ipc_streamer_chunk_enqueue(uint32_t stream_session_id, uint
 						bool last_chunk)
 {
 	suit_plat_err_t err = SUIT_PLAT_SUCCESS;
-	if (NULL != address && 0 != size) {
+
+	if (address != NULL && size != 0) {
 
 		/* TODO!!!
 		 * Memory range shall be valid for caller, i.e App Domain, to make sure that
 		 * the data belonging to other domain is not leaked out.
 		 */
 
-	} else if (NULL == address && 0 == size) {
+	} else if (address == NULL && size == 0) {
 
 		/* that combination of partameters is valid, caller may use it to
 		 * signalize the last chunk or to 'seek' to new offset in target image
@@ -448,30 +466,32 @@ suit_plat_err_t suit_ipc_streamer_chunk_enqueue(uint32_t stream_session_id, uint
 	image_request_state_lock();
 
 	image_request_state_t *irs = &image_request_state;
-	if (SUIT_PLAT_SUCCESS == err) {
-		if (STAGE_IDLE == irs->stage || irs->stream_session_id != stream_session_id) {
+
+	if (err == SUIT_PLAT_SUCCESS) {
+		if (irs->stage == STAGE_IDLE || irs->stream_session_id != stream_session_id) {
 			err = SUIT_PLAT_ERR_INCORRECT_STATE;
 		}
 	}
 
-	if (SUIT_PLAT_SUCCESS == err) {
-		if (STAGE_CLOSING == irs->stage || 0 != irs->last_chunk_arrival_number) {
+	if (err == SUIT_PLAT_SUCCESS) {
+		if (irs->stage == STAGE_CLOSING || irs->last_chunk_arrival_number != 0) {
 			/* connection is closing, no new chunks will be accepted
 			 */
 			err = SUIT_PLAT_ERR_INCORRECT_STATE;
 		}
 	}
 
-	if (SUIT_PLAT_SUCCESS == err) {
+	if (err == SUIT_PLAT_SUCCESS) {
 
-		if (STAGE_PENDING_FIRST_RESPONSE == irs->stage) {
+		if (irs->stage == STAGE_PENDING_FIRST_RESPONSE) {
 			irs->stage = STAGE_IN_PROGRESS;
 		}
 
 		irs->last_response_ts = k_uptime_get();
 
 		chunk_processing_state_t *cps = empty_chunk_slot_get(irs);
-		if (NULL == cps) {
+
+		if (cps == NULL) {
 			/* not enough space to store chunk info. Try again later
 			 */
 			err = SUIT_PLAT_ERR_BUSY;
@@ -489,6 +509,7 @@ suit_plat_err_t suit_ipc_streamer_chunk_enqueue(uint32_t stream_session_id, uint
 			}
 
 			struct k_sem *data_loop_kick_sem = irs->data_loop_kick_sem;
+
 			k_sem_give(data_loop_kick_sem);
 		}
 	}
@@ -503,7 +524,8 @@ suit_plat_err_t suit_ipc_streamer_chunk_status_req(uint32_t stream_session_id,
 						   size_t *chunk_info_count)
 {
 	suit_plat_err_t err = SUIT_PLAT_SUCCESS;
-	if (NULL == chunk_info || NULL == chunk_info_count) {
+
+	if (chunk_info == NULL || chunk_info_count == NULL) {
 		err = SUIT_PLAT_ERR_INVAL;
 	}
 
@@ -511,15 +533,15 @@ suit_plat_err_t suit_ipc_streamer_chunk_status_req(uint32_t stream_session_id,
 
 	image_request_state_t *irs = &image_request_state;
 
-	if (SUIT_PLAT_SUCCESS == err) {
-		if (STAGE_IDLE == irs->stage || irs->stream_session_id != stream_session_id) {
+	if (err == SUIT_PLAT_SUCCESS) {
+		if (irs->stage == STAGE_IDLE || irs->stream_session_id != stream_session_id) {
 			err = SUIT_PLAT_ERR_INCORRECT_STATE;
 		}
 	}
 
 	uint32_t count = 0;
 
-	if (SUIT_PLAT_SUCCESS == err) {
+	if (err == SUIT_PLAT_SUCCESS) {
 
 		uint32_t min_arrival_number = 1;
 
@@ -533,19 +555,19 @@ suit_plat_err_t suit_ipc_streamer_chunk_status_req(uint32_t stream_session_id,
 
 			chunk_processing_state_t *cps =
 				non_empty_chunk_slot_get_next(irs, min_arrival_number);
-			if (NULL != cps) {
+			if (cps != NULL) {
 
 				min_arrival_number = cps->arrival_number + 1;
 
-				if (SUIT_PLAT_SUCCESS == err) {
+				if (err == SUIT_PLAT_SUCCESS) {
 					suit_ipc_streamer_chunk_info_t *entry = &chunk_info[count];
 					*chunk_info_count = count + 1;
 					entry->chunk_id = cps->chunk_id;
 
-					if (CHUNK_PENDING == cps->status) {
+					if (cps->status == CHUNK_PENDING) {
 						entry->status = PENDING;
 
-					} else if (CHUNK_PROCESSED_SUCCESS == cps->status) {
+					} else if (cps->status == CHUNK_PROCESSED_SUCCESS) {
 						entry->status = PROCESSED;
 
 					} else {
@@ -553,7 +575,7 @@ suit_plat_err_t suit_ipc_streamer_chunk_status_req(uint32_t stream_session_id,
 					}
 				}
 
-				if (CHUNK_PENDING != cps->status) {
+				if (cps->status != CHUNK_PENDING) {
 					cps->status = CHUNK_SLOT_EMPTY;
 				}
 
@@ -569,9 +591,9 @@ suit_plat_err_t suit_ipc_streamer_chunk_status_req(uint32_t stream_session_id,
 	return err;
 }
 
-suit_plat_err_t suit_ipc_streamer_chunk_status_evt_subscribe(
-					    suit_ipc_streamer_chunk_status_notify_fn notify_fn,
-					    void *context)
+suit_plat_err_t
+suit_ipc_streamer_chunk_status_evt_subscribe(suit_ipc_streamer_chunk_status_notify_fn notify_fn,
+					     void *context)
 {
 	suit_plat_err_t err = SUIT_PLAT_SUCCESS;
 
@@ -597,9 +619,9 @@ void suit_ipc_streamer_chunk_status_evt_unsubscribe(void)
 	image_request_state_unlock();
 }
 
-suit_plat_err_t suit_ipc_streamer_missing_image_evt_subscribe(
-					     suit_ipc_streamer_missing_image_notify_fn notify_fn,
-					     void *context)
+suit_plat_err_t
+suit_ipc_streamer_missing_image_evt_subscribe(suit_ipc_streamer_missing_image_notify_fn notify_fn,
+					      void *context)
 {
 	suit_plat_err_t err = SUIT_PLAT_SUCCESS;
 

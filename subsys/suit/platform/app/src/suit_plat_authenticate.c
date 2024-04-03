@@ -24,8 +24,8 @@ int suit_plat_authorize_component_id(struct zcbor_string *manifest_component_id,
 	}
 
 	/* Check if component ID is a manifest class */
-	if (suit_plat_decode_manifest_class_id(manifest_component_id, &class_id)
-	    != SUIT_PLAT_SUCCESS) {
+	if (suit_plat_decode_manifest_class_id(manifest_component_id, &class_id) !=
+	    SUIT_PLAT_SUCCESS) {
 		LOG_ERR("Component ID is not a manifest class");
 		return SUIT_ERR_UNAUTHORIZED_COMPONENT;
 	}
@@ -56,6 +56,7 @@ int suit_plat_authorize_process_dependency(struct zcbor_string *parent_component
 	}
 
 	int ret = suit_plat_manifest_role_get(parent_class_id, &parent_role);
+
 	if (ret != SUIT_SUCCESS) {
 		LOG_ERR("Unable to find parent manifest role (err: %i)", err);
 		return ret;

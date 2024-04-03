@@ -18,10 +18,10 @@ extern "C" {
  * @brief Gets an array of supported manifest class_info struct. This is
  *        a function which shall be supported on all domains.
  *
- * @param[out]     class_info An array of `suit_manifest_class_info_t` structures to store the supported
- *                 manifest class information.
- * @param[in,out]  size		as input - maximal amount of elements an array can hold,
- *				   as output - amount of stored elements
+ * @param[out]     class_info An array of `suit_manifest_class_info_t` structures to store the
+ *                            supported manifest class information.
+ * @param[in,out]  size       as input - maximal amount of elements an array can hold,
+ *                             as output - amount of stored elements
  * @return SUIT_SUCCESS on success, error code otherwise.
  *
  */

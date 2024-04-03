@@ -28,7 +28,7 @@ suit_plat_err_t suit_dfu_cache_partition_slot_foreach(struct dfu_cache_pool *cac
 	uintptr_t current_offset = 0;
 	uint8_t partition_header_storage[CACHE_METADATA_MAX_LENGTH];
 
-	LOG_DBG("Foreach on cache %p(size:%u)", (void*)cache_pool->address, cache_pool->size);
+	LOG_DBG("Foreach on cache %p(size:%u)", (void *)cache_pool->address, cache_pool->size);
 
 	zcbor_new_decode_state(states, ZCBOR_ARRAY_SIZE(states), NULL, 0, 1);
 
@@ -36,6 +36,7 @@ suit_plat_err_t suit_dfu_cache_partition_slot_foreach(struct dfu_cache_pool *cac
 		uintptr_t current_address = (uintptr_t)cache_pool->address + current_offset;
 		size_t cache_remaining_size = cache_pool->size - current_offset;
 		size_t read_size = MIN(sizeof(partition_header_storage), cache_remaining_size);
+
 		err = suit_dfu_cache_memcpy(partition_header_storage, current_address, read_size);
 
 		if (err != SUIT_PLAT_SUCCESS) {
@@ -62,8 +63,8 @@ suit_plat_err_t suit_dfu_cache_partition_slot_foreach(struct dfu_cache_pool *cac
 		 *
 		 * If correct URI and payload was found, a user-provided callback is executed.
 		 *
-		 * Lastly, we calculate the next address at which the next URI TSTR is supposed to be
-		 * and repeat the whole process.
+		 * Lastly, we calculate the next address at which the next URI TSTR is supposed
+		 * to be and repeat the whole process.
 		 */
 
 		zcbor_update_state(states, partition_header_storage, read_size);
@@ -97,6 +98,7 @@ suit_plat_err_t suit_dfu_cache_partition_slot_foreach(struct dfu_cache_pool *cac
 
 		if (cb) {
 			uintptr_t data_address = current_address + bstr_data_offset;
+
 			result = cb(cache_pool, states, &uri, data_address, data_fragment.total_len,
 				    ctx);
 		}
@@ -134,6 +136,7 @@ suit_plat_err_t suit_dfu_cache_partition_is_empty(struct dfu_cache_pool *cache_p
 
 	while (remaining > 0) {
 		size_t read_size = MIN(chunk_size, remaining);
+
 		ret = suit_dfu_cache_memcpy(buffer, (uintptr_t)address, read_size);
 		if (ret != SUIT_PLAT_SUCCESS) {
 			break;
@@ -162,8 +165,7 @@ static bool find_free_address(struct dfu_cache_pool *cache_pool, zcbor_state_t *
 }
 
 suit_plat_err_t suit_dfu_cache_partition_find_free_space(struct dfu_cache_pool *partition,
-							 uintptr_t *free_address,
-							 bool *needs_erase)
+							 uintptr_t *free_address, bool *needs_erase)
 {
 	uintptr_t address = (uintptr_t)partition->address;
 	suit_plat_err_t ret;
@@ -219,6 +221,7 @@ suit_plat_err_t suit_dfu_cache_memcpy(uint8_t *destination, uintptr_t source, si
 
 	if (sink.release) {
 		suit_plat_err_t ret2 = sink.release(sink.ctx);
+
 		if (ret2 != SUIT_PLAT_SUCCESS) {
 			LOG_ERR("Failed to release sink: %d", ret2);
 		}

@@ -45,6 +45,7 @@ suit_plat_err_t suit_storage_report_internal_clear(uint8_t *area_addr, size_t ar
 
 	/* Override report entry. */
 	int err = flash_erase(fdev, suit_plat_mem_nvm_offset_get(area_addr), area_size);
+
 	if (err != 0) {
 		return SUIT_PLAT_ERR_IO;
 	}
@@ -109,6 +110,7 @@ suit_plat_err_t suit_storage_report_internal_save(uint8_t *area_addr, size_t are
 
 	/* Override report entry. */
 	int err = flash_erase(fdev, suit_plat_mem_nvm_offset_get(area_addr), area_size);
+
 	if (err != 0) {
 		return SUIT_PLAT_ERR_IO;
 	}

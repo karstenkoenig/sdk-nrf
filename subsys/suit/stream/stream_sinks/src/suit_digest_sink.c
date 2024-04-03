@@ -32,7 +32,7 @@ static struct digest_sink_context *get_new_context(void)
 
 static suit_plat_err_t write(void *ctx, const uint8_t *buf, size_t size)
 {
-	if ((NULL == ctx) || (NULL == buf) || (0 == size)) {
+	if ((ctx == NULL) || (buf == NULL) || (size == 0)) {
 		LOG_ERR("Invalid arguments");
 		return SUIT_PLAT_ERR_INVAL;
 	}
@@ -48,7 +48,8 @@ static suit_plat_err_t write(void *ctx, const uint8_t *buf, size_t size)
 	}
 
 	psa_status_t status = psa_hash_update(&digest_ctx->operation, buf, size);
-	if (PSA_SUCCESS != status) {
+
+	if (status != PSA_SUCCESS) {
 		LOG_ERR("Failed to update digest: %d", status);
 		return SUIT_PLAT_ERR_CRASH;
 	}
@@ -58,12 +59,13 @@ static suit_plat_err_t write(void *ctx, const uint8_t *buf, size_t size)
 
 static suit_plat_err_t release(void *ctx)
 {
-	if (NULL == ctx) {
+	if (ctx == NULL) {
 		LOG_ERR("Invalid argument");
 		return SUIT_PLAT_ERR_INVAL;
 	}
 
 	struct digest_sink_context *digest_ctx = (struct digest_sink_context *)ctx;
+
 	memset(digest_ctx, 0, sizeof(struct digest_sink_context));
 
 	return SUIT_PLAT_SUCCESS;
@@ -72,14 +74,14 @@ static suit_plat_err_t release(void *ctx)
 suit_plat_err_t suit_digest_sink_get(struct stream_sink *sink, psa_algorithm_t algorithm,
 				     const uint8_t *expected_digest)
 {
-	if (NULL == sink || NULL == expected_digest) {
+	if (sink == NULL || expected_digest == NULL) {
 		LOG_ERR("Invalid argument");
 		return SUIT_PLAT_ERR_INVAL;
 	}
 
 	struct digest_sink_context *digest_ctx = get_new_context();
 
-	if (NULL == digest_ctx) {
+	if (digest_ctx == NULL) {
 		LOG_ERR("Failed to get a new context");
 		return SUIT_PLAT_ERR_NO_RESOURCES;
 	}
@@ -87,13 +89,14 @@ suit_plat_err_t suit_digest_sink_get(struct stream_sink *sink, psa_algorithm_t a
 	memset((void *)digest_ctx, 0, sizeof(struct digest_sink_context));
 
 	psa_status_t status = psa_crypto_init();
-	if (PSA_SUCCESS != status) {
+
+	if (status != PSA_SUCCESS) {
 		LOG_ERR("Failed to init psa crypto: %d", status);
 		return SUIT_PLAT_ERR_CRASH;
 	}
 
 	status = psa_hash_setup(&digest_ctx->operation, algorithm);
-	if (PSA_SUCCESS != status) {
+	if (status != PSA_SUCCESS) {
 		LOG_ERR("Failed to setup hash algorithm: %d", status);
 		return SUIT_PLAT_ERR_CRASH;
 	}
@@ -115,7 +118,7 @@ suit_plat_err_t suit_digest_sink_get(struct stream_sink *sink, psa_algorithm_t a
 
 digest_sink_err_t suit_digest_sink_digest_match(void *ctx)
 {
-	if (NULL == ctx) {
+	if (ctx == NULL) {
 		LOG_ERR("Invalid argument");
 		return SUIT_PLAT_ERR_INVAL;
 	}
@@ -130,13 +133,15 @@ digest_sink_err_t suit_digest_sink_digest_match(void *ctx)
 	psa_status_t status = psa_hash_verify(&digest_ctx->operation, digest_ctx->expected_digest,
 					      digest_ctx->expected_digest_length);
 	digest_sink_err_t err = SUIT_PLAT_SUCCESS;
-	if (PSA_SUCCESS == status) {
+
+	if (status == PSA_SUCCESS) {
 		/* Digest calculation successful; expected digest matches calculated one */
 		err = SUIT_PLAT_SUCCESS;
 	} else {
-		if (PSA_ERROR_INVALID_SIGNATURE == status) {
+		if (status == PSA_ERROR_INVALID_SIGNATURE) {
 			/* Digest calculation successful but expected digest does not match
-			 * calculated one */
+			 * calculated one
+			 */
 			err = DIGEST_SINK_ERR_DIGEST_MISMATCH;
 		} else {
 			LOG_ERR("psa_hash_verify error: %d", status);
@@ -144,7 +149,7 @@ digest_sink_err_t suit_digest_sink_digest_match(void *ctx)
 		}
 		/* In both cases psa_hash_verify enters error state and must be aborted */
 		status = psa_hash_abort(&digest_ctx->operation);
-		if (PSA_SUCCESS != status) {
+		if (status != PSA_SUCCESS) {
 			LOG_ERR("psa_hash_abort error %d", status);
 			err = SUIT_PLAT_ERR_CRASH;
 		}

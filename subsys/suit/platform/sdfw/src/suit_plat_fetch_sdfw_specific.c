@@ -49,14 +49,13 @@ bool suit_plat_fetch_domain_specific_is_type_supported(suit_component_type_t com
 		return is_type_supported(component_type);
 	}
 
-
 	return false;
 }
 
 bool suit_plat_fetch_integrated_domain_specific_is_type_supported(
 	suit_component_type_t component_type)
 {
-    return is_type_supported(component_type);
+	return is_type_supported(component_type);
 }
 
 int suit_plat_fetch_domain_specific(suit_component_t dst_handle,
@@ -72,7 +71,7 @@ int suit_plat_fetch_domain_specific(suit_component_t dst_handle,
 #endif /* CONFIG_SUIT_STREAM_SOURCE_CACHE */
 
 #ifdef CONFIG_SUIT_STREAM_IPC_REQUESTOR
-	if ((ret == SUIT_PLAT_ERR_NOT_FOUND) &&		/* URI was not found in cache */
+	if ((ret == SUIT_PLAT_ERR_NOT_FOUND) &&		    /* URI was not found in cache */
 	    is_type_supported_by_ipc(dst_component_type)) { /* component type is supported */
 		/* Request uri through ipc streamer */
 		ret = suit_ipc_streamer_stream(uri->value, uri->len, dst_sink,
@@ -97,7 +96,8 @@ int suit_plat_fetch_domain_specific(suit_component_t dst_handle,
 			if (ret != SUIT_PLAT_SUCCESS) {
 				LOG_ERR("Failed to update destination MEM component size: %i", ret);
 
-				return suit_plat_err_to_processor_err_convert(ret);;
+				return suit_plat_err_to_processor_err_convert(ret);
+				;
 			}
 		}
 	}

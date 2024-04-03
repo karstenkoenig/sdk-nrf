@@ -38,6 +38,7 @@ int suit_plat_check_copy(suit_component_t dst_handle, suit_component_t src_handl
 
 	/* Get destination component type based on component handle*/
 	int ret = suit_plat_component_type_get(dst_handle, &dst_component_type);
+
 	if (ret != SUIT_SUCCESS) {
 		LOG_ERR("Failed to decode destination component type");
 		return ret;
@@ -80,6 +81,7 @@ int suit_plat_check_copy(suit_component_t dst_handle, suit_component_t src_handl
 	case SUIT_COMPONENT_TYPE_MEM:
 	case SUIT_COMPONENT_TYPE_CAND_IMG: {
 		memptr_storage_handle_t handle = NULL;
+
 		ret = suit_plat_component_impl_data_get(src_handle, &handle);
 
 		if (ret != SUIT_SUCCESS) {
@@ -124,6 +126,7 @@ int suit_plat_copy(suit_component_t dst_handle, suit_component_t src_handle)
 
 	/* Get destination component type based on component handle*/
 	int ret = suit_plat_component_type_get(dst_handle, &dst_component_type);
+
 	if (ret != SUIT_SUCCESS) {
 		LOG_ERR("Failed to decode destination component type");
 		return ret;
@@ -163,7 +166,7 @@ int suit_plat_copy(suit_component_t dst_handle, suit_component_t src_handle)
 
 #if CONFIG_SUIT_DIGEST_CACHE
 	/* Invalidate the cache entry of the digest for the destination. */
-	ret =  suit_plat_digest_cache_remove_by_handle(dst_handle);
+	ret = suit_plat_digest_cache_remove_by_handle(dst_handle);
 
 	if (ret != SUIT_SUCCESS) {
 		return ret;
@@ -176,6 +179,7 @@ int suit_plat_copy(suit_component_t dst_handle, suit_component_t src_handle)
 	case SUIT_COMPONENT_TYPE_MEM:
 	case SUIT_COMPONENT_TYPE_CAND_IMG: {
 		memptr_storage_handle_t handle = NULL;
+
 		ret = suit_plat_component_impl_data_get(src_handle, &handle);
 
 		if (ret != SUIT_SUCCESS) {
@@ -197,9 +201,9 @@ int suit_plat_copy(suit_component_t dst_handle, suit_component_t src_handle)
 				LOG_ERR("Failed to erase destination sink: %d", ret);
 				release_sink(&dst_sink);
 				return suit_plat_err_to_processor_err_convert(ret);
-			} else {
-				LOG_DBG("dst_sink erased");
 			}
+
+			LOG_DBG("dst_sink erased");
 		}
 
 		ret = suit_generic_address_streamer_stream(payload_ptr, payload_size, &dst_sink);

@@ -37,7 +37,7 @@ static struct ram_ctx ctx[SUIT_MAX_RAM_COMPONENTS];
  *
  * @return struct ram_ctx* or NULL if no free ctx was found
  */
-static struct ram_ctx *get_new_ctx()
+static struct ram_ctx *get_new_ctx(void)
 {
 	for (size_t i = 0; i < SUIT_MAX_RAM_COMPONENTS; i++) {
 		if (!ctx[i].in_use) {
@@ -50,7 +50,7 @@ static struct ram_ctx *get_new_ctx()
 
 bool suit_ram_sink_is_address_supported(uint8_t *address)
 {
-	if ((address == NULL) || !suit_memory_global_address_is_in_ram((uintptr_t) address)) {
+	if ((address == NULL) || !suit_memory_global_address_is_in_ram((uintptr_t)address)) {
 		LOG_INF("Failed to find RAM area corresponding to address: %p", address);
 		return false;
 	}
@@ -64,7 +64,7 @@ suit_plat_err_t suit_ram_sink_get(struct stream_sink *sink, uint8_t *dst, size_t
 		struct ram_ctx *ctx = get_new_ctx();
 
 		/* Check if requested area fits in found RAM */
-		if (!suit_memory_global_address_range_is_in_ram((uintptr_t) dst, size)) {
+		if (!suit_memory_global_address_range_is_in_ram((uintptr_t)dst, size)) {
 			LOG_ERR("Requested memory area (%p) is not within RAM", dst);
 			return SUIT_PLAT_ERR_OUT_OF_BOUNDS;
 		}
@@ -101,7 +101,8 @@ static suit_plat_err_t erase(void *ctx)
 		struct ram_ctx *ram_ctx = (struct ram_ctx *)ctx;
 		size_t size = ram_ctx->offset_limit - (size_t)ram_ctx->ptr;
 
-		uint8_t *dst = (uint8_t*)suit_memory_global_address_to_ram_address((uintptr_t)ram_ctx->ptr);
+		uint8_t *dst = (uint8_t *)suit_memory_global_address_to_ram_address(
+			(uintptr_t)ram_ctx->ptr);
 
 		if (dst == NULL) {
 			return SUIT_PLAT_ERR_INVAL;
@@ -119,7 +120,8 @@ static suit_plat_err_t write(void *ctx, const uint8_t *buf, size_t size)
 		struct ram_ctx *ram_ctx = (struct ram_ctx *)ctx;
 
 		if ((ram_ctx->offset_limit - (size_t)ram_ctx->ptr) >= size) {
-			uint8_t *dst = (uint8_t*)suit_memory_global_address_to_ram_address((uintptr_t)ram_ctx->ptr);
+			uint8_t *dst = (uint8_t *)suit_memory_global_address_to_ram_address(
+				(uintptr_t)ram_ctx->ptr);
 
 			if (dst == NULL) {
 				return SUIT_PLAT_ERR_INVAL;

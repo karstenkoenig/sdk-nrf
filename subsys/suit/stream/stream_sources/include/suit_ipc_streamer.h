@@ -43,7 +43,7 @@ extern "C" {
  *
  * @param[in]   sink			Function pointers to pass image chunk to next chunk
  *processing element. Non-'null' write_ptr is always required. Non-'null' seek_ptr is required if
- *streamer provider delivers image in non-continous chunks. In event of failure of any sink-related
+ *streamer provider delivers image in non-continuous chunks. In event of failure of any sink-related
  *operations suit_ipc_streamer_stream will fail as well.
  *
  * @param[in]   inter_chunk_timeout_ms	Function will fail (timeout) in case of streamer provider
@@ -154,10 +154,10 @@ suit_plat_err_t suit_ipc_streamer_chunk_enqueue(uint32_t stream_session_id, uint
  *can hold, as output - amount of stored elements
  *
  *
- * @return SUIT_PLAT_SUCCESS on success
- *		SUIT_PLAT_ERR_INVAL invalid parameter, i.e. null pointer
- *		SUIT_PLAT_ERR_INCORRECT_STATE there is no open session identified by stream_session_id
- *		SUIT_PLAT_ERR_BUSY chunk_info array is too small
+ * @retval SUIT_PLAT_SUCCESS on success
+ * @retval SUIT_PLAT_ERR_INVAL invalid parameter, i.e. null pointer
+ * @retval SUIT_PLAT_ERR_INCORRECT_STATE there is no open session identified by stream_session_id
+ * @retval SUIT_PLAT_ERR_BUSY chunk_info array is too small
  *
  */
 suit_plat_err_t suit_ipc_streamer_chunk_status_req(uint32_t stream_session_id,

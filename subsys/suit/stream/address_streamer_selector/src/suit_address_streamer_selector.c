@@ -65,7 +65,7 @@ suit_address_streamer suit_address_streamer_select_by_address(const uint8_t *add
 			return ifaces[i].stream;
 		}
 	}
-	LOG_ERR("No streamer found for address %p", (void*) address);
+	LOG_ERR("No streamer found for address %p", (void *) address);
 
 	return NULL;
 }

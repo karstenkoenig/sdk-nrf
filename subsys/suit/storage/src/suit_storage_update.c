@@ -34,6 +34,7 @@ static suit_plat_err_t save_update_info(const struct update_candidate_info *info
 	}
 
 	int err = flash_erase(fdev, suit_plat_mem_nvm_offset_get(addr), size);
+
 	if (err != 0) {
 		return SUIT_PLAT_ERR_IO;
 	}

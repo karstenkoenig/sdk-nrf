@@ -9,8 +9,8 @@
 int suit_plat_err_to_processor_err_convert(suit_plat_err_t plat_err)
 {
 	int proc_err = SUIT_ERR_CRASH;
-	switch (plat_err)
-	{
+
+	switch (plat_err) {
 	case SUIT_PLAT_SUCCESS:
 		proc_err = SUIT_SUCCESS;
 		break;

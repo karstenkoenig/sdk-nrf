@@ -37,9 +37,9 @@ static suit_plat_err_t save_envelope_partial(uint8_t *area_addr, size_t area_siz
 {
 	int err = 0;
 	static uint8_t write_buf[SUIT_STORAGE_WRITE_SIZE];
-	static uint8_t buf_fill_level = 0;
-	static size_t offset = 0;
-	static uint8_t *current_area_addr = NULL;
+	static uint8_t buf_fill_level;
+	static size_t offset;
+	static uint8_t *current_area_addr;
 	static size_t envelope_offset = -1;
 	const struct device *fdev = DEVICE_DT_GET(DT_CHOSEN(zephyr_flash_controller));
 
@@ -72,6 +72,7 @@ static suit_plat_err_t save_envelope_partial(uint8_t *area_addr, size_t area_siz
 	/* Fill the write buffer to flush non-aligned bytes from the previous call. */
 	if ((err == 0) && buf_fill_level) {
 		size_t len = sizeof(write_buf) - buf_fill_level;
+
 		len = MIN(len, size);
 		memcpy(&write_buf[buf_fill_level], addr, len);
 
@@ -213,8 +214,7 @@ suit_plat_err_t suit_storage_envelope_install(uint8_t *area_addr, size_t area_si
 	 * Additionally change the size variable value from envelope size to
 	 * the decoded envelope size, that does not contain severable elements.
 	 */
-	err = suit_storage_decode_suit_envelope_severed(addr, size, &envelope,
-							&size);
+	err = suit_storage_decode_suit_envelope_severed(addr, size, &envelope, &size);
 	if (err != SUIT_PLAT_SUCCESS) {
 		LOG_ERR("Unable to install envelope: decode failed (%d)", err);
 		return err;

@@ -23,7 +23,7 @@ extern "C" {
  * @return SUIT_PLAT_SUCCESS if success otherwise error code
  */
 suit_plat_err_t suit_dfu_cache_streamer_stream(const uint8_t *uri, size_t uri_size,
-                        		       struct stream_sink *sink);
+					       struct stream_sink *sink);
 
 #ifdef __cplusplus
 }

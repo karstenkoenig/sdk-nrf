@@ -12,11 +12,11 @@
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(suit_plat_check_content, CONFIG_SUIT_LOG_LEVEL);
 
-int suit_plat_check_content_mem_mapped(suit_component_t component,
-				       struct zcbor_string *content)
+int suit_plat_check_content_mem_mapped(suit_component_t component, struct zcbor_string *content)
 {
 	void *impl_data = NULL;
 	int err = suit_plat_component_impl_data_get(component, &impl_data);
+
 	if (err != SUIT_SUCCESS) {
 		LOG_ERR("Failed to get implementation data: %d", err);
 		return SUIT_ERR_UNSUPPORTED_COMPONENT_ID;
@@ -32,18 +32,17 @@ int suit_plat_check_content_mem_mapped(suit_component_t component,
 		return SUIT_ERR_CRASH;
 	}
 
-	if (size != content->len)
-	{
+	if (size != content->len) {
 		return SUIT_FAIL_CONDITION;
 	}
 
 	uint8_t residual = 0;
+
 	for (size_t i = 0; i < size; i++) {
 		residual |= content_data[i] ^ data[i];
 	}
 
-	if (residual != 0)
-	{
+	if (residual != 0) {
 		return SUIT_FAIL_CONDITION;
 	}
 
@@ -56,6 +55,7 @@ int suit_plat_check_content(suit_component_t component, struct zcbor_string *con
 	suit_component_type_t component_type = SUIT_COMPONENT_TYPE_UNSUPPORTED;
 
 	int err = suit_plat_component_id_get(component, &component_id);
+
 	if (err != SUIT_SUCCESS) {
 		LOG_ERR("Failed to get component id: %d", err);
 		return err;

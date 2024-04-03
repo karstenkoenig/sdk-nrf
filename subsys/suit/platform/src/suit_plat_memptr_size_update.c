@@ -12,7 +12,6 @@
 
 LOG_MODULE_REGISTER(suit_plat_memptr_update_size, CONFIG_SUIT_LOG_LEVEL);
 
-
 int suit_plat_memptr_size_update(suit_component_t handle, size_t size)
 {
 	struct zcbor_string *component_id = NULL;
@@ -22,14 +21,15 @@ int suit_plat_memptr_size_update(suit_component_t handle, size_t size)
 	const uint8_t *payload_ptr = NULL;
 	size_t payload_size = 0;
 
-
 	int err = suit_plat_component_id_get(handle, &component_id);
+
 	if (err != SUIT_SUCCESS) {
 		LOG_ERR("Failed to get component id: %i", err);
 		return err;
 	}
 
-	if (suit_plat_decode_address_size(component_id, &run_address, &component_size) != SUIT_PLAT_SUCCESS) {
+	if (suit_plat_decode_address_size(component_id, &run_address, &component_size) !=
+	    SUIT_PLAT_SUCCESS) {
 		LOG_ERR("suit_plat_decode_address_size failed");
 		return SUIT_ERR_UNSUPPORTED_COMPONENT_ID;
 	}

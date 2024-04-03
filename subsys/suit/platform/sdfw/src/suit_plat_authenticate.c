@@ -41,20 +41,22 @@ int suit_plat_authenticate_manifest(struct zcbor_string *manifest_component_id,
 
 	/* Check if signature verification should be skipped. */
 	int err = suit_plat_authorize_unsigned_manifest(manifest_component_id);
+
 	if (err == SUIT_SUCCESS) {
 		LOG_WRN("Signature verification skipped due to MCI configuration.");
 		return err;
 	}
 
 	/* Check if component ID is a manifest class */
-	if (suit_plat_decode_manifest_class_id(manifest_component_id, &class_id)
-	    != SUIT_PLAT_SUCCESS) {
+	if (suit_plat_decode_manifest_class_id(manifest_component_id, &class_id) !=
+	    SUIT_PLAT_SUCCESS) {
 		LOG_ERR("Component ID is not a manifest class");
 		return SUIT_ERR_UNSUPPORTED_COMPONENT_ID;
 	}
 
 	/* Validate manifest class ID against supported manifests */
 	mci_err_t ret = suit_mci_manifest_class_id_validate(class_id);
+
 	if (ret != SUIT_PLAT_SUCCESS) {
 		LOG_ERR("Manifest class ID validation failed: MCI err %i", ret);
 		return SUIT_ERR_UNSUPPORTED_COMPONENT_ID;
@@ -88,21 +90,21 @@ int suit_plat_authorize_unsigned_manifest(struct zcbor_string *manifest_componen
 {
 	suit_manifest_class_id_t *class_id = NULL;
 
-	if ((manifest_component_id == NULL) ||
-		(manifest_component_id->value == NULL) ||
-		(manifest_component_id->len == 0)) {
+	if ((manifest_component_id == NULL) || (manifest_component_id->value == NULL) ||
+	    (manifest_component_id->len == 0)) {
 		return SUIT_ERR_DECODING;
 	}
 
 	/* Check if component ID is a manifest class */
-	if (suit_plat_decode_manifest_class_id(manifest_component_id, &class_id)
-	    != SUIT_PLAT_SUCCESS) {
+	if (suit_plat_decode_manifest_class_id(manifest_component_id, &class_id) !=
+	    SUIT_PLAT_SUCCESS) {
 		LOG_ERR("Component ID is not a manifest class");
 		return SUIT_ERR_UNSUPPORTED_COMPONENT_ID;
 	}
 
 	/* Validate manifest class ID against supported manifests */
 	mci_err_t ret = suit_mci_manifest_class_id_validate(class_id);
+
 	if (ret != SUIT_PLAT_SUCCESS) {
 		LOG_ERR("Manifest class ID validation failed: MCI err %i", ret);
 		return SUIT_ERR_UNSUPPORTED_COMPONENT_ID;
@@ -132,8 +134,8 @@ int suit_plat_authorize_component_id(struct zcbor_string *manifest_component_id,
 	}
 
 	/* Check if component ID is a manifest class */
-	if (suit_plat_decode_manifest_class_id(manifest_component_id, &class_id)
-	    != SUIT_PLAT_SUCCESS) {
+	if (suit_plat_decode_manifest_class_id(manifest_component_id, &class_id) !=
+	    SUIT_PLAT_SUCCESS) {
 		LOG_ERR("Component ID is not a manifest class");
 		return SUIT_ERR_UNAUTHORIZED_COMPONENT;
 	}

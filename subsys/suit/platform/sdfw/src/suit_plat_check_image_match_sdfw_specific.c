@@ -60,10 +60,10 @@ static int suit_plat_check_image_match_soc_spec(struct zcbor_string *component_i
 
 	int err = SUIT_ERR_UNSUPPORTED_COMPONENT_ID;
 
-	if (1 == number) {
+	if (number == 1) {
 		/* SDFW */
 		err = suit_plat_check_image_match_soc_spec_sdfw(component_id, alg_id, digest);
-	} else if (2 == number) {
+	} else if (number == 2) {
 		/* SDFW recovery */
 		err = SUIT_ERR_UNSUPPORTED_COMPONENT_ID;
 	} else {
@@ -74,9 +74,8 @@ static int suit_plat_check_image_match_soc_spec(struct zcbor_string *component_i
 	return err;
 }
 
-static int suit_plat_check_image_match_mfst(suit_component_t component,
-						enum suit_cose_alg alg_id,
-						struct zcbor_string *digest)
+static int suit_plat_check_image_match_mfst(suit_component_t component, enum suit_cose_alg alg_id,
+					    struct zcbor_string *digest)
 {
 	int ret = SUIT_ERR_UNSUPPORTED_COMPONENT_ID;
 
@@ -87,21 +86,30 @@ static int suit_plat_check_image_match_mfst(suit_component_t component,
 
 	ret = suit_plat_retrieve_manifest(component, &envelope_str, &envelope_len);
 	if (ret != SUIT_SUCCESS) {
-		LOG_ERR("Failed to check image digest: unable to retrieve manifest contents (handle: %p)\r\n", (void *)component);
+		LOG_ERR("Failed to check image digest: unable to retrieve manifest contents "
+			"(handle: %p)\r\n",
+			(void *)component);
 		return ret;
 	}
 
-	ret = suit_processor_get_manifest_metadata(envelope_str, envelope_len, false, NULL, &manifest_digest, &alg, NULL);
+	ret = suit_processor_get_manifest_metadata(envelope_str, envelope_len, false, NULL,
+						   &manifest_digest, &alg, NULL);
 	if (ret != SUIT_SUCCESS) {
-		LOG_ERR("Failed to check image digest: unable to read manifest digest (handle: %p)\r\n", (void *)component);
+		LOG_ERR("Failed to check image digest: unable to read manifest digest (handle: "
+			"%p)\r\n",
+			(void *)component);
 		return ret;
 	}
 
 	if (alg_id != alg) {
-		LOG_ERR("Manifest digest check failed: digest algorithm does not match (handle: %p)\r\n", (void *)component);
+		LOG_ERR("Manifest digest check failed: digest algorithm does not match (handle: "
+			"%p)\r\n",
+			(void *)component);
 		ret = SUIT_FAIL_CONDITION;
 	} else if (!suit_compare_zcbor_strings(digest, &manifest_digest)) {
-		LOG_ERR("Manifest digest check failed: digest values does not match (handle: %p)\r\n", (void *)component);
+		LOG_ERR("Manifest digest check failed: digest values does not match (handle: "
+			"%p)\r\n",
+			(void *)component);
 		ret = SUIT_FAIL_CONDITION;
 	}
 
@@ -111,8 +119,8 @@ static int suit_plat_check_image_match_mfst(suit_component_t component,
 bool suit_plat_check_image_match_domain_specific_is_type_mem_mapped(
 	suit_component_type_t component_type)
 {
-	return (component_type == SUIT_COMPONENT_TYPE_CAND_IMG)
-	       || (component_type == SUIT_COMPONENT_TYPE_MEM);
+	return (component_type == SUIT_COMPONENT_TYPE_CAND_IMG) ||
+	       (component_type == SUIT_COMPONENT_TYPE_MEM);
 }
 
 int suit_plat_check_image_match_domain_specific(suit_component_t component,
@@ -146,19 +154,17 @@ int suit_plat_check_image_match_domain_specific(suit_component_t component,
 	}
 
 #if CONFIG_SUIT_DIGEST_CACHE
-	if (err == SUIT_SUCCESS)
-	{
+	if (err == SUIT_SUCCESS) {
 		int ret;
 
-		switch(component_type)
-		{
+		switch (component_type) {
 		case SUIT_COMPONENT_TYPE_MEM:
 		case SUIT_COMPONENT_TYPE_SOC_SPEC: {
 			ret = suit_plat_digest_cache_add(component_id, alg_id, digest);
 
-			if (ret != SUIT_SUCCESS)
-			{
-				LOG_WRN("Failed to cache digest for component type %d, err %d", component_type, ret);
+			if (ret != SUIT_SUCCESS) {
+				LOG_WRN("Failed to cache digest for component type %d, err %d",
+					component_type, ret);
 			}
 		}
 		default: {

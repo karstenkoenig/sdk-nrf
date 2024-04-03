@@ -49,6 +49,37 @@ static image_request_info_t request_info = {
 
 static K_SEM_DEFINE(chunk_status_changed_sem, 0, 1);
 
+static bool chunk_released_check(image_request_info_t *ri,
+				 suit_ipc_streamer_chunk_info_t *injected_chunks,
+				 size_t chunk_info_count)
+{
+	bool chunk_released = false;
+
+	for (int i = 0; i < CONFIG_SUIT_STREAM_IPC_PROVIDER_BUFFERS; i++) {
+		buffer_metadata_t *bm = &ri->buffer_info.buffer_metadata[i];
+
+		if (bm->buffer_state == ENQUEUED) {
+			bool still_enqueued = false;
+
+			for (int j = 0; j < chunk_info_count; j++) {
+				suit_ipc_streamer_chunk_info_t *ci = &injected_chunks[j];
+
+				if (ci->chunk_id == bm->chunk_id && ci->status == PENDING) {
+					still_enqueued = true;
+					break;
+				}
+			}
+
+			if (!still_enqueued) {
+				bm->buffer_state = FREE;
+				chunk_released = true;
+			}
+		}
+	}
+
+	return chunk_released;
+}
+
 static suit_plat_err_t wait_for_buffer_state_change(image_request_info_t *ri)
 {
 	suit_plat_err_t err = SUIT_PLAT_SUCCESS;
@@ -58,40 +89,20 @@ static suit_plat_err_t wait_for_buffer_state_change(image_request_info_t *ri)
 	while (true) {
 		err = suit_ipc_streamer_chunk_status_req(ri->stream_session_id, injected_chunks,
 							 &chunk_info_count);
-		if (SUIT_PLAT_ERR_BUSY == err) {
+		if (err == SUIT_PLAT_ERR_BUSY) {
 			/* not enough space in injected_chunks. This is not a problem,
-			 *  stream requestor most probably just released its space and
-			 *  one of next calls will be successful.
+			 * stream requestor most probably just released its space and
+			 * one of next calls will be successful.
 			 */
-		} else if (err != SUIT_PLAT_SUCCESS) {
-			return err;
-		} else {
-
-			bool chunk_released = false;
-			for (int i = 0; i < CONFIG_SUIT_STREAM_IPC_PROVIDER_BUFFERS; i++) {
-				buffer_metadata_t *bm = &ri->buffer_info.buffer_metadata[i];
-
-				if (ENQUEUED == bm->buffer_state) {
-					bool still_enqueued = false;
-					for (int j = 0; j < chunk_info_count; j++) {
-						suit_ipc_streamer_chunk_info_t *ci = &injected_chunks[j];
-						if (ci->chunk_id == bm->chunk_id &&
-						    PENDING == ci->status) {
-							still_enqueued = true;
-							break;
-						}
-					}
-
-					if (!still_enqueued) {
-						bm->buffer_state = FREE;
-						chunk_released = true;
-					}
-				}
-			}
+		} else if (err == SUIT_PLAT_SUCCESS) {
+			bool chunk_released =
+				chunk_released_check(ri, injected_chunks, chunk_info_count);
 
 			if (chunk_released) {
 				return SUIT_PLAT_SUCCESS;
 			}
+		} else {
+			return err;
 		}
 
 		/* timeout is a guard against chunk status notification miss.
@@ -105,7 +116,7 @@ static suit_plat_err_t wait_for_buffer_state_change(image_request_info_t *ri)
 }
 
 static suit_plat_err_t find_buffer_for_enqueue(image_request_info_t *ri, buffer_metadata_t **bm,
-				   uint8_t **buffer)
+					       uint8_t **buffer)
 {
 	suit_plat_err_t err = SUIT_PLAT_SUCCESS;
 	*bm = NULL;
@@ -113,7 +124,8 @@ static suit_plat_err_t find_buffer_for_enqueue(image_request_info_t *ri, buffer_
 
 	for (int i = 0; i < CONFIG_SUIT_STREAM_IPC_PROVIDER_BUFFERS; i++) {
 		buffer_metadata_t *current = &ri->buffer_info.buffer_metadata[i];
-		if (READY_TO_ENQUEUE == current->buffer_state) {
+
+		if (current->buffer_state == READY_TO_ENQUEUE) {
 			/* READY_TO_ENQUEUE- means that new data shall be concatenated to this one
 			 */
 			*bm = current;
@@ -122,17 +134,18 @@ static suit_plat_err_t find_buffer_for_enqueue(image_request_info_t *ri, buffer_
 		}
 	}
 
-	while (NULL == *bm) {
+	while (*bm == NULL) {
 		for (int i = 0; i < CONFIG_SUIT_STREAM_IPC_PROVIDER_BUFFERS; i++) {
 			buffer_metadata_t *current = &ri->buffer_info.buffer_metadata[i];
-			if (FREE == current->buffer_state) {
+
+			if (current->buffer_state == FREE) {
 				*bm = current;
 				*buffer = ri->buffer_info.buffer[i];
 				break;
 			}
 		}
 
-		if (NULL == *bm) {
+		if (*bm == NULL) {
 			err = wait_for_buffer_state_change(ri);
 			if (err != SUIT_PLAT_SUCCESS) {
 				return err;
@@ -144,7 +157,7 @@ static suit_plat_err_t find_buffer_for_enqueue(image_request_info_t *ri, buffer_
 }
 
 static suit_plat_err_t chunk_enqueue(image_request_info_t *ri, buffer_metadata_t *bm,
-			 uint8_t *buffer_address, bool last_chunk)
+				     uint8_t *buffer_address, bool last_chunk)
 {
 	suit_plat_err_t err = SUIT_PLAT_SUCCESS;
 
@@ -152,7 +165,7 @@ static suit_plat_err_t chunk_enqueue(image_request_info_t *ri, buffer_metadata_t
 		err = suit_ipc_streamer_chunk_enqueue(ri->stream_session_id, bm->chunk_id,
 						      bm->offset_in_image, buffer_address,
 						      bm->chunk_size, last_chunk);
-		if (SUIT_PLAT_ERR_BUSY == err) {
+		if (err == SUIT_PLAT_ERR_BUSY) {
 			/* Not enough space in requestor, try again later
 			 */
 			err = wait_for_buffer_state_change(ri);
@@ -170,9 +183,9 @@ static suit_plat_err_t chunk_enqueue(image_request_info_t *ri, buffer_metadata_t
 static suit_plat_err_t end_of_stream(image_request_info_t *ri)
 {
 	suit_plat_err_t err = SUIT_PLAT_SUCCESS;
-
 	buffer_metadata_t *bm = NULL;
 	uint8_t *buffer = NULL;
+
 	err = find_buffer_for_enqueue(ri, &bm, &buffer);
 	if (err != SUIT_PLAT_SUCCESS) {
 		return err;
@@ -205,13 +218,14 @@ static suit_plat_err_t end_of_stream(image_request_info_t *ri)
 		bm = NULL;
 		for (int i = 0; i < CONFIG_SUIT_STREAM_IPC_PROVIDER_BUFFERS; i++) {
 			buffer_metadata_t *current = &ri->buffer_info.buffer_metadata[i];
-			if (ENQUEUED == current->buffer_state) {
+
+			if (current->buffer_state == ENQUEUED) {
 				bm = current;
 				break;
 			}
 		}
 
-		if (NULL == bm) {
+		if (bm == NULL) {
 			return SUIT_PLAT_SUCCESS;
 		}
 
@@ -224,7 +238,7 @@ static suit_plat_err_t end_of_stream(image_request_info_t *ri)
 	return SUIT_PLAT_SUCCESS;
 }
 
-static suit_plat_err_t write_proxy(void *ctx, const uint8_t *source_bufer, size_t size)
+static suit_plat_err_t write_proxy(void *ctx, const uint8_t *source_buffer, size_t size)
 {
 
 	suit_plat_err_t err = SUIT_PLAT_SUCCESS;
@@ -242,6 +256,7 @@ static suit_plat_err_t write_proxy(void *ctx, const uint8_t *source_bufer, size_
 
 		buffer_metadata_t *bm = NULL;
 		uint8_t *buffer = NULL;
+
 		err = find_buffer_for_enqueue(ri, &bm, &buffer);
 		if (err != SUIT_PLAT_SUCCESS) {
 			return err;
@@ -261,11 +276,12 @@ static suit_plat_err_t write_proxy(void *ctx, const uint8_t *source_bufer, size_
 		}
 
 		size_t to_be_copied = CONFIG_SUIT_STREAM_IPC_PROVIDER_BUFFER_SIZE - bm->chunk_size;
+
 		if (source_remaining < to_be_copied) {
 			to_be_copied = source_remaining;
 		}
 
-		memcpy(buffer + bm->chunk_size, source_bufer + source_offset, to_be_copied);
+		memcpy(buffer + bm->chunk_size, source_buffer + source_offset, to_be_copied);
 		source_offset += to_be_copied;
 		source_remaining -= to_be_copied;
 		bm->chunk_size += to_be_copied;
@@ -298,6 +314,7 @@ static suit_plat_err_t seek_proxy(void *ctx, size_t offset)
 
 	buffer_metadata_t *bm = NULL;
 	uint8_t *buffer = NULL;
+
 	err = find_buffer_for_enqueue(ri, &bm, &buffer);
 	if (err != SUIT_PLAT_SUCCESS) {
 		return err;
@@ -357,15 +374,16 @@ static void image_request_worker(struct k_work *item)
 	uint8_t *resource_id = ri->buffer_info.buffer[0];
 	suit_plat_err_t err = suit_fetch_source_stream(resource_id, strlen(resource_id), &sink);
 
-	if (SUIT_PLAT_SUCCESS == err) {
+	if (err == SUIT_PLAT_SUCCESS) {
 		err = end_of_stream(ri);
 	}
 
 	ri->stream_session_id = 0;
 }
 
-static suit_plat_err_t missing_image_notify_fn(const uint8_t *resource_id, size_t resource_id_length,
-				    uint32_t stream_session_id, void *context)
+static suit_plat_err_t missing_image_notify_fn(const uint8_t *resource_id,
+					       size_t resource_id_length,
+					       uint32_t stream_session_id, void *context)
 {
 	image_request_info_t *ri = &request_info;
 
@@ -397,7 +415,7 @@ static suit_plat_err_t chunk_status_notify_fn(uint32_t stream_session_id, void *
 	return SUIT_PLAT_SUCCESS;
 }
 
-suit_plat_err_t suit_ipc_streamer_provider_init()
+suit_plat_err_t suit_ipc_streamer_provider_init(void)
 {
 
 	k_work_queue_init(&img_request_work_q);
@@ -406,9 +424,11 @@ suit_plat_err_t suit_ipc_streamer_provider_init()
 			   IMG_REQUEST_THREAD_PRIORITY, NULL);
 
 	image_request_info_t *ri = &request_info;
+
 	k_work_init(&ri->work, image_request_worker);
 
 	suit_plat_err_t err = suit_ipc_streamer_requestor_init();
+
 	if (err != SUIT_PLAT_SUCCESS) {
 		return err;
 	}

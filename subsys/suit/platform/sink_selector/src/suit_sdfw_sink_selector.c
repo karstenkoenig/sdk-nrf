@@ -33,8 +33,8 @@ int suit_sink_select(suit_component_t dst_handle, struct stream_sink *sink)
 {
 	struct zcbor_string *component_id;
 	int ret = SUIT_SUCCESS;
-#if defined(CONFIG_SUIT_STREAM_SINK_MEMPTR) || defined(CONFIG_SUIT_STREAM_SINK_FLASH) \
-	|| defined(CONFIG_SUIT_STREAM_SINK_SDFW)
+#if defined(CONFIG_SUIT_STREAM_SINK_MEMPTR) || defined(CONFIG_SUIT_STREAM_SINK_FLASH) ||           \
+	defined(CONFIG_SUIT_STREAM_SINK_SDFW)
 	suit_plat_err_t sink_get_err = SUIT_PLAT_SUCCESS;
 #endif
 
@@ -81,8 +81,8 @@ int suit_sink_select(suit_component_t dst_handle, struct stream_sink *sink)
 		intptr_t run_address;
 		size_t size;
 
-		if (suit_plat_decode_address_size(component_id, &run_address, &size)
-		    != SUIT_PLAT_SUCCESS) {
+		if (suit_plat_decode_address_size(component_id, &run_address, &size) !=
+		    SUIT_PLAT_SUCCESS) {
 			LOG_ERR("suit_plat_decode_address_size failed");
 			return SUIT_ERR_UNSUPPORTED_COMPONENT_ID;
 		}
@@ -155,7 +155,7 @@ int suit_sink_select(suit_component_t dst_handle, struct stream_sink *sink)
 			return SUIT_ERR_UNSUPPORTED_COMPONENT_ID;
 		}
 
-		if (1 == number) {
+		if (number == 1) {
 			if (IS_ENABLED(CONFIG_SUIT_STREAM_SINK_SDFW)) {
 				sink_get_err = suit_sdfw_sink_get(sink);
 				return suit_plat_err_to_processor_err_convert(sink_get_err);

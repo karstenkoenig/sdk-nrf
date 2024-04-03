@@ -32,6 +32,7 @@ int suit_plat_check_write(suit_component_t dst_handle, struct zcbor_string *cont
 
 	/* Get destination component type based on component handle*/
 	int ret = suit_plat_component_type_get(dst_handle, &dst_component_type);
+
 	if (ret != SUIT_SUCCESS) {
 		LOG_ERR("Failed to decode destination component type");
 		return ret;
@@ -77,6 +78,7 @@ int suit_plat_write(suit_component_t dst_handle, struct zcbor_string *content)
 
 	/* Get destination component type based on component handle*/
 	int ret = suit_plat_component_type_get(dst_handle, &dst_component_type);
+
 	if (ret != SUIT_SUCCESS) {
 		LOG_ERR("Failed to decode destination component type");
 		return ret;
@@ -102,7 +104,7 @@ int suit_plat_write(suit_component_t dst_handle, struct zcbor_string *content)
 
 #if CONFIG_SUIT_DIGEST_CACHE
 	/* Invalidate the cache entry of the digest for the destination. */
-	ret =  suit_plat_digest_cache_remove_by_handle(dst_handle);
+	ret = suit_plat_digest_cache_remove_by_handle(dst_handle);
 
 	if (ret != SUIT_SUCCESS) {
 		return ret;
@@ -115,13 +117,13 @@ int suit_plat_write(suit_component_t dst_handle, struct zcbor_string *content)
 			LOG_ERR("Failed to erase destination sink: %d", ret);
 			release_sink(&dst_sink);
 			return suit_plat_err_to_processor_err_convert(ret);
-		} else {
-			LOG_DBG("dst_sink erased");
 		}
+
+		LOG_DBG("dst_sink erased");
 	}
 
 #ifdef CONFIG_SUIT_STREAM_SOURCE_MEMPTR
-	ret = suit_memptr_streamer_stream(content->value, content->len , &dst_sink);
+	ret = suit_memptr_streamer_stream(content->value, content->len, &dst_sink);
 #endif /* CONFIG_SUIT_STREAM_SOURCE_MEMPTR */
 
 	if (ret != SUIT_PLAT_SUCCESS) {

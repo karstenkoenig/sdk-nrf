@@ -26,8 +26,8 @@ int suit_plat_sequence_completed(enum suit_command_sequence seq_name,
 		return SUIT_ERR_UNSUPPORTED_COMPONENT_ID;
 	}
 
-	if (suit_plat_decode_manifest_class_id(manifest_component_id, &class_id)
-	    != SUIT_PLAT_SUCCESS) {
+	if (suit_plat_decode_manifest_class_id(manifest_component_id, &class_id) !=
+	    SUIT_PLAT_SUCCESS) {
 		LOG_ERR("Unable to decode manifest class ID");
 		return SUIT_ERR_UNSUPPORTED_COMPONENT_ID;
 	}
@@ -67,8 +67,8 @@ int suit_plat_authorize_sequence_num(enum suit_command_sequence seq_name,
 		return SUIT_ERR_UNSUPPORTED_COMPONENT_ID;
 	}
 
-	if (suit_plat_decode_manifest_class_id(manifest_component_id, &class_id)
-	    != SUIT_PLAT_SUCCESS) {
+	if (suit_plat_decode_manifest_class_id(manifest_component_id, &class_id) !=
+	    SUIT_PLAT_SUCCESS) {
 		LOG_ERR("Unable to decode manifest class ID");
 		return SUIT_ERR_UNSUPPORTED_COMPONENT_ID;
 	}
@@ -97,8 +97,8 @@ int suit_plat_authorize_sequence_num(enum suit_command_sequence seq_name,
 		return SUIT_SUCCESS;
 	}
 
-	ret = suit_processor_get_manifest_metadata(envelope_addr, envelope_size, false, NULL, NULL, NULL,
-						   &current_seq_num);
+	ret = suit_processor_get_manifest_metadata(envelope_addr, envelope_size, false, NULL, NULL,
+						   NULL, &current_seq_num);
 	if (ret != SUIT_SUCCESS) {
 		LOG_ERR("Unable to read manifest metadata (ret: %d)", ret);
 		return SUIT_ERR_AUTHENTICATION;
@@ -110,12 +110,12 @@ int suit_plat_authorize_sequence_num(enum suit_command_sequence seq_name,
 			/* Allow to use installed manifest during boot procedure. */
 			LOG_DBG("Manifest sequence number %d authorized to boot", seq_num);
 			return SUIT_SUCCESS;
-		} else {
-			/* It is not allowed to boot from update candidate. */
-			LOG_ERR("Manifest sequence number %d unauthorized to boot (current: %d)",
-				seq_num, current_seq_num);
-			return SUIT_ERR_AUTHENTICATION;
 		}
+
+		/* It is not allowed to boot from update candidate. */
+		LOG_ERR("Manifest sequence number %d unauthorized to boot (current: %d)",
+			seq_num, current_seq_num);
+		return SUIT_ERR_AUTHENTICATION;
 	}
 
 	ret = suit_mci_downgrade_prevention_policy_get(class_id, &policy);

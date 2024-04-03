@@ -51,11 +51,12 @@ static int verify_and_get_sink(suit_component_t dst_handle, struct stream_sink *
 
 	/* Select sink */
 #ifdef CONFIG_SUIT_CACHE_RW
-	if (*component_type ==  SUIT_COMPONENT_TYPE_CACHE_POOL) {
+	if (*component_type == SUIT_COMPONENT_TYPE_CACHE_POOL) {
 		uint32_t number;
 		struct zcbor_string *component_id;
 
 		int ret = suit_plat_component_id_get(dst_handle, &component_id);
+
 		if (ret != SUIT_SUCCESS) {
 			LOG_ERR("suit_plat_component_id_get failed: %i", ret);
 			return SUIT_ERR_UNSUPPORTED_COMPONENT_ID;
@@ -74,7 +75,7 @@ static int verify_and_get_sink(suit_component_t dst_handle, struct stream_sink *
 		return suit_plat_err_to_processor_err_convert(ret);
 	}
 #else
-	(void) write_enabled;
+	(void)write_enabled;
 #endif /* CONFIG_SUIT_CACHE_RW */
 
 	return suit_sink_select(dst_handle, sink);
@@ -88,6 +89,7 @@ int suit_plat_check_fetch(suit_component_t dst_handle, struct zcbor_string *uri)
 	struct stream_sink dst_sink = {0};
 
 	int ret = verify_and_get_sink(dst_handle, &dst_sink, uri, &dst_component_type, false);
+
 	if (ret != SUIT_SUCCESS) {
 		LOG_ERR("Failed to verify component and get end sink");
 	}
@@ -138,8 +140,7 @@ int suit_plat_fetch(suit_component_t dst_handle, struct zcbor_string *uri)
 	ret = suit_plat_fetch_domain_specific(dst_handle, dst_component_type, &dst_sink, uri);
 	suit_plat_err_t release_ret = release_sink(&dst_sink);
 
-	if (ret == SUIT_SUCCESS)
-	{
+	if (ret == SUIT_SUCCESS) {
 		ret = suit_plat_err_to_processor_err_convert(release_ret);
 	}
 
@@ -157,6 +158,7 @@ int suit_plat_check_fetch_integrated(suit_component_t dst_handle, struct zcbor_s
 
 	/* Get component type based on component handle*/
 	int ret = suit_plat_component_type_get(dst_handle, &dst_component_type);
+
 	if (ret != SUIT_SUCCESS) {
 		LOG_ERR("Failed to decode component type: %i", ret);
 		return ret;
@@ -196,6 +198,7 @@ int suit_plat_fetch_integrated(suit_component_t dst_handle, struct zcbor_string 
 
 	/* Get component type based on component handle*/
 	int ret = suit_plat_component_type_get(dst_handle, &dst_component_type);
+
 	if (ret != SUIT_SUCCESS) {
 		LOG_ERR("Failed to decode component type: %i", ret);
 		return ret;
@@ -241,13 +244,13 @@ int suit_plat_fetch_integrated(suit_component_t dst_handle, struct zcbor_string 
 	ret = suit_plat_err_to_processor_err_convert(ret);
 
 	if (ret == SUIT_SUCCESS) {
-		ret = suit_plat_fetch_integrated_domain_specific(dst_handle, dst_component_type, &dst_sink);
+		ret = suit_plat_fetch_integrated_domain_specific(dst_handle, dst_component_type,
+								 &dst_sink);
 	}
 
 	suit_plat_err_t release_ret = release_sink(&dst_sink);
 
-	if (ret == SUIT_SUCCESS)
-	{
+	if (ret == SUIT_SUCCESS) {
 		ret = suit_plat_err_to_processor_err_convert(release_ret);
 	}
 

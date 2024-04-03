@@ -30,7 +30,7 @@ typedef int digest_sink_err_t;
  * @return int SUIT_PLAT_SUCCESS if success, error code otherwise
  */
 suit_plat_err_t suit_digest_sink_get(struct stream_sink *sink, psa_algorithm_t algorithm,
-		    		     const uint8_t *expected_digest);
+				     const uint8_t *expected_digest);
 
 /**
  * @brief Check if digest matches expected digest value
@@ -45,7 +45,7 @@ suit_plat_err_t suit_digest_sink_get(struct stream_sink *sink, psa_algorithm_t a
  *
  * @return SUIT_PLAT_SUCCESS Digest calculation was successful and it matches expected digest
  * @return DIGEST_SINK_ERR_DIGEST_MISMATCH Digest calculation was successful but it does
-* not match expected digest
+ * not match expected digest
  * @return SUIT_PLAT_ERR_CRASH Digest could not be calculated or crash during cleanup
  * @return SUIT_PLAT_ERR_INVAL @ctx is NULL
  * @return SUIT_PLAT_ERR_INCORRECT_STATE A sink was not initialized

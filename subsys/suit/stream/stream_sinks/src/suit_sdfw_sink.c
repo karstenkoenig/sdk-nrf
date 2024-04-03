@@ -46,8 +46,8 @@ static digest_sink_err_t verify_digest(uint8_t *buf, size_t buf_size, psa_algori
 				       uint8_t *expected_digest)
 {
 	struct stream_sink digest_sink;
-
 	suit_plat_err_t err = suit_digest_sink_get(&digest_sink, algorithm, expected_digest);
+
 	if (err != SUIT_PLAT_SUCCESS) {
 		LOG_ERR("Failed to get digest sink: %d", err);
 		return err;
@@ -77,7 +77,8 @@ static suit_plat_err_t clear_urot_update_status(void)
 	/* Clearing the registers is crucial for correct handling by SecROM. */
 	/* Incorrect mram_erase behavior was observed on FPGA. */
 	/* Since mram_erase returns void, there is a need for extra check and returning error code
-	 * to handle such case. */
+	 * to handle such case.
+	 */
 	if (NRF_SICR->UROT.UPDATE.STATUS == SICR_UROT_UPDATE_STATUS_CODE_None &&
 	    NRF_SICR->UROT.UPDATE.OPERATION == SICR_UROT_UPDATE_OPERATION_OPCODE_Nop) {
 		return SUIT_PLAT_SUCCESS;
@@ -108,15 +109,16 @@ static suit_plat_err_t schedule_sdfw_update(const uint8_t *buf, size_t size)
 
 	/* NOTE: SecROM does not use the actual size of new SDFW during update process.
 	 *       However, if SDFW is flashed for the first time, the value is used to limit the
-	 * future maximum SDFW size. Hence, use the maximum allowed size for safety. */
+	 * future maximum SDFW size. Hence, use the maximum allowed size for safety.
+	 */
 	err = sdfw_update(&update_blob);
 
 	if (err) {
 		LOG_ERR("Failed to schedule SDFW update: %d", err);
 		return SUIT_PLAT_ERR_CRASH;
-	} else {
-		LOG_INF("SDFW update scheduled");
 	}
+
+	LOG_INF("SDFW update scheduled");
 
 	return SUIT_PLAT_SUCCESS;
 }
@@ -134,8 +136,8 @@ static sdf_sink_err_t check_update_candidate(const uint8_t *buf, size_t size)
 		candidate_binary_start, size - (size_t)CONFIG_SUIT_SDFW_UPDATE_FIRMWARE_OFFSET,
 		PSA_ALG_SHA_512, candidate_digest_in_manifest);
 
-	if (SUIT_PLAT_SUCCESS != err) {
-		if (DIGEST_SINK_ERR_DIGEST_MISMATCH == err) {
+	if (err != SUIT_PLAT_SUCCESS) {
+		if (err == DIGEST_SINK_ERR_DIGEST_MISMATCH) {
 			LOG_ERR("Candidate inconsistent");
 		} else {
 			LOG_ERR("Failed to calculate digest: %d", err);
@@ -153,7 +155,7 @@ static sdf_sink_err_t check_update_candidate(const uint8_t *buf, size_t size)
 	if (err == SUIT_PLAT_SUCCESS) {
 		LOG_INF("Same candidate - skip update");
 		return SUIT_PLAT_SUCCESS;
-	} else if (DIGEST_SINK_ERR_DIGEST_MISMATCH == err) {
+	} else if (err == DIGEST_SINK_ERR_DIGEST_MISMATCH) {
 		LOG_INF("Different candidate");
 		err = schedule_sdfw_update(buf, size);
 		if (err == SUIT_PLAT_SUCCESS) {
@@ -161,10 +163,10 @@ static sdf_sink_err_t check_update_candidate(const uint8_t *buf, size_t size)
 			err = SDFW_SINK_ERR_AGAIN;
 		}
 		return err;
-	} else {
-		LOG_ERR("Failed to calculate digest: %d", err);
-		return SUIT_PLAT_ERR_CRASH;
 	}
+
+	LOG_ERR("Failed to calculate digest: %d", err);
+	return SUIT_PLAT_ERR_CRASH;
 }
 
 static void reboot_to_continue(void)
@@ -185,27 +187,27 @@ static suit_plat_err_t check_urot_none(const uint8_t *buf, size_t size)
 	/* Detect update candidate. */
 	/* It is enough to check Public Key Size field which occupies first 4B of Signed Manifest.
 	 */
-	if (EMPTY_STORAGE_VALUE == *((uint32_t *)buf)) {
+	if (*((uint32_t *)buf) == EMPTY_STORAGE_VALUE) {
 		LOG_INF("Update candidate not found");
 		return SUIT_PLAT_ERR_NOT_FOUND;
-	} else {
-		LOG_INF("Update candidate found");
-
-		suit_plat_err_t err = check_update_candidate(buf, size);
-
-		if (err == SDFW_SINK_ERR_AGAIN) {
-			/* Update scheduled, continue after reboot */
-			reboot_to_continue();
-			if (IS_ENABLED(CONFIG_SUIT_UPDATE_REBOOT_ENABLED)) {
-				/* If this code is reached, it means that reboot did not work. */
-				/* In such case report an error and convert the error code. */
-				LOG_ERR("Expected reboot did not happen");
-				err = SUIT_PLAT_ERR_UNREACHABLE_PATH;
-			}
-		}
-
-		return err;
 	}
+
+	LOG_INF("Update candidate found");
+
+	suit_plat_err_t err = check_update_candidate(buf, size);
+
+	if (err == SDFW_SINK_ERR_AGAIN) {
+		/* Update scheduled, continue after reboot */
+		reboot_to_continue();
+		if (IS_ENABLED(CONFIG_SUIT_UPDATE_REBOOT_ENABLED)) {
+			/* If this code is reached, it means that reboot did not work. */
+			/* In such case report an error and convert the error code. */
+			LOG_ERR("Expected reboot did not happen");
+			err = SUIT_PLAT_ERR_UNREACHABLE_PATH;
+		}
+	}
+
+	return err;
 }
 
 static suit_plat_err_t check_urot_activated(const uint8_t *buf, size_t size)
@@ -218,14 +220,14 @@ static suit_plat_err_t check_urot_activated(const uint8_t *buf, size_t size)
 	digest_sink_err_t err = verify_digest(
 		candidate_binary_start, size - (size_t)CONFIG_SUIT_SDFW_UPDATE_FIRMWARE_OFFSET,
 		PSA_ALG_SHA_512, current_sdfw_digest);
-	if (SUIT_PLAT_SUCCESS != err) {
-		if (DIGEST_SINK_ERR_DIGEST_MISMATCH == err) {
+	if (err != SUIT_PLAT_SUCCESS) {
+		if (err == DIGEST_SINK_ERR_DIGEST_MISMATCH) {
 			LOG_ERR("Digest mismatch - update failure");
 			return SUIT_PLAT_ERR_AUTHENTICATION;
-		} else {
-			LOG_ERR("Failed to calculate digest: %d", err);
-			return SUIT_PLAT_ERR_CRASH;
 		}
+
+		LOG_ERR("Failed to calculate digest: %d", err);
+		return SUIT_PLAT_ERR_CRASH;
 	}
 
 	LOG_DBG("Digest match - update success");
@@ -233,7 +235,8 @@ static suit_plat_err_t check_urot_activated(const uint8_t *buf, size_t size)
 }
 
 /* NOTE: Size means size of the SDFW binary to be updated,
- * excluding Signed Manifest preceding it within update candidate */
+ * excluding Signed Manifest preceding it within update candidate
+ */
 static suit_plat_err_t write(void *ctx, const uint8_t *buf, size_t size)
 {
 	if (NULL == ctx || NULL == buf || 0 == size) {
@@ -245,12 +248,13 @@ static suit_plat_err_t write(void *ctx, const uint8_t *buf, size_t size)
 	LOG_DBG("size: %d", size);
 
 	struct sdfw_sink_context *context = (struct sdfw_sink_context *)ctx;
+
 	if (context->write_called) {
 		LOG_ERR("Multiple write calls not allowed");
 		return SUIT_PLAT_ERR_INCORRECT_STATE;
-	} else {
-		context->write_called = true;
 	}
+
+	context->write_called = true;
 
 	suit_plat_err_t err = SUIT_PLAT_SUCCESS;
 	bool clear_registers = true;
@@ -288,11 +292,12 @@ static suit_plat_err_t write(void *ctx, const uint8_t *buf, size_t size)
 
 	if (clear_registers) {
 		suit_plat_err_t clear_err = clear_urot_update_status();
+
 		if (clear_err) {
 			LOG_ERR("Failed to clear UROT update status");
 			/* If the only error was during register clearing - report it. */
 			/* Otherwise report the original cause of failure. */
-			if (SUIT_PLAT_SUCCESS == err) {
+			if (err == SUIT_PLAT_SUCCESS) {
 				err = clear_err;
 			}
 		} else {
@@ -305,12 +310,13 @@ static suit_plat_err_t write(void *ctx, const uint8_t *buf, size_t size)
 
 static suit_plat_err_t release(void *ctx)
 {
-	if (NULL == ctx) {
+	if (ctx == NULL) {
 		LOG_ERR("Invalid argument");
 		return SUIT_PLAT_ERR_INVAL;
 	}
 
 	struct sdfw_sink_context *context = (struct sdfw_sink_context *)ctx;
+
 	memset(context, 0, sizeof(struct sdfw_sink_context));
 
 	return SUIT_PLAT_SUCCESS;
@@ -318,14 +324,14 @@ static suit_plat_err_t release(void *ctx)
 
 suit_plat_err_t suit_sdfw_sink_get(struct stream_sink *sink)
 {
-	if (NULL == sink) {
+	if (sink == NULL) {
 		LOG_ERR("Invalid arguments");
 		return SUIT_PLAT_ERR_INVAL;
 	}
 
 	struct sdfw_sink_context *ctx = get_new_context();
 
-	if (NULL == ctx) {
+	if (ctx == NULL) {
 		LOG_ERR("Failed to get a new context");
 		return SUIT_PLAT_ERR_NO_RESOURCES;
 	}

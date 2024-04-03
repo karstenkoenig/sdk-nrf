@@ -21,7 +21,6 @@
  * procedure caching of digests should be disabled.
  */
 
-
 #ifndef SUIT_PLAT_DIGEST_CACHE_H__
 #define SUIT_PLAT_DIGEST_CACHE_H__
 
@@ -80,8 +79,7 @@ int suit_plat_digest_cache_remove(struct zcbor_string *component_id);
  * @retval SUIT_ERR_CRASH                 Crash - failed to acquire mutex to store data
  */
 int suit_plat_digest_cache_compare(const struct zcbor_string *component_id,
-				   enum suit_cose_alg alg_id,
-				   const struct zcbor_string * digest);
+				   enum suit_cose_alg alg_id, const struct zcbor_string *digest);
 
 /**
  * @brief Invalidate all elements in the cache,

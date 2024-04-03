@@ -38,6 +38,7 @@ int suit_plat_check_digest(enum suit_cose_alg alg_id, struct zcbor_string *diges
 	}
 
 	size_t expected_hash_len = PSA_HASH_LENGTH(psa_alg);
+
 	if (digest->len != expected_hash_len) {
 		LOG_ERR("Unexpected hash length: %d instead of %d", digest->len, expected_hash_len);
 		return SUIT_ERR_DECODING;
@@ -46,6 +47,7 @@ int suit_plat_check_digest(enum suit_cose_alg alg_id, struct zcbor_string *diges
 	struct stream_sink digest_sink;
 
 	suit_plat_err_t err = suit_digest_sink_get(&digest_sink, psa_alg, digest->value);
+
 	if (err != SUIT_PLAT_SUCCESS) {
 		LOG_ERR("Failed to get digest sink: %d", err);
 		return suit_plat_err_to_processor_err_convert(err);
@@ -62,13 +64,12 @@ int suit_plat_check_digest(enum suit_cose_alg alg_id, struct zcbor_string *diges
 	err = digest_sink.release(digest_sink.ctx);
 	if (err != SUIT_PLAT_SUCCESS) {
 		LOG_ERR("Failed to release stream: %d", err);
-		if (SUIT_PLAT_SUCCESS == ret) {
+		if (ret == SUIT_PLAT_SUCCESS) {
 			return suit_plat_err_to_processor_err_convert(err);
 		}
 	}
 
-	if (DIGEST_SINK_ERR_DIGEST_MISMATCH == ret)
-	{
+	if (ret == DIGEST_SINK_ERR_DIGEST_MISMATCH) {
 		return SUIT_FAIL_CONDITION;
 	}
 

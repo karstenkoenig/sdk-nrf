@@ -41,7 +41,7 @@ SYS_BITARRAY_DEFINE_STATIC(ctx_bitarray, SUIT_MAX_EXTMEM_COMPONENTS);
  *
  * @return struct extmem_ctx* or NULL if no free ctx was found
  */
-static struct extmem_ctx *alloc_ctx()
+static struct extmem_ctx *alloc_ctx(void)
 {
 	size_t offset;
 
@@ -69,7 +69,8 @@ static bool is_address_supported(uintptr_t address, struct extmem_capabilities *
 	size_t extmem_area_size = capabilities->capacity;
 	uintptr_t extmem_area_end = extmem_area_start + extmem_area_size;
 
-	return suit_memory_global_address_range_is_in_external_memory(extmem_area_start, extmem_area_size);
+	return suit_memory_global_address_range_is_in_external_memory(extmem_area_start,
+								      extmem_area_size);
 }
 
 bool suit_extmem_sink_is_address_supported(uint8_t *address)

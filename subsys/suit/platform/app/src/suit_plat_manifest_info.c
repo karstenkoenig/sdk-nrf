@@ -16,12 +16,13 @@ static int supported_manifest_class_infos_get(const suit_ssf_manifest_class_info
 	static suit_ssf_manifest_class_info_t
 		manifest_class_infos_list[CONFIG_MAX_NUMBER_OF_MANIFEST_CLASS_IDS] = {0};
 	static size_t size = CONFIG_MAX_NUMBER_OF_MANIFEST_CLASS_IDS;
-	static bool initialized = false;
+	static bool initialized;
 
 	suit_manifest_role_t manifest_roles_list[CONFIG_MAX_NUMBER_OF_MANIFEST_CLASS_IDS] = {0};
 
 	if (!initialized) {
 		suit_ssf_err_t ret = suit_get_supported_manifest_roles(manifest_roles_list, &size);
+
 		if (ret != SUIT_PLAT_SUCCESS) {
 			return suit_plat_err_to_processor_err_convert(ret);
 		}
@@ -64,8 +65,7 @@ int suit_plat_supported_manifest_class_infos_get(suit_manifest_class_info_t *cla
 
 	int ret = supported_manifest_class_infos_get(&manifest_class_infos_list, size);
 
-	if (ret != SUIT_SUCCESS)
-	{
+	if (ret != SUIT_SUCCESS) {
 		return ret;
 	}
 

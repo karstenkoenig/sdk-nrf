@@ -15,6 +15,7 @@ suit_plat_err_t suit_generic_address_streamer_stream(const uint8_t *payload, siz
 {
 	if ((payload != NULL) && (sink != NULL) && (sink->write != NULL) && (payload_size > 0)) {
 		suit_address_streamer streamer = suit_address_streamer_select_by_address(payload);
+
 		if (streamer == NULL) {
 			LOG_ERR("Streamer source not found for address: %p", (void *)payload);
 			return SUIT_PLAT_ERR_NOT_FOUND;

@@ -84,6 +84,7 @@ suit_plat_err_t suit_extmem_streamer_stream(const uint8_t *payload,
 		};
 
 		int ret = extmem_read(offset, payload_size, read_cb, &ctx);
+
 		if (ret != EXTMEM_RESULT_SUCCESS) {
 			LOG_ERR("Read from external memory failed: %d", ret);
 			return SUIT_PLAT_ERR_IO;

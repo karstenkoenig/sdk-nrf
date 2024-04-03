@@ -28,6 +28,7 @@ static int suit_plat_check_image_match_mem_mapped(suit_component_t component,
 {
 	void *impl_data = NULL;
 	int err = suit_plat_component_impl_data_get(component, &impl_data);
+
 	if (err != SUIT_SUCCESS) {
 		LOG_ERR("Failed to get implementation data: %d", err);
 		return SUIT_ERR_UNSUPPORTED_COMPONENT_ID;
@@ -35,6 +36,7 @@ static int suit_plat_check_image_match_mem_mapped(suit_component_t component,
 
 	const uint8_t *data = NULL;
 	size_t size = 0;
+
 	err = suit_memptr_storage_ptr_get((memptr_storage_handle_t)impl_data, &data, &size);
 	if (err != SUIT_PLAT_SUCCESS) {
 		LOG_ERR("Failed to get memptr ptr: %d", err);
@@ -69,16 +71,16 @@ static int suit_plat_check_image_match_mem_mapped(suit_component_t component,
 		if (err != SUIT_PLAT_SUCCESS) {
 			LOG_ERR("Failed to check digest: %d", err);
 			/* Translate error code to allow entering another branches in try-each
-			 * sequence */
+			 * sequence
+			 */
 			err = SUIT_FAIL_CONDITION;
-		}
-		else
-		{
+		} else {
 			err = SUIT_SUCCESS;
 		}
 	}
 
 	suit_plat_err_t release_err = digest_sink.release(digest_sink.ctx);
+
 	if (release_err != SUIT_PLAT_SUCCESS) {
 		LOG_ERR("Failed to release digest sink: %d", release_err);
 		if (err != SUIT_SUCCESS) {
@@ -97,6 +99,7 @@ int suit_plat_check_image_match(suit_component_t component, enum suit_cose_alg a
 	suit_component_type_t component_type = SUIT_COMPONENT_TYPE_UNSUPPORTED;
 
 	int err = suit_plat_component_id_get(component, &component_id);
+
 	if (err != SUIT_SUCCESS) {
 		LOG_ERR("Failed to get component id: %d", err);
 		return err;
@@ -110,21 +113,17 @@ int suit_plat_check_image_match(suit_component_t component, enum suit_cose_alg a
 #ifdef CONFIG_SUIT_STREAM_SINK_DIGEST
 	LOG_DBG("Component type: %d", component_type);
 
-	if (suit_plat_check_image_match_domain_specific_is_type_mem_mapped(component_type))
-	{
+	if (suit_plat_check_image_match_domain_specific_is_type_mem_mapped(component_type)) {
 		err = suit_plat_check_image_match_mem_mapped(component, alg_id, digest);
 	}
 #endif
 
-	if (component_type == SUIT_COMPONENT_TYPE_UNSUPPORTED)
-	{
+	if (component_type == SUIT_COMPONENT_TYPE_UNSUPPORTED) {
 		LOG_ERR("Unsupported component type");
 		err = SUIT_ERR_UNSUPPORTED_COMPONENT_ID;
 	}
 
-
-	if (err == SUIT_SUCCESS)
-	{
+	if (err == SUIT_SUCCESS) {
 		err = suit_plat_check_image_match_domain_specific(component, alg_id, digest,
 								  component_id, component_type);
 	}

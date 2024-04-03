@@ -10,9 +10,9 @@
 #include <suit_memory_layout.h>
 
 #if defined(CONFIG_SOC_FLASH_NRF_MRAM_ONE_BYTE_WRITE_ACCESS)
-	#define SWAP_BUFFER_SIZE 4
+#define SWAP_BUFFER_SIZE 4
 #else
-	#define SWAP_BUFFER_SIZE 16
+#define SWAP_BUFFER_SIZE 16
 #endif /* CONFIG_SOC_FLASH_NRF_MRAM_ONE_BYTE_WRITE_ACCESS */
 
 #define WRITE_OFFSET(a) (a->ptr + a->offset)
@@ -20,7 +20,7 @@
 /* Set to more than one to allow multiple contexts in case of parallel execution */
 #define SUIT_MAX_FLASH_COMPONENTS 1
 
-#define IS_COND_TRUE(c)  ((c) ? "True" : "False")
+#define IS_COND_TRUE(c) ((c) ? "True" : "False")
 
 LOG_MODULE_REGISTER(suit_flash_sink, CONFIG_SUIT_LOG_LEVEL);
 
@@ -48,7 +48,7 @@ static struct flash_ctx ctx[SUIT_MAX_FLASH_COMPONENTS];
  *
  * @return struct flash_ctx* or NULL if no free ctx was found
  */
-static struct flash_ctx *new_ctx_get()
+static struct flash_ctx *new_ctx_get(void)
 {
 	for (size_t i = 0; i < SUIT_MAX_FLASH_COMPONENTS; i++) {
 		if (!ctx[i].in_use) {
@@ -110,6 +110,7 @@ suit_plat_err_t erase(void *ctx)
 
 		/* Erase requested area in preparation for data. */
 		int res = flash_erase(flash_ctx->fdev, flash_ctx->ptr, size);
+
 		if (res != 0) {
 			LOG_ERR("Failed to erase requested memory area: %i", res);
 			return SUIT_PLAT_ERR_IO;
@@ -129,8 +130,10 @@ suit_plat_err_t suit_flash_sink_get(struct stream_sink *sink, uint8_t *dst, size
 		if (ctx != NULL) {
 			struct nvm_address nvm_address;
 
-			if (!suit_memory_global_address_to_nvm_address((uintptr_t)dst, &nvm_address)) {
-				LOG_ERR("Failed to find nvm area corresponding to requested address.");
+			if (!suit_memory_global_address_to_nvm_address((uintptr_t)dst,
+								       &nvm_address)) {
+				LOG_ERR("Failed to find nvm area corresponding to requested "
+					"address.");
 				return SUIT_PLAT_ERR_HW_NOT_READY;
 			}
 
@@ -181,7 +184,8 @@ suit_plat_err_t suit_flash_sink_get(struct stream_sink *sink, uint8_t *dst, size
 	return SUIT_PLAT_ERR_INVAL;
 }
 
-static suit_plat_err_t write_unaligned_start(struct flash_ctx *flash_ctx, size_t *size_left, const uint8_t **buf)
+static suit_plat_err_t write_unaligned_start(struct flash_ctx *flash_ctx, size_t *size_left,
+					     const uint8_t **buf)
 {
 	uint8_t edit_buffer[SWAP_BUFFER_SIZE];
 
@@ -189,11 +193,13 @@ static suit_plat_err_t write_unaligned_start(struct flash_ctx *flash_ctx, size_t
 	size_t block_start = 0;
 	size_t write_size = 0;
 
-	block_start = ((size_t)(WRITE_OFFSET(flash_ctx) / flash_ctx->flash_write_size)) * flash_ctx->flash_write_size;
+	block_start = ((size_t)(WRITE_OFFSET(flash_ctx) / flash_ctx->flash_write_size)) *
+		      flash_ctx->flash_write_size;
 	start_offset = WRITE_OFFSET(flash_ctx) - block_start;
 	write_size = 0;
 
-	if (flash_read(flash_ctx->fdev, block_start, edit_buffer, flash_ctx->flash_write_size) != 0) {
+	if (flash_read(flash_ctx->fdev, block_start, edit_buffer, flash_ctx->flash_write_size) !=
+	    0) {
 		LOG_ERR("Flash read failed.");
 		return SUIT_PLAT_ERR_IO;
 	}
@@ -204,13 +210,15 @@ static suit_plat_err_t write_unaligned_start(struct flash_ctx *flash_ctx, size_t
 	memcpy(edit_buffer + start_offset, *buf, write_size);
 
 	/* Write back edit_buffer that now contains unaligned bytes from the start of buf */
-	if (flash_write(flash_ctx->fdev, block_start, edit_buffer, flash_ctx->flash_write_size) != 0) {
+	if (flash_write(flash_ctx->fdev, block_start, edit_buffer, flash_ctx->flash_write_size) !=
+	    0) {
 		LOG_ERR("Writing initial unaligned data failed.");
 		return SUIT_PLAT_ERR_IO;
 	}
 
 	/* Move offset for bytes written */
 	suit_plat_err_t ret = register_write(flash_ctx, write_size);
+
 	if (ret != SUIT_PLAT_SUCCESS) {
 		LOG_ERR("Failed to update size after write");
 		return ret;
@@ -225,13 +233,14 @@ static suit_plat_err_t write_unaligned_start(struct flash_ctx *flash_ctx, size_t
 	return SUIT_PLAT_SUCCESS;
 }
 
-static suit_plat_err_t write_aligned(struct flash_ctx *flash_ctx, size_t *size_left, const uint8_t **buf,
-				     size_t write_size)
+static suit_plat_err_t write_aligned(struct flash_ctx *flash_ctx, size_t *size_left,
+				     const uint8_t **buf, size_t write_size)
 {
 	size_t block_start = 0;
 
 	/* Write part that is aligned */
-	block_start = ((size_t)(WRITE_OFFSET(flash_ctx) / flash_ctx->flash_write_size)) * flash_ctx->flash_write_size;
+	block_start = ((size_t)(WRITE_OFFSET(flash_ctx) / flash_ctx->flash_write_size)) *
+		      flash_ctx->flash_write_size;
 
 	if (flash_write(flash_ctx->fdev, block_start, *buf, write_size) != 0) {
 		LOG_ERR("Writing aligned blocks failed.");
@@ -242,6 +251,7 @@ static suit_plat_err_t write_aligned(struct flash_ctx *flash_ctx, size_t *size_l
 
 	/* Move offset for bytes written */
 	suit_plat_err_t ret = register_write(flash_ctx, write_size);
+
 	if (ret != SUIT_PLAT_SUCCESS) {
 		LOG_ERR("Failed to update size after write");
 		return ret;
@@ -255,29 +265,34 @@ static suit_plat_err_t write_aligned(struct flash_ctx *flash_ctx, size_t *size_l
 	return SUIT_PLAT_SUCCESS;
 }
 
-static suit_plat_err_t write_remaining(struct flash_ctx *flash_ctx, size_t *size_left, const uint8_t **buf)
+static suit_plat_err_t write_remaining(struct flash_ctx *flash_ctx, size_t *size_left,
+				       const uint8_t **buf)
 {
 	uint8_t edit_buffer[SWAP_BUFFER_SIZE];
 	size_t block_start = 0;
 
 	/* Write remaining data */
-	block_start = ((size_t)(WRITE_OFFSET(flash_ctx) / flash_ctx->flash_write_size)) * flash_ctx->flash_write_size;
+	block_start = ((size_t)(WRITE_OFFSET(flash_ctx) / flash_ctx->flash_write_size)) *
+		      flash_ctx->flash_write_size;
 
-	if (flash_read(flash_ctx->fdev, block_start, edit_buffer, flash_ctx->flash_write_size) == 0) {
+	if (flash_read(flash_ctx->fdev, block_start, edit_buffer, flash_ctx->flash_write_size) ==
+	    0) {
 		memcpy(edit_buffer, *buf, *size_left);
 
 		/* Write back edit_buffer that now contains unaligned bytes from the start of buf */
-		if (flash_write(flash_ctx->fdev, block_start, edit_buffer, flash_ctx->flash_write_size) != 0) {
+		if (flash_write(flash_ctx->fdev, block_start, edit_buffer,
+				flash_ctx->flash_write_size) != 0) {
 			LOG_ERR("Writing remaining unaligned data failed.");
 			return SUIT_PLAT_ERR_IO;
 		}
 
 		/* Move offset for bytes written */
 		suit_plat_err_t ret = register_write(flash_ctx, *size_left);
+
 		if (ret != SUIT_PLAT_SUCCESS) {
-		LOG_ERR("Failed to update size after write");
-		return ret;
-	}
+			LOG_ERR("Failed to update size after write");
+			return ret;
+		}
 
 		return SUIT_PLAT_SUCCESS;
 	}
@@ -305,9 +320,8 @@ static suit_plat_err_t write(void *ctx, const uint8_t *buf, size_t size)
 
 		if ((flash_ctx->offset_limit - (size_t)flash_ctx->ptr) >= size_left) {
 			if (flash_ctx->flash_write_size == 1) {
-				int ret = flash_write(flash_ctx->fdev,
-						      WRITE_OFFSET(flash_ctx),
-						      buf, size_left);
+				int ret = flash_write(flash_ctx->fdev, WRITE_OFFSET(flash_ctx), buf,
+						      size_left);
 
 				if (ret == 0) {
 					ret = register_write(flash_ctx, size_left);
@@ -315,9 +329,7 @@ static suit_plat_err_t write(void *ctx, const uint8_t *buf, size_t size)
 						LOG_ERR("Failed to update size after write");
 						return ret;
 					}
-				}
-				else
-				{
+				} else {
 					ret = SUIT_PLAT_ERR_IO;
 				}
 
@@ -342,7 +354,8 @@ static suit_plat_err_t write(void *ctx, const uint8_t *buf, size_t size)
 			}
 
 			/* Number of bytes to be written in context of whole blocks */
-			write_size = (size_left / flash_ctx->flash_write_size) * flash_ctx->flash_write_size;
+			write_size = (size_left / flash_ctx->flash_write_size) *
+				     flash_ctx->flash_write_size;
 
 			if (write_size > 0) {
 				err = write_aligned(flash_ctx, &size_left, &buf, write_size);
@@ -365,10 +378,8 @@ static suit_plat_err_t write(void *ctx, const uint8_t *buf, size_t size)
 		}
 	}
 
-	LOG_ERR("%s: Invalid arguments. %s, %s, %s", __func__,
-	IS_COND_TRUE(ctx != NULL),
-	IS_COND_TRUE(buf != NULL),
-	IS_COND_TRUE(size_left > 0));
+	LOG_ERR("%s: Invalid arguments. %s, %s, %s", __func__, IS_COND_TRUE(ctx != NULL),
+		IS_COND_TRUE(buf != NULL), IS_COND_TRUE(size_left > 0));
 	return SUIT_PLAT_ERR_INVAL;
 }
 
@@ -405,9 +416,8 @@ static suit_plat_err_t used_storage(void *ctx, size_t *size)
 		return SUIT_PLAT_SUCCESS;
 	}
 
-	LOG_ERR("%s: Invalid arguments. %s, %s", __func__,
-	IS_COND_TRUE(ctx != NULL),
-	IS_COND_TRUE(size != NULL));
+	LOG_ERR("%s: Invalid arguments. %s, %s", __func__, IS_COND_TRUE(ctx != NULL),
+		IS_COND_TRUE(size != NULL));
 	return SUIT_PLAT_ERR_INVAL;
 }
 

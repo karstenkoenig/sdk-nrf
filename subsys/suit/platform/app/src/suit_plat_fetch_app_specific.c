@@ -70,8 +70,7 @@ int suit_plat_fetch_domain_specific(suit_component_t dst_handle,
 		break;
 	}
 
-	if (ret == SUIT_SUCCESS && dst_component_type == SUIT_COMPONENT_TYPE_CACHE_POOL)
-	{
+	if (ret == SUIT_SUCCESS && dst_component_type == SUIT_COMPONENT_TYPE_CACHE_POOL) {
 		suit_dfu_cache_sink_commit(dst_sink->ctx);
 	}
 
@@ -82,9 +81,9 @@ int suit_plat_fetch_integrated_domain_specific(suit_component_t dst_handle,
 					       suit_component_type_t dst_component_type,
 					       struct stream_sink *dst_sink)
 {
-	(void) dst_handle;
-	(void) dst_component_type;
-	(void) dst_sink;
+	(void)dst_handle;
+	(void)dst_component_type;
+	(void)dst_sink;
 	return SUIT_SUCCESS;
 }
 

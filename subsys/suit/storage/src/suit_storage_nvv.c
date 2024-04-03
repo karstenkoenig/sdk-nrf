@@ -45,6 +45,7 @@ suit_plat_err_t suit_storage_nvv_erase(uint8_t *area_addr, size_t area_size)
 
 	/* Override regular entry. */
 	int err = flash_erase(fdev, suit_plat_mem_nvm_offset_get(area_addr), area_size);
+
 	if (err != 0) {
 		return SUIT_PLAT_ERR_IO;
 	}
@@ -113,6 +114,7 @@ suit_plat_err_t suit_storage_nvv_set(uint8_t *area_addr, size_t area_size, size_
 
 	/* Override regular entry. */
 	int err = flash_erase(fdev, suit_plat_mem_nvm_offset_get(area_addr), area_size);
+
 	if (err != 0) {
 		return SUIT_PLAT_ERR_IO;
 	}

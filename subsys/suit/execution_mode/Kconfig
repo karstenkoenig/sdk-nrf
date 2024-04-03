@@ -4,5 +4,5 @@
 # SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
 #
 
-menuconfig SUIT_EXECUTION_MODE
+config SUIT_EXECUTION_MODE
 	bool "Enable SUIT execution mode module"

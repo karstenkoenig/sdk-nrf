@@ -4,10 +4,6 @@
 # SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
 #
 
-menuconfig SUIT_SINK_SELECTOR
-        bool "Enable SUIT sink_selector module"
-        depends on SUIT_STREAM
-
-if SUIT_SINK_SELECTOR
-
-endif # SUIT_SINK_SELECTOR
+config SUIT_SINK_SELECTOR
+	bool "Enable SUIT sink_selector module"
+	depends on SUIT_STREAM

@@ -22,7 +22,7 @@ LOG_MODULE_REGISTER(suit_mci_nrf54h20, CONFIG_SUIT_LOG_LEVEL);
 mci_err_t suit_mci_supported_manifest_class_ids_get(suit_manifest_class_info_t *class_info,
 						    size_t *size)
 {
-	if (NULL == class_info || NULL == size) {
+	if (class_info == NULL || size == NULL) {
 		return SUIT_PLAT_ERR_INVAL;
 	}
 
@@ -31,7 +31,7 @@ mci_err_t suit_mci_supported_manifest_class_ids_get(suit_manifest_class_info_t *
 
 mci_err_t suit_mci_invoke_order_get(const suit_manifest_class_id_t **class_id, size_t *size)
 {
-	if (NULL == class_id || NULL == size) {
+	if (class_id == NULL || size == NULL) {
 		return SUIT_PLAT_ERR_INVAL;
 	}
 	size_t output_max_size = *size;
@@ -45,25 +45,25 @@ mci_err_t suit_mci_invoke_order_get(const suit_manifest_class_id_t **class_id, s
 
 	switch (execution_mode) {
 	case EXECUTION_MODE_INVOKE:
-		if (SUIT_PLAT_SUCCESS !=
-		    suit_storage_mpi_class_get(SUIT_MANIFEST_SEC_TOP, &class_id[0])) {
+		if (suit_storage_mpi_class_get(SUIT_MANIFEST_SEC_TOP, &class_id[0]) !=
+		    SUIT_PLAT_SUCCESS) {
 			return SUIT_PLAT_ERR_NOT_FOUND;
 		}
 
-		if (SUIT_PLAT_SUCCESS !=
-		    suit_storage_mpi_class_get(SUIT_MANIFEST_APP_ROOT, &class_id[1])) {
+		if (suit_storage_mpi_class_get(SUIT_MANIFEST_APP_ROOT, &class_id[1]) !=
+		    SUIT_PLAT_SUCCESS) {
 			return SUIT_PLAT_ERR_NOT_FOUND;
 		}
 		break;
 
 	case EXECUTION_MODE_INVOKE_RECOVERY:
-		if (SUIT_PLAT_SUCCESS !=
-		    suit_storage_mpi_class_get(SUIT_MANIFEST_SEC_TOP, &class_id[0])) {
+		if (suit_storage_mpi_class_get(SUIT_MANIFEST_SEC_TOP, &class_id[0]) !=
+		    SUIT_PLAT_SUCCESS) {
 			return SUIT_PLAT_ERR_NOT_FOUND;
 		}
 
-		if (SUIT_PLAT_SUCCESS !=
-		    suit_storage_mpi_class_get(SUIT_MANIFEST_APP_RECOVERY, &class_id[1])) {
+		if (suit_storage_mpi_class_get(SUIT_MANIFEST_APP_RECOVERY, &class_id[1]) !=
+		    SUIT_PLAT_SUCCESS) {
 			return SUIT_PLAT_ERR_NOT_FOUND;
 		}
 		break;
@@ -79,19 +79,19 @@ mci_err_t suit_mci_invoke_order_get(const suit_manifest_class_id_t **class_id, s
 mci_err_t suit_mci_downgrade_prevention_policy_get(const suit_manifest_class_id_t *class_id,
 						   suit_downgrade_prevention_policy_t *policy)
 {
-	if (NULL == class_id || NULL == policy) {
+	suit_storage_mpi_t *mpi = NULL;
+
+	if (class_id == NULL || policy == NULL) {
 		return SUIT_PLAT_ERR_INVAL;
 	}
 
-	suit_storage_mpi_t *mpi;
-
-	if (SUIT_PLAT_SUCCESS != suit_storage_mpi_get(class_id, &mpi)) {
+	if (suit_storage_mpi_get(class_id, &mpi) != SUIT_PLAT_SUCCESS) {
 		return MCI_ERR_MANIFESTCLASSID;
 	}
 
 	*policy =
 		suit_mpi_downgrade_prevention_policy_to_metadata(mpi->downgrade_prevention_policy);
-	if (SUIT_DOWNGRADE_PREVENTION_UNKNOWN == *policy) {
+	if (*policy == SUIT_DOWNGRADE_PREVENTION_UNKNOWN) {
 		return SUIT_PLAT_ERR_OUT_OF_BOUNDS;
 	}
 
@@ -104,21 +104,21 @@ mci_err_t suit_mci_independent_update_policy_get(const suit_manifest_class_id_t 
 	suit_storage_mpi_t *mpi = NULL;
 	suit_manifest_role_t role = SUIT_MANIFEST_UNKNOWN;
 
-	if (NULL == class_id || NULL == policy) {
+	if (class_id == NULL || policy == NULL) {
 		return SUIT_PLAT_ERR_INVAL;
 	}
 
-	if (SUIT_PLAT_SUCCESS != suit_storage_mpi_get(class_id, &mpi)) {
+	if (suit_storage_mpi_get(class_id, &mpi) != SUIT_PLAT_SUCCESS) {
 		return MCI_ERR_MANIFESTCLASSID;
 	}
 
-	if (SUIT_PLAT_SUCCESS != suit_storage_mpi_role_get(class_id, &role)) {
+	if (suit_storage_mpi_role_get(class_id, &role) != SUIT_PLAT_SUCCESS) {
 		return MCI_ERR_MANIFESTCLASSID;
 	}
 
 	*policy = suit_mpi_independent_updateability_policy_to_metadata(
 		mpi->independent_updateability_policy);
-	if (SUIT_INDEPENDENT_UPDATE_UNKNOWN == *policy) {
+	if (*policy == SUIT_INDEPENDENT_UPDATE_UNKNOWN) {
 		return SUIT_PLAT_ERR_OUT_OF_BOUNDS;
 	}
 
@@ -145,14 +145,14 @@ mci_err_t suit_mci_independent_update_policy_get(const suit_manifest_class_id_t 
 
 mci_err_t suit_mci_manifest_class_id_validate(const suit_manifest_class_id_t *class_id)
 {
-	if (NULL == class_id) {
+	if (class_id == NULL) {
 		return SUIT_PLAT_ERR_INVAL;
 	}
 
 	suit_manifest_role_t role = SUIT_MANIFEST_UNKNOWN;
 	suit_plat_err_t ret = suit_storage_mpi_role_get(class_id, &role);
 
-	if (SUIT_PLAT_SUCCESS != ret) {
+	if (ret != SUIT_PLAT_SUCCESS) {
 		return MCI_ERR_MANIFESTCLASSID;
 	}
 
@@ -164,6 +164,7 @@ static bool skip_validation(suit_manifest_role_t role)
 #ifdef CONFIG_SDFW_LCS
 	/* Read the domain-specific LCS value. */
 	enum lcs current_lcs = LCS_DISCARDED;
+
 	switch (role) {
 	case SUIT_MANIFEST_SEC_TOP:
 	case SUIT_MANIFEST_SEC_SDFW:
@@ -209,22 +210,24 @@ static bool skip_validation(suit_manifest_role_t role)
 mci_err_t suit_mci_signing_key_id_validate(const suit_manifest_class_id_t *class_id,
 					   uint32_t key_id)
 {
-	if (NULL == class_id) {
+	suit_manifest_role_t role = SUIT_MANIFEST_UNKNOWN;
+
+	if (class_id == NULL) {
 		return SUIT_PLAT_ERR_INVAL;
 	}
 
-	suit_manifest_role_t role = SUIT_MANIFEST_UNKNOWN;
-	if (SUIT_PLAT_SUCCESS != suit_storage_mpi_role_get(class_id, &role)) {
+	if (suit_storage_mpi_role_get(class_id, &role) != SUIT_PLAT_SUCCESS) {
 		return MCI_ERR_MANIFESTCLASSID;
 	}
 
 	if (key_id == 0) {
+		suit_storage_mpi_t *mpi = NULL;
+
 		if (skip_validation(role)) {
 			return SUIT_PLAT_SUCCESS;
 		}
 
-		suit_storage_mpi_t *mpi;
-		if (SUIT_PLAT_SUCCESS != suit_storage_mpi_get(class_id, &mpi)) {
+		if (suit_storage_mpi_get(class_id, &mpi) != SUIT_PLAT_SUCCESS) {
 			return MCI_ERR_MANIFESTCLASSID;
 		}
 
@@ -232,7 +235,7 @@ mci_err_t suit_mci_signing_key_id_validate(const suit_manifest_class_id_t *class
 			return SUIT_PLAT_SUCCESS;
 		} else if ((mpi->signature_verification_policy ==
 			    SUIT_MPI_SIGNATURE_CHECK_ENABLED_ON_UPDATE) &&
-			   (EXECUTION_MODE_INVOKE == suit_execution_mode_get())) {
+			   (suit_execution_mode_get() == EXECUTION_MODE_INVOKE)) {
 			/* By allowing key_id == 0 in the invoke path, the platform will verify
 			 * the signature only during updates.
 			 */
@@ -294,13 +297,13 @@ mci_err_t suit_mci_signing_key_id_validate(const suit_manifest_class_id_t *class
 mci_err_t suit_mci_processor_start_rights_validate(const suit_manifest_class_id_t *class_id,
 						   int processor_id)
 {
-	if (NULL == class_id) {
+	if (class_id == NULL) {
 		return SUIT_PLAT_ERR_INVAL;
 	}
 
 	suit_manifest_role_t role = SUIT_MANIFEST_UNKNOWN;
 
-	if (SUIT_PLAT_SUCCESS != suit_storage_mpi_role_get(class_id, &role)) {
+	if (suit_storage_mpi_role_get(class_id, &role) != SUIT_PLAT_SUCCESS) {
 		return MCI_ERR_MANIFESTCLASSID;
 	}
 
@@ -315,7 +318,7 @@ mci_err_t suit_mci_processor_start_rights_validate(const suit_manifest_class_id_
 
 	case SUIT_MANIFEST_SEC_SYSCTRL:
 		/* Sys manifest */
-		if (NRF_PROCESSOR_SYSCTRL == processor_id) {
+		if (processor_id == NRF_PROCESSOR_SYSCTRL) {
 			/* SysCtrl */
 			return SUIT_PLAT_SUCCESS;
 		}
@@ -326,7 +329,7 @@ mci_err_t suit_mci_processor_start_rights_validate(const suit_manifest_class_id_
 	case SUIT_MANIFEST_APP_LOCAL_2:
 	case SUIT_MANIFEST_APP_LOCAL_3:
 		/* App manifest */
-		if (NRF_PROCESSOR_APPLICATION == processor_id) {
+		if (processor_id == NRF_PROCESSOR_APPLICATION) {
 			/* Appcore */
 			return SUIT_PLAT_SUCCESS;
 		}
@@ -336,7 +339,7 @@ mci_err_t suit_mci_processor_start_rights_validate(const suit_manifest_class_id_
 	case SUIT_MANIFEST_RAD_LOCAL_1:
 	case SUIT_MANIFEST_RAD_LOCAL_2:
 		/* Rad manifest */
-		if (NRF_PROCESSOR_RADIOCORE == processor_id) {
+		if (processor_id == NRF_PROCESSOR_RADIOCORE) {
 			/* Radiocore */
 			return SUIT_PLAT_SUCCESS;
 		}
@@ -352,13 +355,13 @@ mci_err_t suit_mci_processor_start_rights_validate(const suit_manifest_class_id_
 mci_err_t suit_mci_memory_access_rights_validate(const suit_manifest_class_id_t *class_id,
 						 void *address, size_t mem_size)
 {
-	if (NULL == class_id || NULL == address || 0 == mem_size) {
+	if (class_id == NULL || address == NULL || mem_size == 0) {
 		return SUIT_PLAT_ERR_INVAL;
 	}
 
 	suit_manifest_role_t role = SUIT_MANIFEST_UNKNOWN;
 
-	if (SUIT_PLAT_SUCCESS != suit_storage_mpi_role_get(class_id, &role)) {
+	if (suit_storage_mpi_role_get(class_id, &role) != SUIT_PLAT_SUCCESS) {
 		return MCI_ERR_MANIFESTCLASSID;
 	}
 
@@ -412,23 +415,23 @@ mci_err_t
 suit_mci_platform_specific_component_rights_validate(const suit_manifest_class_id_t *class_id,
 						     int platform_specific_component_number)
 {
-	if (NULL == class_id) {
+	if (class_id == NULL) {
 		return SUIT_PLAT_ERR_INVAL;
 	}
 
 	suit_manifest_role_t role = SUIT_MANIFEST_UNKNOWN;
 
-	if (SUIT_PLAT_SUCCESS != suit_storage_mpi_role_get(class_id, &role)) {
+	if (suit_storage_mpi_role_get(class_id, &role) != SUIT_PLAT_SUCCESS) {
 		return MCI_ERR_MANIFESTCLASSID;
 	}
 
-	if (SUIT_MANIFEST_SEC_SDFW == role) {
+	if (role == SUIT_MANIFEST_SEC_SDFW) {
 		/* The only manifest with ability to control platform specific components is secdom.
 		 * 0 - SDFW Firmware
 		 * 1 - SDFW Recovery Firmware
 		 */
-		if (0 == platform_specific_component_number ||
-		    1 == platform_specific_component_number) {
+		if (platform_specific_component_number == 0 ||
+		    platform_specific_component_number == 1) {
 			return SUIT_PLAT_SUCCESS;
 		}
 	}
@@ -439,12 +442,13 @@ suit_mci_platform_specific_component_rights_validate(const suit_manifest_class_i
 mci_err_t suit_mci_vendor_id_for_manifest_class_id_get(const suit_manifest_class_id_t *class_id,
 						       const suit_uuid_t **vendor_id)
 {
-	if (NULL == class_id || NULL == vendor_id) {
+	suit_storage_mpi_t *mpi = NULL;
+
+	if (class_id == NULL || vendor_id == NULL) {
 		return SUIT_PLAT_ERR_INVAL;
 	}
 
-	suit_storage_mpi_t *mpi;
-	if (SUIT_PLAT_SUCCESS != suit_storage_mpi_get(class_id, &mpi)) {
+	if (suit_storage_mpi_get(class_id, &mpi) != SUIT_PLAT_SUCCESS) {
 		return MCI_ERR_MANIFESTCLASSID;
 	}
 
@@ -462,12 +466,14 @@ suit_mci_manifest_parent_child_declaration_validate(const suit_manifest_class_id
 	}
 
 	suit_manifest_role_t parent_role = SUIT_MANIFEST_UNKNOWN;
-	if (SUIT_PLAT_SUCCESS != suit_storage_mpi_role_get(parent_class_id, &parent_role)) {
+
+	if (suit_storage_mpi_role_get(parent_class_id, &parent_role) != SUIT_PLAT_SUCCESS) {
 		return MCI_ERR_MANIFESTCLASSID;
 	}
 
 	suit_manifest_role_t child_role = SUIT_MANIFEST_UNKNOWN;
-	if (SUIT_PLAT_SUCCESS != suit_storage_mpi_role_get(child_class_id, &child_role)) {
+
+	if (suit_storage_mpi_role_get(child_class_id, &child_role) != SUIT_PLAT_SUCCESS) {
 		return MCI_ERR_MANIFESTCLASSID;
 	}
 
@@ -508,12 +514,14 @@ suit_mci_manifest_process_dependency_validate(const suit_manifest_class_id_t *pa
 	suit_execution_mode_t execution_mode = suit_execution_mode_get();
 
 	suit_manifest_role_t parent_role = SUIT_MANIFEST_UNKNOWN;
-	if (SUIT_PLAT_SUCCESS != suit_storage_mpi_role_get(parent_class_id, &parent_role)) {
+
+	if (suit_storage_mpi_role_get(parent_class_id, &parent_role) != SUIT_PLAT_SUCCESS) {
 		return MCI_ERR_MANIFESTCLASSID;
 	}
 
 	suit_manifest_role_t child_role = SUIT_MANIFEST_UNKNOWN;
-	if (SUIT_PLAT_SUCCESS != suit_storage_mpi_role_get(child_class_id, &child_role)) {
+
+	if (suit_storage_mpi_role_get(child_class_id, &child_role) != SUIT_PLAT_SUCCESS) {
 		return MCI_ERR_MANIFESTCLASSID;
 	}
 

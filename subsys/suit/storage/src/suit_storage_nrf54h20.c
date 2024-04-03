@@ -184,7 +184,8 @@ static const suit_storage_mpi_t mpi_nordic[] = {
 			     0xc8, 0xd1, 0xd1, 0xc8},
 	}};
 
-static suit_plat_err_t find_manifest_area(suit_manifest_role_t role, const uint8_t **addr, size_t *size)
+static suit_plat_err_t find_manifest_area(suit_manifest_role_t role, const uint8_t **addr,
+					  size_t *size)
 {
 	struct suit_storage_nordic *nordic_storage =
 		(struct suit_storage_nordic *)SUIT_STORAGE_NORDIC_ADDRESS;
@@ -273,6 +274,7 @@ static suit_plat_err_t sha256_check(const uint8_t *addr, size_t size,
 	}
 
 	psa_status_t status = psa_crypto_init();
+
 	if (status != PSA_SUCCESS) {
 		LOG_ERR("Failed to init psa crypto: %d", status);
 		return SUIT_PLAT_ERR_CRASH;
@@ -297,7 +299,8 @@ static suit_plat_err_t sha256_check(const uint8_t *addr, size_t size,
 	} else {
 		if (status == PSA_ERROR_INVALID_SIGNATURE) {
 			/* Digest calculation successful but expected digest does not match
-			 * calculated one */
+			 * calculated one
+			 */
 			err = SUIT_PLAT_ERR_AUTHENTICATION;
 		} else {
 			LOG_ERR("psa_hash_verify error: %d", status);
@@ -344,6 +347,7 @@ static suit_plat_err_t sha256_get(const uint8_t *addr, size_t size, suit_storage
 	}
 
 	psa_status_t status = psa_crypto_init();
+
 	if (status != PSA_SUCCESS) {
 		LOG_ERR("Failed to init psa crypto: %d", status);
 		return SUIT_PLAT_ERR_CRASH;
@@ -549,6 +553,7 @@ static suit_plat_err_t digest_struct_commit(uint8_t *area_addr, uint8_t *backup_
 	}
 
 	suit_plat_err_t ret = sha256_get(area_addr, area_size, &digest);
+
 	if (ret != SUIT_PLAT_SUCCESS) {
 		return ret;
 	}
@@ -874,7 +879,7 @@ suit_plat_err_t suit_storage_update_cand_set(suit_plat_mreg_t *regions, size_t l
 }
 
 suit_plat_err_t suit_storage_installed_envelope_get(const suit_manifest_class_id_t *id,
-						   const uint8_t **addr, size_t *size)
+						    const uint8_t **addr, size_t *size)
 {
 	suit_manifest_role_t role;
 
@@ -883,6 +888,7 @@ suit_plat_err_t suit_storage_installed_envelope_get(const suit_manifest_class_id
 	}
 
 	suit_plat_err_t err = suit_storage_mpi_role_get(id, &role);
+
 	if (err != SUIT_PLAT_SUCCESS) {
 		LOG_INF("Unable to find role for given class ID.");
 		return err;
@@ -968,6 +974,7 @@ suit_plat_err_t suit_storage_var_set(size_t index, uint32_t value)
 	}
 
 	suit_plat_err_t err = suit_storage_nvv_set(area_addr, area_size, index, value);
+
 	if (err != SUIT_PLAT_SUCCESS) {
 		LOG_INF("Failed to update NVV at index %d", index);
 		return err;

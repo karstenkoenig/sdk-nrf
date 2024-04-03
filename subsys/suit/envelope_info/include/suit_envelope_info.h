@@ -28,7 +28,7 @@ extern "C" {
  *
  * @return suit_plat_success on success, error code otherwise.
  */
-suit_plat_err_t suit_envelope_info_candidate_stored(const uint8_t* address, size_t max_size);
+suit_plat_err_t suit_envelope_info_candidate_stored(const uint8_t *address, size_t max_size);
 
 /**
  * @brief Resets the module.
@@ -44,7 +44,7 @@ void suit_envelope_info_reset(void);
  *
  * @return suit_plat_success on success, error code otherwise.
  */
-suit_plat_err_t suit_envelope_info_get(const uint8_t** address, size_t *size);
+suit_plat_err_t suit_envelope_info_get(const uint8_t **address, size_t *size);
 
 #ifdef __cplusplus
 }

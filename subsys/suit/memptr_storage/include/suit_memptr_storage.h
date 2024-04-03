@@ -19,7 +19,7 @@ extern "C" {
 typedef int suit_memptr_storage_err_t;
 
 /**< Invalid record */
-#define SUIT_MEMPTR_STORAGE_ERR_INVALID_RECORD     1
+#define SUIT_MEMPTR_STORAGE_ERR_INVALID_RECORD	   1
 /**< Write to unallocated record */
 #define SUIT_MEMPTR_STORAGE_ERR_UNALLOCATED_RECORD 2
 
@@ -58,8 +58,8 @@ suit_memptr_storage_err_t suit_memptr_storage_release(memptr_storage_handle_t ha
  * @retval SUIT_MEMPTR_STORAGE_ERR_UNALLOCATED_RECORD Attempt to write to unallocated record.
  */
 suit_memptr_storage_err_t suit_memptr_storage_ptr_store(memptr_storage_handle_t handle,
-						        const uint8_t *payload_ptr,
-						        size_t payload_size);
+							const uint8_t *payload_ptr,
+							size_t payload_size);
 
 /**
  * @brief Get the memptr ptr object

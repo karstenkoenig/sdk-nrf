@@ -98,6 +98,7 @@ static uintptr_t area_address_get(const struct nvm_area *area)
 {
 	if (IS_ENABLED(CONFIG_FLASH_SIMULATOR)) {
 		size_t size;
+
 		return (uintptr_t)flash_simulator_get_memory(area->na_fdev, &size);
 	}
 
@@ -206,8 +207,10 @@ uintptr_t suit_memory_global_address_to_ram_address(uintptr_t address)
 {
 	if (IS_ENABLED(CONFIG_BOARD_NATIVE_POSIX) && DT_NODE_EXISTS(DT_NODELABEL(sram0))) {
 		const struct ram_area *area = find_ram_area(address);
+
 		if (area) {
 			uintptr_t offset = address - area->ra_start;
+
 			return (uintptr_t)mem_for_sim_ram + offset;
 		}
 	}
@@ -241,6 +244,7 @@ bool suit_memory_global_address_is_in_external_memory(uintptr_t address)
 bool suit_memory_global_address_range_is_in_external_memory(uintptr_t address, size_t size)
 {
 	uintptr_t end_addr = address + size;
+
 	return suit_memory_global_address_is_in_external_memory(address) &&
 	       suit_memory_global_address_is_in_external_memory(end_addr) &&
 	       end_addr >= address; /* Overflow check. */

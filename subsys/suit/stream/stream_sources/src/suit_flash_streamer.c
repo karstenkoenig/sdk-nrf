@@ -48,11 +48,13 @@ suit_plat_err_t suit_flash_streamer_stream(const uint8_t *payload, size_t payloa
 		size_t read_size = MIN(bytes_remaining, READ_CHUNK_SIZE);
 
 		int result = flash_read(fdev, offset, read_buffer, read_size);
+
 		if (result != 0) {
 			return SUIT_PLAT_ERR_IO;
 		}
 
 		suit_plat_err_t ret = sink->write(sink->ctx, read_buffer, read_size);
+
 		if (ret != SUIT_PLAT_SUCCESS) {
 			return ret;
 		}

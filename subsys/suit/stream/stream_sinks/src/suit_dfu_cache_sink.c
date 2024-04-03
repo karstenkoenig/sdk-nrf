@@ -40,23 +40,22 @@ suit_plat_err_t suit_dfu_cache_sink_get(struct stream_sink *sink, uint8_t cache_
 			return SUIT_PLAT_ERR_BUSY;
 		}
 
-		const uint8_t* dfu_partition_address;
+		const uint8_t *dfu_partition_address;
 		size_t dfu_partition_size;
-		(void) dfu_partition_address;
-		(void) dfu_partition_size;
-		if (suit_dfu_cache_rw_partition_info_get(cache_partition_id,
-							 &dfu_partition_address,
-							 &dfu_partition_size) != SUIT_PLAT_SUCCESS)
-		{
+
+		(void)dfu_partition_address;
+		(void)dfu_partition_size;
+		if (suit_dfu_cache_rw_partition_info_get(cache_partition_id, &dfu_partition_address,
+							 &dfu_partition_size) !=
+		    SUIT_PLAT_SUCCESS) {
 			return SUIT_PLAT_ERR_NOT_FOUND;
 		}
 
 		suit_plat_err_t ret = SUIT_PLAT_SUCCESS;
 
-		if (write_enabled)
-		{
-			ret = suit_dfu_cache_rw_slot_create(cache_partition_id, &ctx.slot,
-							    uri, uri_size);
+		if (write_enabled) {
+			ret = suit_dfu_cache_rw_slot_create(cache_partition_id, &ctx.slot, uri,
+							    uri_size);
 		}
 
 		if (ret != SUIT_PLAT_SUCCESS) {
@@ -96,9 +95,8 @@ static suit_plat_err_t write(void *ctx, const uint8_t *buf, size_t size)
 			if ((size + cache_ctx->offset) < cache_ctx->offset_limit) {
 				suit_plat_err_t ret = suit_flash_sink_get(
 					&sink,
-					cache_ctx->slot.slot_address +
-								  cache_ctx->slot.data_offset +
-								  cache_ctx->offset,
+					cache_ctx->slot.slot_address + cache_ctx->slot.data_offset +
+						cache_ctx->offset,
 					size);
 				if (ret != SUIT_PLAT_SUCCESS) {
 					LOG_ERR("Getting flash_sink failed. %i", ret);
@@ -107,7 +105,8 @@ static suit_plat_err_t write(void *ctx, const uint8_t *buf, size_t size)
 
 				ret = sink.write(sink.ctx, buf, size);
 				if (ret != SUIT_PLAT_SUCCESS) {
-					LOG_ERR("Writing data to cache slot failed, Flash err: %d.", ret);
+					LOG_ERR("Writing data to cache slot failed, Flash err: %d.",
+						ret);
 
 					if (sink.release(sink.ctx) != SUIT_PLAT_SUCCESS) {
 						LOG_ERR("Sink release failed");
@@ -130,10 +129,8 @@ static suit_plat_err_t write(void *ctx, const uint8_t *buf, size_t size)
 
 				return SUIT_PLAT_SUCCESS;
 			}
-			else
-			{
-				return SUIT_PLAT_ERR_NOMEM;
-			}
+
+			return SUIT_PLAT_ERR_NOMEM;
 		}
 
 		return SUIT_PLAT_ERR_INCORRECT_STATE;
@@ -209,6 +206,7 @@ suit_plat_err_t suit_dfu_cache_sink_commit(void *ctx)
 {
 	if (ctx != NULL) {
 		struct cache_ctx *cache_ctx = (struct cache_ctx *)ctx;
+
 		if (cache_ctx->write_enabled) {
 			suit_plat_err_t ret = suit_dfu_cache_rw_slot_close(&cache_ctx->slot,
 									   cache_ctx->size_used);
@@ -232,6 +230,7 @@ suit_plat_err_t suit_dfu_cache_sink_drop(void *ctx)
 {
 	if (ctx != NULL) {
 		struct cache_ctx *cache_ctx = (struct cache_ctx *)ctx;
+
 		if (cache_ctx->write_enabled) {
 			suit_plat_err_t ret = suit_dfu_cache_rw_slot_drop(&cache_ctx->slot);
 

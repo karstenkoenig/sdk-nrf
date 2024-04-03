@@ -13,10 +13,12 @@
 LOG_MODULE_REGISTER(plat_components, CONFIG_SUIT_LOG_LEVEL);
 
 struct suit_plat_component {
-	void *impl_data; /** Slot to store the implementation-specific private data. */
-	struct zcbor_string component_id; /** Slot to store the component ID. The implementation
-					    * may use it instead of building full
-					    * internal context. */
+	/** Slot to store the implementation-specific private data. */
+	void *impl_data;
+	/** Slot to store the component ID. The implementation
+	 * may use it instead of building full internal context.
+	 */
+	struct zcbor_string component_id;
 	bool in_use;
 };
 
@@ -68,8 +70,8 @@ int suit_plat_release_component_handle(suit_component_t handle)
 
 	suit_component_type_t component_type = SUIT_COMPONENT_TYPE_UNSUPPORTED;
 
-	if (suit_plat_decode_component_type(&component->component_id, &component_type)
-	    != SUIT_PLAT_SUCCESS) {
+	if (suit_plat_decode_component_type(&component->component_id, &component_type) !=
+	    SUIT_PLAT_SUCCESS) {
 		return SUIT_ERR_UNSUPPORTED_COMPONENT_ID;
 	}
 
@@ -94,8 +96,7 @@ int suit_plat_create_component_handle(struct zcbor_string *component_id,
 	suit_memptr_storage_err_t err;
 	struct suit_plat_component *component = NULL;
 
-	if (component_id == NULL || component_handle == NULL)
-	{
+	if (component_id == NULL || component_handle == NULL) {
 		return SUIT_ERR_UNSUPPORTED_PARAMETER;
 	}
 
@@ -128,8 +129,7 @@ int suit_plat_create_component_handle(struct zcbor_string *component_id,
 	if ((component_type == SUIT_COMPONENT_TYPE_CAND_IMG) ||
 	    (component_type == SUIT_COMPONENT_TYPE_CAND_MFST)) {
 		err = suit_memptr_storage_get(&component->impl_data);
-		if (err != SUIT_PLAT_SUCCESS)
-		{
+		if (err != SUIT_PLAT_SUCCESS) {
 			return suit_plat_err_to_processor_err_convert(err);
 		}
 	}
@@ -138,8 +138,9 @@ int suit_plat_create_component_handle(struct zcbor_string *component_id,
 		/* Get address and size of the component from its id */
 		intptr_t address = (intptr_t)NULL;
 		size_t size = 0;
-		if (suit_plat_decode_address_size(&component->component_id, &address, &size)
-		    != SUIT_PLAT_SUCCESS) {
+
+		if (suit_plat_decode_address_size(&component->component_id, &address, &size) !=
+		    SUIT_PLAT_SUCCESS) {
 			LOG_ERR("Failed to decode address and size");
 			return SUIT_ERR_UNSUPPORTED_COMPONENT_ID;
 		}
@@ -154,8 +155,8 @@ int suit_plat_create_component_handle(struct zcbor_string *component_id,
 
 		/* Set the address as in component id but set size with 0 */
 		size = 0;
-		suit_memptr_storage_err_t err = suit_memptr_storage_ptr_store(component->impl_data,
-						(uint8_t *)address, size);
+		suit_memptr_storage_err_t err = suit_memptr_storage_ptr_store(
+			component->impl_data, (uint8_t *)address, size);
 		if (err != SUIT_PLAT_SUCCESS) {
 			suit_memptr_storage_release(component->impl_data);
 			component->impl_data = NULL;
@@ -209,12 +210,14 @@ int suit_plat_override_image_size(suit_component_t handle, size_t size)
 	struct zcbor_string *component_id = NULL;
 
 	int err = suit_plat_component_id_get(handle, &component_id);
+
 	if (err != SUIT_SUCCESS) {
 		LOG_ERR("Failed to get component id: %i", err);
 		return err;
 	}
 
 	suit_component_type_t component_type = SUIT_COMPONENT_TYPE_UNSUPPORTED;
+
 	if (suit_plat_decode_component_type(component_id, &component_type) != SUIT_PLAT_SUCCESS) {
 		LOG_ERR("Failed to decode component type: %i", err);
 		return SUIT_ERR_DECODING;
@@ -225,7 +228,8 @@ int suit_plat_override_image_size(suit_component_t handle, size_t size)
 		intptr_t run_address;
 		size_t component_size;
 
-		if (suit_plat_decode_address_size(component_id, &run_address, &component_size) != SUIT_PLAT_SUCCESS) {
+		if (suit_plat_decode_address_size(component_id, &run_address, &component_size) !=
+		    SUIT_PLAT_SUCCESS) {
 			LOG_ERR("suit_plat_decode_address_size failed");
 			return SUIT_ERR_UNSUPPORTED_COMPONENT_ID;
 		}
@@ -238,6 +242,7 @@ int suit_plat_override_image_size(suit_component_t handle, size_t size)
 		}
 
 		void *impl_data = NULL;
+
 		err = suit_plat_component_impl_data_get(handle, &impl_data);
 		if (err != SUIT_SUCCESS) {
 			LOG_ERR("Failed to get implementation data: %i", err);

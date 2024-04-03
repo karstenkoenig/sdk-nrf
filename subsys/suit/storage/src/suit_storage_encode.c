@@ -110,11 +110,11 @@ suit_plat_err_t suit_storage_decode_envelope_header(const uint8_t *buf, size_t l
 		int err = zcbor_pop_error(states);
 
 		/* Use this error code if additional logging is needed:
-		   LOG_INF("Decoding of envelope header failed:, ZCBOR error %d", err);
-		   This isn't done normally as it would print lots of logs as this
-		   function is called in a loop and most envelope slots are invalid.
-		*/
-		(void) err;
+		 * LOG_INF("Decoding of envelope header failed:, ZCBOR error %d", err);
+		 * This isn't done normally as it would print lots of logs as this
+		 * function is called in a loop and most envelope slots are invalid.
+		 */
+		(void)err;
 
 		return SUIT_PLAT_ERR_CBOR_DECODING;
 	}
@@ -132,7 +132,8 @@ suit_plat_err_t suit_storage_decode_envelope_header(const uint8_t *buf, size_t l
 	return SUIT_PLAT_SUCCESS;
 }
 
-suit_plat_err_t suit_storage_encode_envelope_header(suit_envelope_hdr_t *envelope, uint8_t *buf, size_t *len)
+suit_plat_err_t suit_storage_encode_envelope_header(suit_envelope_hdr_t *envelope, uint8_t *buf,
+						    size_t *len)
 {
 	const uint8_t envelope_tag[SUIT_STORAGE_ENCODED_ENVELOPE_TAG_LEN] = {
 		0xD8, 0x6B, /* SUIT envelope tag (107) */
@@ -176,6 +177,7 @@ suit_plat_err_t suit_storage_encode_envelope_header(suit_envelope_hdr_t *envelop
 
 	if (!ok) {
 		int err = zcbor_pop_error(states);
+
 		LOG_ERR("Encoding of envelope header failed:, ZCBOR error %d", err);
 
 		return SUIT_PLAT_ERR_CBOR_DECODING;
@@ -221,6 +223,7 @@ suit_plat_err_t suit_storage_decode_suit_envelope_severed(const uint8_t *buf, si
 
 		while (ok) {
 			uint32_t manifest_map_tag;
+
 			ok = zcbor_uint32_decode(states, &manifest_map_tag);
 			if (!ok) {
 				break;
@@ -228,7 +231,9 @@ suit_plat_err_t suit_storage_decode_suit_envelope_severed(const uint8_t *buf, si
 
 			if (manifest_map_tag == SUIT_MANIFEST_COMPONENT_ID_TAG) {
 				const uint8_t *component_id_start = states[0].payload;
+
 				ok = zcbor_any_skip(states, NULL);
+
 				const uint8_t *component_id_end = states[0].payload;
 
 				if (ok) {
@@ -250,6 +255,7 @@ suit_plat_err_t suit_storage_decode_suit_envelope_severed(const uint8_t *buf, si
 
 	if (!ok) {
 		int err = zcbor_pop_error(states);
+
 		LOG_ERR("Decoding of envelope severed elements failed:, ZCBOR error %d", err);
 
 		return SUIT_PLAT_ERR_CBOR_DECODING;

@@ -11,12 +11,13 @@ int suit_plat_retrieve_manifest_domain_specific(struct zcbor_string *component_i
 						suit_component_type_t component_type,
 						const uint8_t **envelope_str, size_t *envelope_len)
 {
-	(void) component_id;
-	(void) component_type;
-	(void) envelope_str;
-	(void) envelope_len;
+	(void)component_id;
+	(void)component_type;
+	(void)envelope_str;
+	(void)envelope_len;
 
 	/* suit_plat_retrieve will only set the return value to success if some
-	   component type in the higher layer will be processed successfully. */
+	 * component type in the higher layer will be processed successfully.
+	 */
 	return SUIT_ERR_UNSUPPORTED_COMPONENT_ID;
 }

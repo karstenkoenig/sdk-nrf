@@ -18,7 +18,7 @@
 
 LOG_MODULE_REGISTER(dfu_cache, CONFIG_SUIT_LOG_LEVEL);
 
-static bool init_done = false;
+static bool init_done;
 struct dfu_cache dfu_cache;
 
 /**
@@ -63,6 +63,7 @@ static bool match_uri(struct dfu_cache_pool *cache_pool, zcbor_state_t *state,
 		      void *ctx)
 {
 	struct match_uri_ctx *cb_ctx = ctx;
+
 	cb_ctx->match = uricmp(uri, cb_ctx->uri);
 
 	if (cb_ctx->match) {
@@ -176,8 +177,7 @@ static suit_plat_err_t suit_dfu_cache_copy(struct dfu_cache *dst_cache,
 
 suit_plat_err_t suit_dfu_cache_initialize(struct dfu_cache *cache)
 {
-	if (init_done)
-	{
+	if (init_done) {
 		return SUIT_PLAT_ERR_INCORRECT_STATE;
 	}
 

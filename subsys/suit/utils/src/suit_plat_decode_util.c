@@ -136,6 +136,7 @@ suit_plat_err_t suit_plat_decode_component_number(struct zcbor_string *component
 	struct zcbor_string component_type;
 
 	bool res = zcbor_list_start_decode(state);
+
 	res = res && zcbor_bstr_decode(state, &component_type);
 	res = res && zcbor_bstr_start_decode(state, NULL);
 	res = res && zcbor_uint32_decode(state, number);

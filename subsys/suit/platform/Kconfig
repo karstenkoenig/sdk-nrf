@@ -5,7 +5,7 @@
 #
 
 menuconfig SUIT_PLATFORM
-        bool "Enable SUIT component implementations"
+	bool "Enable SUIT component implementations"
 	depends on SUIT_PROCESSOR
 	depends on SUIT_UTILS
 	depends on SUIT_MEMPTR_STORAGE

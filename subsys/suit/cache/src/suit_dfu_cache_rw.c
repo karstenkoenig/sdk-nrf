@@ -29,7 +29,7 @@ LOG_MODULE_REGISTER(suit_cache_rw, CONFIG_SUIT_LOG_LEVEL);
 #define BSWAP_16 __bswap_16
 #endif
 
-#define SUCCESS 0
+#define SUCCESS		      0
 #define INDEFINITE_MAP_HEADER 0xBF
 
 /* BF
@@ -46,7 +46,7 @@ LOG_MODULE_REGISTER(suit_cache_rw, CONFIG_SUIT_LOG_LEVEL);
 #define MAX_URI_ENCODE_BUFFER_LENGTH (CONFIG_SUIT_MAX_URI_LENGTH + 9)
 
 extern struct dfu_cache dfu_cache;
-static bool prevent_second_init = false;
+static bool prevent_second_init;
 
 struct dfu_cache_partition_ext { /* Extended structure describing single cache partition */
 	const struct device *fdev;
@@ -143,6 +143,7 @@ static bool translate_partition_start_address(struct dfu_cache_partition_ext *pa
 	};
 
 	uintptr_t ret;
+
 	if (!suit_memory_nvm_address_to_global_address(&addr, &ret)) {
 		LOG_ERR("Address not translated: %p(dev):%lX", (void *)addr.fdev, addr.offset);
 		return false;
@@ -205,6 +206,7 @@ suit_plat_err_t suit_dfu_cache_rw_initialize(void *addr, size_t size)
 suit_plat_err_t suit_dfu_cache_rw_deinitialize(void)
 {
 	suit_plat_err_t ret = SUIT_PLAT_SUCCESS;
+
 	suit_dfu_cache_deinitialize();
 	suit_dfu_cache_clear(&dfu_cache);
 
@@ -244,10 +246,9 @@ suit_plat_err_t suit_dfu_cache_rw_deinitialize(void)
 suit_plat_err_t suit_dfu_cache_rw_partition_info_get(uint8_t cache_partition_id,
 						     const uint8_t **address, size_t *size)
 {
-	struct dfu_cache_partition_ext* partition = cache_partition_get(cache_partition_id);
+	struct dfu_cache_partition_ext *partition = cache_partition_get(cache_partition_id);
 
-	if (partition == NULL)
-	{
+	if (partition == NULL) {
 		return SUIT_PLAT_ERR_NOT_FOUND;
 	}
 
@@ -270,6 +271,7 @@ static suit_plat_err_t write_to_sink(uint8_t *address, uint8_t *data, size_t siz
 	struct stream_sink sink;
 
 	suit_plat_err_t ret = suit_flash_sink_get(&sink, address, size);
+
 	if (ret != SUIT_PLAT_SUCCESS) {
 		LOG_ERR("Getting flash_sink failed. %i", ret);
 		return SUIT_PLAT_ERR_IO;
@@ -306,9 +308,10 @@ static suit_plat_err_t erase_on_sink(uint8_t *address, size_t size)
 {
 	struct stream_sink sink;
 
-	LOG_DBG("Erasing memory: %p(size:%u)", (void*)address, size);
+	LOG_DBG("Erasing memory: %p(size:%u)", (void *)address, size);
 
 	suit_plat_err_t ret = suit_flash_sink_get(&sink, address, size);
+
 	if (ret != SUIT_PLAT_SUCCESS) {
 		LOG_ERR("Getting flash_sink failed. %i", ret);
 		return SUIT_PLAT_ERR_IO;
@@ -366,8 +369,7 @@ static suit_plat_err_t partition_initialize(struct dfu_cache_partition_ext *part
 				}
 
 				LOG_INF("Erasing partition %p(size:%d) on init",
-					(void*)part->address,
-					part->size);
+					(void *)part->address, part->size);
 				ret = erase_on_sink(part->address, part->size);
 
 				if (ret != SUIT_PLAT_SUCCESS) {
@@ -408,9 +410,8 @@ static suit_plat_err_t cache_free_space_check(struct dfu_cache_partition_ext *pa
 	if ((part != NULL) && (slot != NULL)) {
 		part_tmp_address = (uintptr_t)part->address;
 		if (suit_dfu_cache_partition_is_empty(&cache_pool) != SUIT_PLAT_SUCCESS) {
-			ret = suit_dfu_cache_partition_find_free_space(&cache_pool,
-								       &part_tmp_address,
-								       &needs_erase);
+			ret = suit_dfu_cache_partition_find_free_space(
+				&cache_pool, &part_tmp_address, &needs_erase);
 			if (ret == SUIT_PLAT_ERR_CBOR_DECODING) {
 				part_tmp_address = (uintptr_t)part->address;
 				ret = SUIT_PLAT_SUCCESS;
@@ -480,7 +481,7 @@ static suit_plat_err_t slot_in_cache_partition_allocate(const struct zcbor_strin
 	if ((uri != NULL) && (slot != NULL) && (part != NULL)) {
 		if (uri->len > CONFIG_SUIT_MAX_URI_LENGTH) {
 			LOG_ERR("URI longer than defined maximum CONFIG_SUIT_MAX_URI_LENGTH: %u",
-						CONFIG_SUIT_MAX_URI_LENGTH);
+				CONFIG_SUIT_MAX_URI_LENGTH);
 			return SUIT_PLAT_ERR_NOMEM;
 		}
 
@@ -600,8 +601,7 @@ static suit_plat_err_t cache_0_update(uint8_t *address, size_t size)
 #if CONFIG_SUIT_CACHE0_ERASE_ON_ENVELOPE_STORED
 		ret = erase_on_sink(dfu_partitions_ext[0].address, dfu_partitions_ext[0].size);
 
-		if (ret != SUIT_PLAT_SUCCESS)
-		{
+		if (ret != SUIT_PLAT_SUCCESS) {
 			return ret;
 		}
 #endif /* CONFIG_SUIT_CACHE0_ERASE_ON_ENVELOPE_STORED */
@@ -613,8 +613,8 @@ static suit_plat_err_t cache_0_update(uint8_t *address, size_t size)
 }
 
 suit_plat_err_t suit_dfu_cache_rw_slot_create(uint8_t cache_partition_id,
-					      struct suit_cache_slot *slot,
-					      const uint8_t *uri, size_t uri_size)
+					      struct suit_cache_slot *slot, const uint8_t *uri,
+					      size_t uri_size)
 {
 	if ((slot != NULL) && (uri != NULL) && (uri_size > 0)) {
 		struct zcbor_string tmp_uri = {.value = uri, .len = uri_size};
@@ -686,7 +686,8 @@ suit_plat_err_t suit_dfu_cache_rw_slot_close(struct suit_cache_slot *slot, size_
 
 		if (padding_size > 0) {
 			/* Assumed worst case scenario is that padding size is not bigger than
-			 * uint16 */
+			 * uint16
+			 */
 			uint8_t header[] = {0x60, 0, 0, 0};
 			size_t header_size = 0;
 
@@ -699,8 +700,8 @@ suit_plat_err_t suit_dfu_cache_rw_slot_close(struct suit_cache_slot *slot, size_
 			} else if (padding_size <= UINT16_MAX) {
 				header_size = 4;
 				padding_size -= header_size;
-				header[1] = 0x59; /* byte string (two-byte uint16_t for n, and then
-						     n bytes follow) */
+				/* byte string (two-byte uint16_t for n, and then n bytes follow) */
+				header[1] = 0x59;
 				*(uint16_t *)(&header[2]) = BSWAP_16(padding_size);
 			} else {
 				LOG_ERR("Number of required padding bytes exceeds assumed max size "
@@ -772,12 +773,14 @@ suit_plat_err_t suit_dfu_cache_rw_slot_drop(struct suit_cache_slot *slot)
 
 		suit_plat_err_t ret = suit_dfu_cache_memcpy(
 			&map_header, (uintptr_t)slot->slot_address, sizeof(map_header));
+
 		if (ret > 0) {
 			LOG_ERR("Read from cache failed: %d", ret);
 			return ret;
 		}
 
 		bool add_map_header = false;
+
 		if (map_header == INDEFINITE_MAP_HEADER) {
 			add_map_header = true;
 		}
@@ -807,8 +810,7 @@ suit_plat_err_t suit_dfu_cache_rw_slot_drop(struct suit_cache_slot *slot)
 
 static int preinitialize(void)
 {
-	if(!setup_partition_addresses())
-	{
+	if (!setup_partition_addresses()) {
 		return -EIO;
 	}
 

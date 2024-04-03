@@ -11,6 +11,6 @@ if SUIT_METADATA
 
 config APP_LINK_WITH_SUIT_METADATA
 	bool
-        default y
+	default y
 
 endif # SUIT_METADATA
