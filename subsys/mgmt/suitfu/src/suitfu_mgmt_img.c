@@ -42,8 +42,8 @@ static int suitfu_mgmt_img_upload(struct smp_streamer *ctx)
 {
 	zcbor_state_t *zsd = ctx->reader->zs;
 	zcbor_state_t *zse = ctx->writer->zs;
-	static size_t image_size = 0;
-	static size_t offset_in_image = 0;
+	static size_t image_size;
+	static size_t offset_in_image;
 
 	size_t decoded = 0;
 	suitfu_mgmt_image_upload_req_t req = {
@@ -56,6 +56,7 @@ static int suitfu_mgmt_img_upload(struct smp_streamer *ctx)
 	};
 
 	int rc = suitfu_mgmt_is_dfu_partition_ready();
+
 	if (rc != MGMT_ERR_EOK) {
 		LOG_ERR("DFU Partition in not ready");
 		return rc;
@@ -182,6 +183,7 @@ static int suitfu_mgmt_img_state_read(struct smp_streamer *ctx)
 
 	if (ok) {
 		int err = snprintf(installed_vers_str, sizeof(installed_vers_str), "%d", seq_num);
+
 		if (err < 0) {
 			LOG_ERR("Unable to create manifest version string: %d", err);
 			ok = false;
@@ -226,6 +228,7 @@ static int suitfu_mgmt_img_state_read(struct smp_streamer *ctx)
 static int suitfu_mgmt_img_erase(struct smp_streamer *ctx)
 {
 	int rc = suit_dfu_cleanup();
+
 	if (rc != 0) {
 		LOG_ERR("Erasing DFU partition failed");
 		return MGMT_ERR_EBADSTATE;

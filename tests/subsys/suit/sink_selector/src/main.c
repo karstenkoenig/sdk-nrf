@@ -45,9 +45,9 @@ ZTEST(sink_selector_tests, test_select_memptr_sink_OK)
 ZTEST(sink_selector_tests, test_select_flash_sink_OK)
 {
 	suit_component_t handle;
-	/* [h'MEM', h'02', h'1A00080000', h'1A00001000'] */
+	/* [h'MEM', h'02', h'1A00080000', h'191000'] */
 	uint8_t valid_value[] = {0x84, 0x44, 0x63, 'M',	 'E',  'M',  0x41, 0x02, 0x45, 0x1A,
-				 0x00, 0x08, 0x00, 0x00, 0x45, 0x1A, 0x00, 0x00, 0x10, 0x00};
+				 0x00, 0x08, 0x00, 0x00, 0x43, 0x19, 0x10, 0x00};
 	struct zcbor_string valid_component_id = {
 		.value = valid_value,
 		.len = sizeof(valid_value),
@@ -66,9 +66,9 @@ ZTEST(sink_selector_tests, test_select_ram_sink_OK)
 {
 	suit_component_t handle;
 
-	/* ['MEM', h'02', h'1A20000000', h'1A00001000'] */
+	/* ['MEM', h'02', h'1A20000000', h'191000'] */
 	uint8_t valid_value[] = {0x84, 0x44, 0x63, 'M',	 'E',  'M',  0x41, 0x02, 0x45, 0x1A,
-				 0x20, 0x00, 0x00, 0x00, 0x45, 0x1A, 0x00, 0x00, 0x10, 0x00};
+				 0x20, 0x00, 0x00, 0x00, 0x43, 0x19, 0x10, 0x00};
 
 	struct zcbor_string valid_component_id = {
 		.value = valid_value,
@@ -110,9 +110,9 @@ ZTEST(sink_selector_tests, test_select_sdfw_sink_OK)
 ZTEST(sink_selector_tests, test_select_invalid_component_id)
 {
 	suit_component_t handle;
-	/* [h'MEM', h'02', h'1000080000', h'1A00000008'] */
+	/* [h'MEM', h'02', h'1000080000', h'08'] */
 	uint8_t invalid_value[] = {0x84, 0x44, 0x63, 'M',  'E',	 'M',  0x41, 0x02, 0x45, 0x10,
-				   0x00, 0x08, 0x00, 0x00, 0x45, 0x1A, 0x00, 0x00, 0x00, 0x08};
+				   0x00, 0x08, 0x00, 0x00, 0x41, 0x08};
 	struct zcbor_string invalid_component_id = {
 		.value = invalid_value,
 		.len = sizeof(invalid_value),

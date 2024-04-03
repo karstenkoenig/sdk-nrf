@@ -56,9 +56,9 @@ ZTEST(copy_tests, test_integrated_fetch_to_memptr_and_copy_to_msink_OK)
 
 	/* Create handle that will be used as destination */
 	suit_component_t dst_handle;
-	/* [h'MEM', h'02', h'1A00080000', h'1A00001000'] */
+	/* [h'MEM', h'02', h'1A00080000', h'191000'] */
 	uint8_t valid_dst_value[] = {0x84, 0x44, 0x63, 'M',  'E',  'M',	 0x41, 0x02, 0x45, 0x1A,
-				     0x00, 0x08, 0x00, 0x00, 0x45, 0x1A, 0x00, 0x00, 0x10, 0x00};
+				     0x00, 0x08, 0x00, 0x00, 0x43, 0x19, 0x10, 0x00};
 
 	struct zcbor_string valid_dst_component_id = {
 		.value = valid_dst_value,
@@ -120,9 +120,9 @@ ZTEST(copy_tests, test_integrated_fetch_to_memptr_and_copy_to_msink_NOK_dst_hand
 
 	/* Create handle that will be used as destination */
 	suit_component_t dst_handle;
-	/* [h'MEM', h'02', h'1A00080000', h'1A00001000'] */
+	/* [h'MEM', h'02', h'1A00080000', h'191000'] */
 	uint8_t valid_dst_value[] = {0x84, 0x44, 0x63, 'M',  'E',  'M',	 0x41, 0x02, 0x45, 0x1A,
-				     0x00, 0x08, 0x00, 0x00, 0x45, 0x1A, 0x00, 0x00, 0x10, 0x00};
+				     0x00, 0x08, 0x00, 0x00, 0x43, 0x19, 0x10, 0x00};
 
 	struct zcbor_string valid_dst_component_id = {
 		.value = valid_dst_value,
@@ -184,9 +184,9 @@ ZTEST(copy_tests, test_integrated_fetch_to_memptr_and_copy_to_msink_NOK_src_hand
 
 	/* Create handle that will be used as destination */
 	suit_component_t dst_handle;
-	/* [h'MEM', h'02', h'1A00080000', h'1A00001000'] */
+	/* [h'MEM', h'02', h'1A00080000', h'191000'] */
 	uint8_t valid_dst_value[] = {0x84, 0x44, 0x63, 'M',  'E',  'M',	 0x41, 0x02, 0x45, 0x1A,
-				     0x00, 0x08, 0x00, 0x00, 0x45, 0x1A, 0x00, 0x00, 0x10, 0x00};
+				     0x00, 0x08, 0x00, 0x00, 0x43, 0x19, 0x10, 0x00};
 
 	struct zcbor_string valid_dst_component_id = {
 		.value = valid_dst_value,
@@ -228,9 +228,9 @@ ZTEST(copy_tests, test_integrated_fetch_to_memptr_and_copy_to_msink_NOK_memptr_e
 
 	/* Create handle that will be used as destination */
 	suit_component_t dst_handle;
-	/* [h'MEM', h'02', h'1A00080000', h'1A00001000'] */
+	/* [h'MEM', h'02', h'1A00080000', h'191000'] */
 	uint8_t valid_dst_value[] = {0x84, 0x44, 0x63, 'M',  'E',  'M',	 0x41, 0x02, 0x45, 0x1A,
-				     0x00, 0x08, 0x00, 0x00, 0x45, 0x1A, 0x00, 0x00, 0x10, 0x00};
+				     0x00, 0x08, 0x00, 0x00, 0x43, 0x19, 0x10, 0x00};
 
 	struct zcbor_string valid_dst_component_id = {
 		.value = valid_dst_value,

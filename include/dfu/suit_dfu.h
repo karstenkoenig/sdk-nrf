@@ -35,7 +35,6 @@
  *     resetting the device and passing control over the update to the Secure Domain.
  */
 
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -82,8 +81,8 @@ int suit_dfu_candidate_preprocess(void);
 /**
  * @brief Start the update.
  *        This will trigger a reset and pass the control to the Secure Domain in order to perform
- *        firmware update based on the installed envelope and other data stored in the SUIT DFU cache
- *        as a result of earlier operations.
+ *        firmware update based on the installed envelope and other data stored in the SUIT DFU
+ *        cache as a result of earlier operations.
  *
  * @return 0 on success, non-zero value otherwise.
  */

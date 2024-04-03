@@ -52,8 +52,7 @@ struct k_work_q system_update_work_queue;
 
 static void update_failure(void)
 {
-	if (suit_dfu_cleanup() < 0)
-	{
+	if (suit_dfu_cleanup() < 0) {
 		LOG_ERR("Error while cleaning up the SUIT DFU module!");
 	}
 }
@@ -61,6 +60,7 @@ static void update_failure(void)
 static void schedule_system_update(struct k_work *item)
 {
 	int ret = suit_dfu_candidate_preprocess();
+
 	if (ret < 0) {
 		LOG_ERR("Envelope processing error");
 		update_failure();
@@ -79,8 +79,8 @@ static void schedule_system_update(struct k_work *item)
 int suitfu_mgmt_candidate_envelope_stored(size_t image_size)
 {
 	int rc = MGMT_ERR_EOK;
-
 	int ret = 0;
+
 	ret = suit_dfu_candidate_envelope_stored();
 	if (ret < 0) {
 		LOG_ERR("Envelope decoding error");
@@ -93,7 +93,7 @@ int suitfu_mgmt_candidate_envelope_stored(size_t image_size)
 	LOG_INF("Schedule system reboot");
 	k_work_init_delayable(&suw.work, schedule_system_update);
 	ret = k_work_schedule_for_queue(&system_update_work_queue, &suw.work,
-			      K_MSEC(CONFIG_MGMT_SUITFU_TRIGGER_UPDATE_RESET_DELAY_MS));
+					K_MSEC(CONFIG_MGMT_SUITFU_TRIGGER_UPDATE_RESET_DELAY_MS));
 	if (ret < 0) {
 		LOG_ERR("Unable to process the envelope");
 		update_failure();
@@ -123,6 +123,7 @@ int suitfu_mgmt_erase_dfu_partition(size_t num_bytes)
 {
 	const struct device *fdev = DFU_PARTITION_DEVICE;
 	size_t erase_size = DIV_ROUND_UP(num_bytes, DFU_PARTITION_EB_SIZE) * DFU_PARTITION_EB_SIZE;
+
 	if (erase_size > DFU_PARTITION_SIZE) {
 		return MGMT_ERR_ENOMEM;
 	}
@@ -131,6 +132,7 @@ int suitfu_mgmt_erase_dfu_partition(size_t num_bytes)
 		(void *)((size_t)DFU_PARTITION_ADDRESS + erase_size), erase_size);
 
 	int rc = flash_erase(fdev, DFU_PARTITION_OFFSET, erase_size);
+
 	if (rc < 0) {
 		return MGMT_ERR_EUNKNOWN;
 	}
@@ -143,8 +145,8 @@ int suitfu_mgmt_write_dfu_image_data(unsigned int req_offset, const void *addr, 
 {
 	const struct device *fdev = DFU_PARTITION_DEVICE;
 	static uint8_t write_buf[DFU_PARTITION_WRITE_SIZE];
-	static uint8_t buf_fill_level = 0;
-	static size_t offset = 0;
+	static uint8_t buf_fill_level;
+	static size_t offset;
 	int err = 0;
 
 	/* Allow to reset the write procedure if the offset is equal to zero. */
@@ -165,9 +167,11 @@ int suitfu_mgmt_write_dfu_image_data(unsigned int req_offset, const void *addr, 
 	}
 
 	/* Fill the write buffer to flush non-aligned bytes from the previous
-	 * call. */
+	 * call.
+	 */
 	if (buf_fill_level) {
 		size_t len = sizeof(write_buf) - buf_fill_level;
+
 		len = MIN(len, size);
 		memcpy(&write_buf[buf_fill_level], addr, len);
 
@@ -224,6 +228,7 @@ int suitfu_mgmt_write_dfu_image_data(unsigned int req_offset, const void *addr, 
 
 	if (flush) {
 		const uint8_t *addr = DFU_PARTITION_ADDRESS;
+
 		LOG_INF("Last Chunk Written");
 		LOG_INF("Partition address: %p (size: 0x%x), data: %02X %02X "
 			"%02X "
@@ -234,12 +239,12 @@ int suitfu_mgmt_write_dfu_image_data(unsigned int req_offset, const void *addr, 
 	return (err == 0 ? MGMT_ERR_EOK : MGMT_ERR_EUNKNOWN);
 }
 
-int suitfu_mgmt_init()
+int suitfu_mgmt_init(void)
 {
 	k_work_queue_init(&system_update_work_queue);
 	k_work_queue_start(&system_update_work_queue, system_update_stack_area,
-                   K_THREAD_STACK_SIZEOF(system_update_stack_area), K_HIGHEST_THREAD_PRIO,
-                   NULL);
+			   K_THREAD_STACK_SIZEOF(system_update_stack_area), K_HIGHEST_THREAD_PRIO,
+			   NULL);
 	return suit_dfu_initialize();
 }
 

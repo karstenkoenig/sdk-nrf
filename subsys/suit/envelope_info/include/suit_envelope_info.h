@@ -4,12 +4,16 @@
  * SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
  */
 
+#ifndef SUIT_ENVELOPE_INFO_H__
+#define SUIT_ENVELOPE_INFO_H__
+
 #include <stdint.h>
 #include <stddef.h>
 #include <suit_plat_err.h>
 
-#ifndef SUIT_ENVELOPE_INFO_H__
-#define SUIT_ENVELOPE_INFO_H__
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /**
  * @brief Inform the module that the SUIT candidate envelope was stored.
@@ -41,5 +45,9 @@ void suit_envelope_info_reset(void);
  * @return suit_plat_success on success, error code otherwise.
  */
 suit_plat_err_t suit_envelope_info_get(const uint8_t** address, size_t *size);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* SUIT_ENVELOPE_INFO_H__ */

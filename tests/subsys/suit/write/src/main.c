@@ -29,9 +29,9 @@ ZTEST(write_tests, test_write_to_flash_sink_OK)
 
 	/* Create handle that will be used as destination */
 	suit_component_t dst_handle;
-	/* [h'MEM', h'02', h'1A000FE000', h'1A00001000'] */
+	/* [h'MEM', h'02', h'1A000FE000', h'191000'] */
 	uint8_t valid_dst_value[] = {0x84, 0x44, 0x63, 'M',  'E',  'M',	 0x41, 0x02, 0x45, 0x1A,
-				     0x00, 0x0F, 0xE0, 0x00, 0x45, 0x1A, 0x00, 0x00, 0x10, 0x00};
+				     0x00, 0x0F, 0xE0, 0x00, 0x43, 0x19, 0x10, 0x00};
 
 	struct zcbor_string valid_dst_component_id = {
 		.value = valid_dst_value,
@@ -55,9 +55,9 @@ ZTEST(write_tests, test_write_to_ram_sink_OK)
 
 	/* Create handle that will be used as destination */
 	suit_component_t dst_handle;
-	/* [h'MEM', h'02', h'1A20000000', h'1A00000010'] */
+	/* [h'MEM', h'02', h'1A20000000', h'191000'] */
 	uint8_t valid_dst_value[] = {0x84, 0x44, 0x63, 'M',  'E',  'M',	 0x41, 0x02, 0x45, 0x1A,
-				     0x20, 0x03, 0xEC, 0x00, 0x45, 0x1A, 0x00, 0x00, 0x10, 0x00};
+				     0x20, 0x03, 0xEC, 0x00, 0x43, 0x19, 0x10, 0x00};
 
 	struct zcbor_string valid_dst_component_id = {
 		.value = valid_dst_value,
@@ -81,9 +81,9 @@ ZTEST(write_tests, test_write_flash_sink_NOK_size_not_aligned)
 
 	/* Create handle that will be used as destination */
 	suit_component_t dst_handle;
-	/* [h'MEM', h'02', h'1A000FE000', h'1A00000010'] */
+	/* [h'MEM', h'02', h'1A000FE000', h'10'] */
 	uint8_t valid_dst_value[] = {0x84, 0x44, 0x63, 'M',  'E',  'M',	 0x41, 0x02, 0x45, 0x1A,
-				     0x00, 0x0F, 0xE0, 0x00, 0x45, 0x1A, 0x00, 0x00, 0x00, 0x10};
+				     0x00, 0x0F, 0xE0, 0x00, 0x41, 0x10};
 
 	struct zcbor_string valid_dst_component_id = {
 		.value = valid_dst_value,
@@ -115,9 +115,9 @@ ZTEST(write_tests, test_write_to_flash_sink_NOK_source_null)
 {
 	/* Create handle that will be used as destination */
 	suit_component_t dst_handle;
-	/* [h'MEM', h'02', h'1A000FE000', h'1A00001000'] */
+	/* [h'MEM', h'02', h'1A000FE000', h'191000'] */
 	uint8_t valid_dst_value[] = {0x84, 0x44, 0x63, 'M',  'E',  'M',	 0x41, 0x02, 0x45, 0x1A,
-				     0x00, 0x0F, 0xE0, 0x00, 0x45, 0x1A, 0x00, 0x00, 0x10, 0x00};
+				     0x00, 0x0F, 0xE0, 0x00, 0x43, 0x19, 0x10, 0x00};
 
 	struct zcbor_string valid_dst_component_id = {
 		.value = valid_dst_value,
@@ -140,9 +140,9 @@ ZTEST(write_tests, test_write_to_flash_sink_NOK_source_value_null)
 
 	/* Create handle that will be used as destination */
 	suit_component_t dst_handle;
-	/* [h'MEM', h'02', h'1A000FE000', h'1A00001000'] */
+	/* [h'MEM', h'02', h'1A000FE000', h'191000'] */
 	uint8_t valid_dst_value[] = {0x84, 0x44, 0x63, 'M',  'E',  'M',	 0x41, 0x02, 0x45, 0x1A,
-				     0x00, 0x0F, 0xE0, 0x00, 0x45, 0x1A, 0x00, 0x00, 0x10, 0x00};
+				     0x00, 0x0F, 0xE0, 0x00, 0x43, 0x19, 0x10, 0x00};
 
 	struct zcbor_string valid_dst_component_id = {
 		.value = valid_dst_value,
@@ -165,9 +165,9 @@ ZTEST(write_tests, test_write_to_flash_sink_NOK_source_len_0)
 
 	/* Create handle that will be used as destination */
 	suit_component_t dst_handle;
-	/* [h'MEM', h'02', h'1A000FE000', h'1A00001000'] */
+	/* [h'MEM', h'02', h'1A000FE000', h'191000'] */
 	uint8_t valid_dst_value[] = {0x84, 0x44, 0x63, 'M',  'E',  'M',	 0x41, 0x02, 0x45, 0x1A,
-				     0x00, 0x0F, 0xE0, 0x00, 0x45, 0x1A, 0x00, 0x00, 0x10, 0x00};
+				     0x00, 0x0F, 0xE0, 0x00, 0x43, 0x19, 0x10, 0x00};
 
 	struct zcbor_string valid_dst_component_id = {
 		.value = valid_dst_value,
