@@ -37,7 +37,7 @@ config SUIT_STREAM_SINK_RAM
 
 config SUIT_STREAM_SINK_EXTMEM
 	bool "Enable external memory sink"
-	depends on SSF_EXTMEM_SERVICE_ENABLED
+	depends on SSF_SERVER_EXTMEM_SERVICE_ENABLED
 	select SUIT_STREAM_SINK_COMPONENT_MEM_SUPPORTED
 
 if SUIT_STREAM_SINK_EXTMEM
@@ -125,7 +125,7 @@ config SUIT_STREAM_FETCH_MAX_SOURCES
 
 config SUIT_STREAM_SOURCE_EXTMEM
 	bool "Enable external memory storage source"
-	depends on SSF_EXTMEM_SERVICE_ENABLED
+	depends on SSF_SERVER_EXTMEM_SERVICE_ENABLED
 
 config SUIT_STREAM_SOURCE_FLASH
 	bool "Enable flash memory storage source"

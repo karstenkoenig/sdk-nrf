@@ -159,7 +159,7 @@ config SUIT_ENABLE_DEFAULTS_SDFW_EXTMEM
 	bool "SDFW SUIT defaults with external flash support"
 	depends on IS_SECURE_DOMAIN_FW
 	imply SUIT_STREAM_SOURCE_EXTMEM
-	imply SSF_EXTMEM_SERVICE_ENABLED
+	imply SSF_SERVER_EXTMEM_SERVICE_ENABLED
 
 rsource "cache/Kconfig"
 rsource "mci/Kconfig"
