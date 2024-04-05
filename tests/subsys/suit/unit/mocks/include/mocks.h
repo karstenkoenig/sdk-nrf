@@ -78,6 +78,10 @@
 #include <mock_sdfw_builtin_keys.h>
 #endif /* CONFIG_MOCK_SDFW_BUILTIN_KEYS */
 
+#ifdef CONFIG_MOCK_SUIT_MEMORY_LAYOUT
+#include <mock_suit_memory_layout.h>
+#endif /* CONFIG_MOCK_SUIT_MEMORY_LAYOUT */
+
 static inline void mocks_reset(void)
 {
 #ifdef CONFIG_MOCK_SUIT_PROCESSOR
@@ -147,6 +151,10 @@ static inline void mocks_reset(void)
 #ifdef CONFIG_MOCK_SDFW_BUILTIN_KEYS
 	mock_sdfw_builtin_keys_reset();
 #endif /* CONFIG_MOCK_SDFW_BUILTIN_KEYS */
+
+#ifdef CONFIG_MOCK_SUIT_MEMORY_LAYOUT
+	mock_suit_memory_layout_reset();
+#endif /* CONFIG_MOCK_SUIT_MEMORY_LAYOUT */
 
 }
 #endif /* MOCK_H__ */

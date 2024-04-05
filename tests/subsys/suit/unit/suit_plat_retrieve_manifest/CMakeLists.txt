@@ -15,3 +15,7 @@ target_sources(testbinary PRIVATE
   ${SUIT_SUBSYS_DIR}/platform/src/suit_plat_retrieve_manifest.c
   ${SUIT_SUBSYS_DIR}/platform/sdfw/src/suit_plat_retrieve_manifest_sdfw_specific.c
 )
+
+if (CONFIG_MOCK_SUIT_MEMORY_LAYOUT)
+  target_include_directories(testbinary PRIVATE .)
+endif()

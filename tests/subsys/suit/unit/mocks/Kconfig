@@ -87,3 +87,6 @@ config MOCK_DFU_CACHE_SINK
 
 config MOCK_SDFW_BUILTIN_KEYS
 	bool "Mock SDFW builtin keys handling"
+
+config MOCK_SUIT_MEMORY_LAYOUT
+	bool "Mock SUIT memory layout module"

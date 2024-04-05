@@ -226,7 +226,7 @@ static int suit_plat_component_impl_data_get_data_fake_func(suit_component_t han
 }
 
 static int suit_memptr_storage_ptr_get_no_data_fake_func(memptr_storage_handle_t handle,
-							 uint8_t **payload_ptr,
+							 const uint8_t **payload_ptr,
 							 size_t *payload_size)
 {
 	zassert_equal(handle, TEST_MEMPTR_STORAGE_HANDLE, "Unexpected memory storage handle value");
@@ -239,7 +239,8 @@ static int suit_memptr_storage_ptr_get_no_data_fake_func(memptr_storage_handle_t
 }
 
 static int suit_memptr_storage_ptr_get_invalid_addr_fake_func(memptr_storage_handle_t handle,
-						 uint8_t **payload_ptr, size_t *payload_size)
+							      const uint8_t **payload_ptr,
+							      size_t *payload_size)
 {
 	zassert_equal(handle, TEST_MEMPTR_STORAGE_HANDLE, "Unexpected memory storage handle value");
 	zassert_not_equal(payload_ptr, NULL,
@@ -254,7 +255,8 @@ static int suit_memptr_storage_ptr_get_invalid_addr_fake_func(memptr_storage_han
 }
 
 static int suit_memptr_storage_ptr_get_invalid_size_fake_func(memptr_storage_handle_t handle,
-						 uint8_t **payload_ptr, size_t *payload_size)
+							      const uint8_t **payload_ptr,
+							      size_t *payload_size)
 {
 	zassert_equal(handle, TEST_MEMPTR_STORAGE_HANDLE, "Unexpected memory storage handle value");
 	zassert_not_equal(payload_ptr, NULL,
@@ -268,8 +270,9 @@ static int suit_memptr_storage_ptr_get_invalid_size_fake_func(memptr_storage_han
 	return SUIT_PLAT_SUCCESS;
 }
 
-static int suit_memptr_storage_ptr_get_valid_fake_func(memptr_storage_handle_t handle, uint8_t **payload_ptr,
-					  size_t *payload_size)
+static int suit_memptr_storage_ptr_get_valid_fake_func(memptr_storage_handle_t handle,
+						       const uint8_t **payload_ptr,
+						       size_t *payload_size)
 {
 	zassert_equal(handle, TEST_MEMPTR_STORAGE_HANDLE, "Unexpected memory storage handle value");
 	zassert_not_equal(payload_ptr, NULL,
@@ -902,7 +905,8 @@ ZTEST(suit_platform_retrieve_manifest_tests, test_cand_manifest_valid)
 	suit_memptr_storage_ptr_get_fake.custom_fake = suit_memptr_storage_ptr_get_valid_fake_func;
 
 	/* WHEN platform is asked to return manifest */
-	int ret = suit_plat_retrieve_manifest(TEST_COMPONENT_HANDLE, &envelope_str, &envelope_len);
+	int ret = suit_plat_retrieve_manifest(TEST_COMPONENT_HANDLE, (const uint8_t*) &envelope_str,
+					      &envelope_len);
 
 	/* THEN manifest is not returned... */
 	zassert_equal(SUIT_SUCCESS, ret, "Invalid manifest retrieved");
@@ -921,6 +925,59 @@ ZTEST(suit_platform_retrieve_manifest_tests, test_cand_manifest_valid)
 	/* ... and envelope was fetched from the memory pointer storage */
 	zassert_equal(suit_memptr_storage_ptr_get_fake.call_count, 1,
 		      "Incorrect number of suit_memptr_storage_ptr_get() calls");
+	zassert_equal(suit_memory_global_address_is_in_external_memory_fake.call_count, 1,
+		      "Incorrect number of suit_memory_global_address_is_in_external_memory() "
+		      "calls");
+
+	/* ... and other checks were not performed */
+	zassert_equal(suit_plat_decode_manifest_class_id_fake.call_count, 0,
+		      "Incorrect number of suit_plat_decode_manifest_class_id() calls");
+	zassert_equal(suit_storage_installed_envelope_get_fake.call_count, 0,
+		      "Incorrect number of suit_storage_installed_envelope_get() calls");
+}
+
+ZTEST(suit_platform_retrieve_manifest_tests, test_cand_manifest_in_external_memory)
+{
+	uint8_t *envelope_str;
+	size_t envelope_len;
+
+	/* GIVEN the component handle value is valid. */
+	suit_plat_component_id_get_fake.custom_fake =
+		suit_plat_component_id_get_valid_component_fake_func;
+	/* ... and the component type is candidate manifest component */
+	suit_plat_decode_component_type_fake.custom_fake =
+		suit_plat_decode_component_type_cand_fake_func;
+	/* ... and there is implementation-specific data */
+	suit_plat_component_impl_data_get_fake.custom_fake =
+		suit_plat_component_impl_data_get_data_fake_func;
+	/* ... and there is data in memory pointer storage */
+	suit_memptr_storage_ptr_get_fake.custom_fake = suit_memptr_storage_ptr_get_valid_fake_func;
+
+	/* ... and the data pointer points to an area in external memory */
+	suit_memory_global_address_is_in_external_memory_fake.return_val = true;
+
+	/* WHEN platform is asked to return manifest */
+	int ret = suit_plat_retrieve_manifest(TEST_COMPONENT_HANDLE, (const uint8_t*) &envelope_str,
+					      &envelope_len);
+
+	/* THEN manifest is not returned... */
+	zassert_equal(SUIT_ERR_UNSUPPORTED_COMPONENT_ID, ret, "Invalid manifest retrieved");
+
+	/* ... and component ID for given component handle was fetched */
+	zassert_equal(suit_plat_component_id_get_fake.call_count, 1,
+		      "Incorrect number of suit_plat_component_id_get() calls");
+	/* ... and component type for given component ID was fetched */
+	zassert_equal(suit_plat_decode_component_type_fake.call_count, 1,
+		      "Incorrect number of suit_plat_decode_component_type() calls");
+	/* ... and implementation data for given component handle was fetched */
+	zassert_equal(suit_plat_component_impl_data_get_fake.call_count, 1,
+		      "Incorrect number of suit_plat_component_impl_data_get() calls");
+	/* ... and envelope was fetched from the memory pointer storage */
+	zassert_equal(suit_memptr_storage_ptr_get_fake.call_count, 1,
+		      "Incorrect number of suit_memptr_storage_ptr_get() calls");
+	zassert_equal(suit_memory_global_address_is_in_external_memory_fake.call_count, 1,
+		      "Incorrect number of suit_memory_global_address_is_in_external_memory() "
+		      "calls");
 
 	/* ... and other checks were not performed */
 	zassert_equal(suit_plat_decode_manifest_class_id_fake.call_count, 0,

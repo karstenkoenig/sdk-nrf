@@ -8,6 +8,7 @@
 #include <zephyr/logging/log.h>
 #include <suit_plat_decode_util.h>
 #include <suit_plat_retrieve_manifest_domain_specific.h>
+#include <suit_memory_layout.h>
 
 #ifdef CONFIG_SUIT_MEMPTR_STORAGE
 #include <suit_memptr_storage.h>
@@ -53,6 +54,12 @@ int suit_plat_retrieve_manifest(suit_component_t component_handle, const uint8_t
 		if ((ret != SUIT_PLAT_SUCCESS) || (*envelope_str == NULL) || (*envelope_len == 0)) {
 			LOG_ERR("Unable to fetch pointer to manifest candidate"
 				"(memptr storage err: %d)", ret);
+			ret = SUIT_ERR_UNSUPPORTED_COMPONENT_ID;
+			break;
+		}
+
+		if (suit_memory_global_address_is_in_external_memory((uintptr_t)*envelope_str) == true) {
+			LOG_ERR("Manifest candidate is in external memory - this is not supported");
 			ret = SUIT_ERR_UNSUPPORTED_COMPONENT_ID;
 			break;
 		}
