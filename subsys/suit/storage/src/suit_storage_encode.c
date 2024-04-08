@@ -17,6 +17,35 @@
 
 LOG_MODULE_REGISTER(suit_storage_env, CONFIG_SUIT_LOG_LEVEL);
 
+static suit_plat_err_t encode_bstr_header(size_t bstr_len, uint8_t *buf, size_t *len)
+{
+	size_t bytes_used = 0;
+
+	if ((buf == NULL) || (len == NULL)) {
+		return SUIT_PLAT_ERR_INVAL;
+	}
+
+	if ((bstr_len > 0x0000FFFF) || (*len < 3)) {
+		return SUIT_PLAT_ERR_INVAL;
+	}
+
+	/* Encode bstr header */
+	if (bstr_len < 24) {
+		buf[bytes_used++] = 0x40 + bstr_len;
+	} else if (bstr_len < 0x100) {
+		buf[bytes_used++] = 0x58;
+		buf[bytes_used++] = bstr_len;
+	} else {
+		buf[bytes_used++] = 0x59;
+		buf[bytes_used++] = bstr_len / 0x100;
+		buf[bytes_used++] = bstr_len % 0x100;
+	}
+
+	*len = bytes_used;
+
+	return SUIT_PLAT_SUCCESS;
+}
+
 suit_plat_err_t suit_storage_bstr_kv_header_len(uint32_t key, size_t bstr_len, size_t *p_len)
 {
 	if ((p_len == NULL) || (key > 0x0000FFFF) || (bstr_len > 0x0000FFFF)) {
@@ -72,17 +101,14 @@ suit_plat_err_t suit_storage_encode_bstr_kv_header(uint32_t key, size_t bstr_len
 	}
 
 	/* Encode bstr header */
-	if (bstr_len < 24) {
-		buf[bytes_used++] = 0x40 + bstr_len;
-	} else if (bstr_len < 0x100) {
-		buf[bytes_used++] = 0x58;
-		buf[bytes_used++] = bstr_len;
-	} else {
-		buf[bytes_used++] = 0x59;
-		buf[bytes_used++] = bstr_len / 0x100;
-		buf[bytes_used++] = bstr_len % 0x100;
+	size_t bstr_hdr_len = *len - bytes_used;
+	suit_plat_err_t err = encode_bstr_header(bstr_len, &buf[bytes_used], &bstr_hdr_len);
+
+	if (err != SUIT_PLAT_SUCCESS) {
+		return err;
 	}
 
+	bytes_used += bstr_hdr_len;
 	*len = bytes_used;
 
 	return SUIT_PLAT_SUCCESS;
@@ -154,6 +180,7 @@ suit_plat_err_t suit_storage_encode_envelope_header(suit_envelope_hdr_t *envelop
 	if (ok) {
 		/* Get the number of bytes filled inside the output buffer. */
 		size_t mem_used = (size_t)states[0].payload - (size_t)buf;
+		size_t bstr_hdr_len = (*len - (mem_used + sizeof(envelope_tag)));
 
 		if ((*len < (mem_used + 3 + sizeof(envelope_tag))) ||
 		    (envelope->envelope.size > 0x0000FFFF)) {
@@ -163,10 +190,14 @@ suit_plat_err_t suit_storage_encode_envelope_header(suit_envelope_hdr_t *envelop
 		}
 
 		/* Encode bstr header and length */
-		buf[mem_used] = 0x59;
-		buf[mem_used + 1] = envelope->envelope.size / 0x0100;
-		buf[mem_used + 2] = envelope->envelope.size % 0x0100;
-		mem_used += 3;
+		suit_plat_err_t err =
+			encode_bstr_header(envelope->envelope.size, &buf[mem_used], &bstr_hdr_len);
+
+		if (err != SUIT_PLAT_SUCCESS) {
+			LOG_ERR("Encoding of envelope bstr header failed: %d", err);
+			return err;
+		}
+		mem_used += bstr_hdr_len;
 
 		/* Encode SUIT envelope tag and map header. */
 		memcpy(&buf[mem_used], envelope_tag, sizeof(envelope_tag));
@@ -178,7 +209,7 @@ suit_plat_err_t suit_storage_encode_envelope_header(suit_envelope_hdr_t *envelop
 	if (!ok) {
 		int err = zcbor_pop_error(states);
 
-		LOG_ERR("Encoding of envelope header failed:, ZCBOR error %d", err);
+		LOG_ERR("Encoding of envelope header failed, ZCBOR error %d", err);
 
 		return SUIT_PLAT_ERR_CBOR_DECODING;
 	}
