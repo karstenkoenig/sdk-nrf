@@ -65,7 +65,7 @@ suit_plat_err_t suit_ram_sink_get(struct stream_sink *sink, uint8_t *dst, size_t
 
 		/* Check if requested area fits in found RAM */
 		if (!suit_memory_global_address_range_is_in_ram((uintptr_t)dst, size)) {
-			LOG_ERR("Requested memory area (%p) is not within RAM", dst);
+			LOG_ERR("Requested memory area (%p) is not within RAM", (void *)dst);
 			return SUIT_PLAT_ERR_OUT_OF_BOUNDS;
 		}
 

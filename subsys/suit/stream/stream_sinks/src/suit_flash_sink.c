@@ -9,12 +9,7 @@
 #include <zephyr/drivers/flash.h>
 #include <suit_memory_layout.h>
 
-#if defined(CONFIG_SOC_FLASH_NRF_MRAM_ONE_BYTE_WRITE_ACCESS)
-#define SWAP_BUFFER_SIZE 4
-#else
 #define SWAP_BUFFER_SIZE 16
-#endif /* CONFIG_SOC_FLASH_NRF_MRAM_ONE_BYTE_WRITE_ACCESS */
-
 #define WRITE_OFFSET(a) (a->ptr + a->offset)
 
 /* Set to more than one to allow multiple contexts in case of parallel execution */

@@ -9,7 +9,10 @@
 #include <zephyr/drivers/flash/flash_simulator.h>
 
 /* Definitions for SOC internal nonvolatile memory */
-#if (DT_NODE_EXISTS(DT_NODELABEL(mram10))) /* nrf54H20 */
+#if (DT_NODE_EXISTS(DT_NODELABEL(mram1x))) /* nrf54H20 */
+#define INTERNAL_NVM_START (DT_REG_ADDR(DT_NODELABEL(mram1x)))
+#define INTERNAL_NVM_SIZE  DT_REG_SIZE(DT_NODELABEL(mram1x))
+#elif (DT_NODE_EXISTS(DT_NODELABEL(mram10))) /* nrf54H20 */
 #define INTERNAL_NVM_START (DT_REG_ADDR(DT_NODELABEL(mram10)))
 #define INTERNAL_NVM_SIZE  DT_REG_SIZE(DT_NODELABEL(mram10)) + DT_REG_SIZE(DT_NODELABEL(mram11))
 #elif (DT_NODE_EXISTS(DT_NODELABEL(flash0))) /* nrf52 or flash simulator */
@@ -23,7 +26,11 @@
 #endif
 
 #if IS_ENABLED(CONFIG_FLASH)
+#if (DT_NODE_EXISTS(DT_CHOSEN(zephyr_flash_controller)))
 #define INTERNAL_NVM_DEV DEVICE_DT_GET(DT_CHOSEN(zephyr_flash_controller))
+#else
+#define INTERNAL_NVM_DEV DEVICE_DT_GET(DT_CHOSEN(zephyr_flash))
+#endif
 #else
 #define INTERNAL_NVM_DEV NULL
 #endif
@@ -71,6 +78,18 @@ static struct ram_area ram_area_map[] = {
 	{
 		.ra_start = DT_REG_ADDR(DT_NODELABEL(ram20)),
 		.ra_size = DT_REG_SIZE(DT_NODELABEL(ram20)),
+	},
+#endif							/* ram20 */
+#if (DT_NODE_EXISTS(DT_NODELABEL(cpuapp_ram0x_region))) /* nrf54H20 */
+	{
+		.ra_start = DT_REG_ADDR(DT_NODELABEL(cpuapp_ram0x_region)),
+		.ra_size = DT_REG_SIZE(DT_NODELABEL(cpuapp_ram0x_region)),
+	},
+#endif							/* ram0x */
+#if (DT_NODE_EXISTS(DT_NODELABEL(shared_ram20_region))) /* nrf54H20 */
+	{
+		.ra_start = DT_REG_ADDR(DT_NODELABEL(shared_ram20_region)),
+		.ra_size = DT_REG_SIZE(DT_NODELABEL(shared_ram20_region)),
 	},
 #endif					  /* ram20 */
 #if (DT_NODE_EXISTS(DT_NODELABEL(sram0))) /* nrf52 or simulator */
