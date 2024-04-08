@@ -12,6 +12,11 @@
 #include <suit_dfu_cache_sink.h>
 #include <suit_dfu_cache_rw.h>
 #include <suit_plat_mem_util.h>
+#include <suit_types.h>
+#include <suit_metadata.h>
+#include <zephyr/fff.h>
+
+DEFINE_FFF_GLOBALS;
 
 static uint8_t uri[] = "http://databucket.com";
 static uint8_t data[] = { 0x43, 0x60, 0x02, 0x11, 0x35, 0x85, 0x37, 0x85, 0x76,
@@ -35,6 +40,14 @@ static struct zcbor_string unexp_digest = {
 	.len = sizeof(invalid_digest),
 };
 
+/* Mocks of functions provided via SSF services */
+FAKE_VALUE_FUNC(int, suit_plat_component_compatibility_check, suit_manifest_class_id_t*,
+                struct zcbor_string*);
+FAKE_VALUE_FUNC(int, suit_plat_authorize_sequence_num, enum suit_command_sequence,
+                struct zcbor_string*, unsigned int);
+FAKE_VALUE_FUNC(int, suit_plat_authorize_unsigned_manifest, struct zcbor_string*);
+FAKE_VALUE_FUNC(int, suit_plat_authenticate_manifest, struct zcbor_string*, enum suit_cose_alg,
+		struct zcbor_string*, struct zcbor_string*, struct zcbor_string*);
 
 
 void setup_dfu_test_cache(void *f)

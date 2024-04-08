@@ -46,17 +46,6 @@ static int suit_plat_check_image_match_ssf(struct zcbor_string *component_id,
 }
 #endif /* CONFIG_SSF_SUIT_SERVICE_ENABLED */
 
-bool suit_plat_check_image_match_domain_specific_is_type_mem_mapped(
-	suit_component_type_t component_type)
-{
-#ifdef CONFIG_SUIT_STREAM_SINK_DIGEST
-	return (component_type == SUIT_COMPONENT_TYPE_CAND_IMG)
-	       || (component_type == SUIT_COMPONENT_TYPE_CAND_MFST);
-#else
-	return false;
-#endif
-}
-
 int suit_plat_check_image_match_domain_specific(suit_component_t component,
 						enum suit_cose_alg alg_id,
 						struct zcbor_string *digest,
@@ -66,10 +55,6 @@ int suit_plat_check_image_match_domain_specific(suit_component_t component,
 	int err = SUIT_SUCCESS;
 
 	switch (component_type) {
-	case SUIT_COMPONENT_TYPE_CAND_IMG:
-	case SUIT_COMPONENT_TYPE_CAND_MFST:
-		/* Types already handled by suit_plat_check_image_match */
-		break;
 	case SUIT_COMPONENT_TYPE_INSTLD_MFST:
 	case SUIT_COMPONENT_TYPE_MEM:
 	case SUIT_COMPONENT_TYPE_SOC_SPEC: {
@@ -80,12 +65,10 @@ int suit_plat_check_image_match_domain_specific(suit_component_t component,
 #endif /* CONFIG_SSF_SUIT_SERVICE_ENABLED */
 		break;
 	}
-	case SUIT_COMPONENT_TYPE_CACHE_POOL:
-	default: {
-		LOG_ERR("Unhandled component type: %d", component_type);
-		err = SUIT_ERR_UNSUPPORTED_COMPONENT_ID;
+	default:
+		/* Should never get here */
+		err = SUIT_ERR_TAMP;
 		break;
-	}
 	}
 
 	return err;

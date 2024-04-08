@@ -16,12 +16,6 @@ extern "C" {
 #endif
 
 /**
- * @brief Check if the given component type represents a memory mapped component
- */
-bool suit_plat_check_image_match_domain_specific_is_type_mem_mapped(
-	suit_component_type_t component_type);
-
-/**
  * @brief Domain specific part of the of the suit_plat_check_image_match function
  */
 int suit_plat_check_image_match_domain_specific(suit_component_t component,

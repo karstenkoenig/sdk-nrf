@@ -5,11 +5,11 @@
  */
 
 #include <suit_plat_check_image_match_domain_specific.h>
+#include <suit_plat_check_image_match_common.h>
 #include <suit_platform.h>
 
 #include <suit_plat_digest_cache.h>
 #include <suit_plat_decode_util.h>
-#include <suit.h>
 #include <psa/crypto.h>
 
 #include <zephyr/logging/log.h>
@@ -74,55 +74,6 @@ static int suit_plat_check_image_match_soc_spec(struct zcbor_string *component_i
 	return err;
 }
 
-static int suit_plat_check_image_match_mfst(suit_component_t component, enum suit_cose_alg alg_id,
-					    struct zcbor_string *digest)
-{
-	int ret = SUIT_ERR_UNSUPPORTED_COMPONENT_ID;
-
-	const uint8_t *envelope_str;
-	size_t envelope_len;
-	struct zcbor_string manifest_digest;
-	enum suit_cose_alg alg;
-
-	ret = suit_plat_retrieve_manifest(component, &envelope_str, &envelope_len);
-	if (ret != SUIT_SUCCESS) {
-		LOG_ERR("Failed to check image digest: unable to retrieve manifest contents "
-			"(handle: %p)\r\n",
-			(void *)component);
-		return ret;
-	}
-
-	ret = suit_processor_get_manifest_metadata(envelope_str, envelope_len, false, NULL,
-						   &manifest_digest, &alg, NULL);
-	if (ret != SUIT_SUCCESS) {
-		LOG_ERR("Failed to check image digest: unable to read manifest digest (handle: "
-			"%p)\r\n",
-			(void *)component);
-		return ret;
-	}
-
-	if (alg_id != alg) {
-		LOG_ERR("Manifest digest check failed: digest algorithm does not match (handle: "
-			"%p)\r\n",
-			(void *)component);
-		ret = SUIT_FAIL_CONDITION;
-	} else if (!suit_compare_zcbor_strings(digest, &manifest_digest)) {
-		LOG_ERR("Manifest digest check failed: digest values does not match (handle: "
-			"%p)\r\n",
-			(void *)component);
-		ret = SUIT_FAIL_CONDITION;
-	}
-
-	return ret;
-}
-
-bool suit_plat_check_image_match_domain_specific_is_type_mem_mapped(
-	suit_component_type_t component_type)
-{
-	return (component_type == SUIT_COMPONENT_TYPE_CAND_IMG) ||
-	       (component_type == SUIT_COMPONENT_TYPE_MEM);
-}
-
 int suit_plat_check_image_match_domain_specific(suit_component_t component,
 						enum suit_cose_alg alg_id,
 						struct zcbor_string *digest,
@@ -132,23 +83,20 @@ int suit_plat_check_image_match_domain_specific(suit_component_t component,
 	int err = SUIT_SUCCESS;
 
 	switch (component_type) {
-	case SUIT_COMPONENT_TYPE_CAND_IMG:
 	case SUIT_COMPONENT_TYPE_MEM:
-		/* Types already handled by suit_plat_check_image_match */
+		err = suit_plat_check_image_match_mem_mapped(component, alg_id, digest);
 		break;
 	case SUIT_COMPONENT_TYPE_SOC_SPEC: {
 		err = suit_plat_check_image_match_soc_spec(component_id, alg_id, digest);
 		break;
 	}
-	case SUIT_COMPONENT_TYPE_CAND_MFST:
 	case SUIT_COMPONENT_TYPE_INSTLD_MFST:
 		err = suit_plat_check_image_match_mfst(component, alg_id, digest);
 		break;
 
-	case SUIT_COMPONENT_TYPE_CACHE_POOL:
 	default: {
-		LOG_ERR("Unhandled component type: %d", component_type);
-		err = SUIT_ERR_UNSUPPORTED_COMPONENT_ID;
+		/* Should never get here */
+		err = SUIT_ERR_TAMP;
 		break;
 	}
 	}
