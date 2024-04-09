@@ -23,6 +23,7 @@
 int main(void)
 {
 	int ret = dk_leds_init();
+
 	if (ret) {
 		printk("Cannot init LEDs (err: %d)\r\n", ret);
 	}
@@ -45,6 +46,7 @@ int main(void)
 	printk("DFU update candidate found in DFU partition: %d\r\n", dfu_partition_valid);
 	if (dfu_partition_valid) {
 		int ret = suit_trigger_update(update_candidate, ARRAY_SIZE(update_candidate));
+
 		printk("DFU triggered with status: %d\r\n", ret);
 	}
 #endif
