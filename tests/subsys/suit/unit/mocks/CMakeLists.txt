@@ -117,6 +117,7 @@ if (CONFIG_MOCK_FETCH_SOURCE_STREAMER)
 endif()
 
 if (CONFIG_MOCK_SDFW_BUILTIN_KEYS)
+  target_compile_options(test_interface INTERFACE -DCONFIG_SDFW_BUILTIN_KEYS)
   target_include_directories(testbinary PRIVATE $ENV{ZEPHYR_BASE}/../modules/crypto/mbedtls/include)
   target_include_directories(testbinary PRIVATE ${ZEPHYR_BASE}/../core_fw/secdom/include)
 endif()

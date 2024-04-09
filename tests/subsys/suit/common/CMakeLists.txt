@@ -6,7 +6,6 @@
 
 add_subdirectory(sysinit)
 add_subdirectory(mci_test)
-add_subdirectory(sdfw_builtin_keys_test)
 zephyr_include_directories(${CMAKE_CURRENT_LIST_DIR}/include)
 
 if (CONFIG_MBEDTLS)
