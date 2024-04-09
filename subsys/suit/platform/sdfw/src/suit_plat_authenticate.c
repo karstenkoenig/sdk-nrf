@@ -80,16 +80,15 @@ int suit_plat_authenticate_manifest(struct zcbor_string *manifest_component_id,
 
 	/* Verify data */
 #ifdef CONFIG_SDFW_BUILTIN_KEYS
-	if(sdfw_builtin_keys_is_builtin(public_key_id)) {
-		if (sdfw_builtin_keys_verify_message(public_key_id, psa_alg, data->value,
-						     data->len, signature->value,
+	if (sdfw_builtin_keys_is_builtin(public_key_id)) {
+		if (sdfw_builtin_keys_verify_message(public_key_id, psa_alg, data->value, data->len,
+						     signature->value,
 						     signature->len) == PSA_SUCCESS) {
 			return SUIT_SUCCESS;
 		}
-		else {
-			LOG_ERR("Signature verification failed.");
-			return SUIT_ERR_AUTHENTICATION;
-		}
+
+		LOG_ERR("Signature verification failed.");
+		return SUIT_ERR_AUTHENTICATION;
 	}
 #endif /* CONFIG_SDFW_BUILTIN_KEYS */
 

@@ -39,12 +39,12 @@ suit_plat_err_t suit_dfu_cache_partition_slot_foreach(struct dfu_cache_pool *cac
 
 		if (cache_remaining_size == 0) {
 			/* If the end of cache partition is reached and the last element was
-			   decoded correctly, end with a success (even though no end of marker
-			   is present). Handling such a case separately is necessary, as padding
-			   always ends at an address aligned to the erase block size, and the
-			   partition size also should aligned to the eb size, thus not leaving
-			   space for the single byte end of map marker.
-			    */
+			 * decoded correctly, end with a success (even though no end of marker
+			 * is present). Handling such a case separately is necessary, as padding
+			 * always ends at an address aligned to the erase block size, and the
+			 * partition size also should aligned to the eb size, thus not leaving
+			 * space for the single byte end of map marker.
+			 */
 			break;
 		}
 

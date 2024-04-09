@@ -14,7 +14,6 @@
 #include <suit_memptr_storage.h>
 #endif /* CONFIG_SUIT_MEMPTR_STORAGE */
 
-
 LOG_MODULE_REGISTER(suit_plat_retr_mfst, CONFIG_SUIT_LOG_LEVEL);
 
 int suit_plat_retrieve_manifest(suit_component_t component_handle, const uint8_t **envelope_str,
@@ -53,12 +52,14 @@ int suit_plat_retrieve_manifest(suit_component_t component_handle, const uint8_t
 		ret = suit_memptr_storage_ptr_get(handle, envelope_str, envelope_len);
 		if ((ret != SUIT_PLAT_SUCCESS) || (*envelope_str == NULL) || (*envelope_len == 0)) {
 			LOG_ERR("Unable to fetch pointer to manifest candidate"
-				"(memptr storage err: %d)", ret);
+				"(memptr storage err: %d)",
+				ret);
 			ret = SUIT_ERR_UNSUPPORTED_COMPONENT_ID;
 			break;
 		}
 
-		if (suit_memory_global_address_is_in_external_memory((uintptr_t)*envelope_str) == true) {
+		if (suit_memory_global_address_is_in_external_memory((uintptr_t)*envelope_str) ==
+		    true) {
 			LOG_ERR("Manifest candidate is in external memory - this is not supported");
 			ret = SUIT_ERR_UNSUPPORTED_COMPONENT_ID;
 			break;
