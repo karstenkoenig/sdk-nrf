@@ -96,6 +96,9 @@ To use the fetch model, complete the following steps:
          - - CACHE_POOL
            - 0
 
+      The ``CACHE_POOL`` component with identifier ``0`` is significant, as it is always available and occupies the free space in the DFU partition after the envelope.
+      It is possible to define additional ``CACHE_POOL`` partitions using devicetree.
+
       In this example, the ``CACHE_POOL`` component index is ``2``.
       In the following steps the cache pool component is selected with ``suit-directive-set-component-index: 2``.
 
@@ -110,23 +113,40 @@ To use the fetch model, complete the following steps:
          - suit-directive-fetch:
            - suit-send-record-failure
 
-  #. Modify the ``suit-install`` sequence to use an identical URI, as in the ``suit-payload-fetch``, instead of the integrated one.
+     This sequence of directives instructs the device to fetch a payload under the given URI. The fetched payload is then stored in the ``CACHE_POOL`` partition with identifier ``0``.
 
-     .. code-block:: diff
+     The SUIT procedure attempts to use all fetch sources registered with :c:func:`suit_dfu_fetch_source_register` until one of them fetches the payload.
+     If no sources are able to fetch the payload, the update process ends with an error.
 
-        - suit-parameter-uri: '#{{ app['name'] }}'
-        + suit-parameter-uri: 'file://{{ app['binary'] }}'
+     The reference SMP fetch source implementation only recognizes URIs that start with ``file://``.
 
-     The reference SMP fetch implementation recognizes only URIs starting with ``file://``.
+   #. Modify the ``suit-install`` sequence to use an identical URI, as in the ``suit-payload-fetch``, instead of the integrated one.
 
-  #. Remove the application binary from the integrated payloads:
+      .. code-block:: diff
 
-     .. code-block:: diff
+           suit-install:
+             ...
+           - suit-directive-set-component-index: 1
+           - suit-directive-override-parameters:
+         -     suit-parameter-uri: '#{{ app['name'] }}'
+         +     suit-parameter-uri: 'file://{{ app['binary'] }}'
+           - suit-directive-fetch:
+             - suit-send-record-failure
 
-        - suit-integrated-payloads:
-        -   '#{{ app['name'] }}': {{ app['binary'] }}
-        + suit-integrated-payloads: {}
+     When the secure domain firmware processes the ``suit-install`` sequence, this sequence of directives instructs the secure domain to search for a payload with a given URI in all cache partitions.
+     If no such payload is found, the update process ends with an error.
 
+
+   #. Remove the application binary from the integrated payloads:
+
+      .. code-block:: diff
+
+         - suit-integrated-payloads:
+         -   '#{{ app['name'] }}': {{ app['binary'] }}
+         + suit-integrated-payloads: {}
+
+     In the fetch model-based firmware upgrade, it is not necessary to integrate the payload into the envelope.
+     However, you may still choose to integrate certain payloads.
 
 Creating a custom fetch source
 ******************************

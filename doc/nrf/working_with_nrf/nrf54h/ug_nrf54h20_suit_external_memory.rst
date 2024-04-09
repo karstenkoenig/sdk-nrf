@@ -19,6 +19,29 @@ The following terms are used in this guide:
 * Companion image - Application domain firmware implementing the extmem service and external memory driver.
    The IPC service allows the secure domain to access the external memory.
 
+High level overview
+*******************
+
+To use external memory with SUIT, the fetch model-based firmware upgrade is required.
+The SUIT envelope must always be stored in the non-volatile memory in the MCU.
+The SUIT manifests stored in the envelope contain instructions that the device must perform to fetch other required payloads.
+To store payloads in the external memory, a DFU cache partition must be defined in the external memory's devicetree node.
+In the SUIT manifest, you can define a component representing the cache partition in the external memory.
+Within the ``suit-payload-fetch`` sequence, you can then store any fetched payload into any ``CACHE_POOL`` component.
+
+When the secure domain processes the ``suit-install`` sequence, issuing ``suit-directive-fetch`` on any non-integrated payload will instruct the secure domain firmware to search for a given URI in all cache partitions in the system.
+However, when such a cache partition is located in the external memory, the secure domain is unable to access the data.
+Before any ``suit-directive-fetch`` directive is issued that accesses a payload stored on the external memory, a companion image that implements an external memory device driver must be booted.
+
+The companion image consists of two main parts:
+
+* Device driver adequate for the external memory device
+
+* IPC service exposed towards the secure domain
+
+When the companion image is booted and a directive that accesses the data on the external memory is issued, such as the ``suit-directive-fetch`` and ``suit-directive-copy`` directives, the secure domain firmware uses the IPC service provided by the companion image to access the contents of the external memory.
+Beyond the booting of the companion image, the update process does not differ from regular fetch model-based update.
+
 Enabling external flash support in SUIT DFU
 *******************************************
 
