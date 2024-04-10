@@ -5,11 +5,3 @@ tests:
     integration_platforms:
       - nrf52840dk_nrf52840
       - native_posix
-
-  suit-platform.integration.suit_cache.fpga:
-    platform_allow: nrf54h20dk_nrf54h20_cpusec@soc1
-    tags: suit suit_cache fpga
-    timeout: 240
-    extra_args: DTC_OVERLAY_FILE=serial_cpusec.overlay;systick.overlay
-    extra_configs:
-      - CONFIG_EMULATOR_FPGA=y

@@ -4,11 +4,3 @@ tests:
     tags: suit-processor suit_storage
     integration_platforms:
       - native_posix
-
-  suit-processor.integration.suit_storage_nrf54h20.fpga:
-    platform_allow: nrf54h20dk_nrf54h20_cpusec@soc1
-    tags: suit-processor suit_storage fpga
-    timeout: 240
-    extra_args: DTC_OVERLAY_FILE=boards/nrf54h20dk_nrf54h20_cpusec.overlay;serial_cpusec.overlay;systick.overlay
-    extra_configs:
-      - CONFIG_EMULATOR_FPGA=y

@@ -6,11 +6,3 @@ tests:
     integration_platforms:
       - nrf52840dk_nrf52840
       - native_posix
-
-  suit.integration.orchestrator.fpga:
-    platform_allow: nrf54h20dk_nrf54h20_cpusec@soc1
-    tags: suit suit_orchestrator fpga
-    timeout: 240
-    extra_args: DTC_OVERLAY_FILE=boards/nrf54h20dk_nrf54h20_cpusec.overlay;serial_cpusec.overlay;systick.overlay
-    extra_configs:
-      - CONFIG_EMULATOR_FPGA=y
