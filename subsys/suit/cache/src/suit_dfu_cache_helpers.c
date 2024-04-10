@@ -19,7 +19,7 @@ LOG_MODULE_REGISTER(dfu_cache_helpers, CONFIG_SUIT_LOG_LEVEL);
 suit_plat_err_t suit_dfu_cache_partition_slot_foreach(struct dfu_cache_pool *cache_pool,
 						      partition_slot_foreach_cb cb, void *ctx)
 {
-	suit_plat_err_t err;
+	suit_plat_err_t err = SUIT_PLAT_SUCCESS;
 	zcbor_state_t states[4];
 	struct zcbor_string uri;
 	struct zcbor_string_fragment data_fragment;
@@ -37,6 +37,17 @@ suit_plat_err_t suit_dfu_cache_partition_slot_foreach(struct dfu_cache_pool *cac
 		size_t cache_remaining_size = cache_pool->size - current_offset;
 		size_t read_size = MIN(sizeof(partition_header_storage), cache_remaining_size);
 
+		if (cache_remaining_size == 0) {
+			/* If the end of cache partition is reached and the last element was
+			   decoded correctly, end with a success (even though no end of marker
+			   is present). Handling such a case separately is necessary, as padding
+			   always ends at an address aligned to the erase block size, and the
+			   partition size also should aligned to the eb size, thus not leaving
+			   space for the single byte end of map marker.
+			    */
+			break;
+		}
+
 		err = suit_dfu_cache_memcpy(partition_header_storage, current_address, read_size);
 
 		if (err != SUIT_PLAT_SUCCESS) {
@@ -53,6 +64,12 @@ suit_plat_err_t suit_dfu_cache_partition_slot_foreach(struct dfu_cache_pool *cac
 		 * The zcbor state is first initialized to where the indefinite map header
 		 * is supposed to be. If there is not indefinite map header tag, then the
 		 * partition is corrupted and no further processing is done.
+		 *
+		 * At the start of each iteration, it is detected if the end of the map was reached
+		 * by checking if the next byte is 0xFF. For an indefinite length map, this is
+		 * the map end indicator, for a definite length map, this means that the rest of
+		 * the memory is erased, so the map is considered to be ended.
+		 * If the end of the map is detected, the loop is exited and the function succeeds.
 		 *
 		 * In second step the TSTR is parsed. If a correct TSTR is found, we move to the
 		 * next step. Otherwise we bail.
@@ -76,6 +93,10 @@ suit_plat_err_t suit_dfu_cache_partition_slot_foreach(struct dfu_cache_pool *cac
 			}
 		}
 
+		if (partition_header_storage[0] == 0xFF) {
+			break;
+		}
+
 		if (result) {
 			result = zcbor_tstr_decode(states, &uri);
 		}
@@ -91,6 +112,7 @@ suit_plat_err_t suit_dfu_cache_partition_slot_foreach(struct dfu_cache_pool *cac
 		}
 
 		if (!result) {
+			err = SUIT_PLAT_ERR_CBOR_DECODING;
 			break;
 		}
 
