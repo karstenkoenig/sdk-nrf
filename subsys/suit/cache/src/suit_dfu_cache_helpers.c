@@ -118,6 +118,12 @@ suit_plat_err_t suit_dfu_cache_partition_slot_foreach(struct dfu_cache_pool *cac
 
 		off_t bstr_data_offset = data_fragment.fragment.value - partition_header_storage;
 
+		if (data_fragment.total_len > cache_remaining_size - bstr_data_offset) {
+			/* The bstr data would exceed the remaining size of the cache partition */
+			err = SUIT_PLAT_ERR_CBOR_DECODING;
+			break;
+		}
+
 		if (cb) {
 			uintptr_t data_address = current_address + bstr_data_offset;
 
