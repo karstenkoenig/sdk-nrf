@@ -6,7 +6,7 @@
 
 # List all manifest roles.
 # The function internally checks if the enabling symbol is defined.
-# If role is enabled, the funtion verifies if all required options are defined.
+# If role is enabled, the function verifies if all required options are defined.
 
 generate_mpi_hex(ROOT)
 generate_mpi_hex(APP_RECOVERY)

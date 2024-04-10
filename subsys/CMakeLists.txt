@@ -71,5 +71,5 @@ add_subdirectory_ifdef(CONFIG_NRF_802154_RADIO_DRIVER ieee802154)
 add_subdirectory_ifdef(CONFIG_NRF_DM dm)
 add_subdirectory_ifdef(CONFIG_EMDS emds)
 
-add_subdirectory_ifdef(CONFIG_SUIT suit)
+add_subdirectory(suit)
 add_subdirectory_ifdef(CONFIG_MGMT_SUITFU mgmt/suitfu)
