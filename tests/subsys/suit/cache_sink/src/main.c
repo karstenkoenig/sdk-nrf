@@ -13,7 +13,7 @@
 #include <suit_plat_mem_util.h>
 
 #ifndef CONFIG_BOARD_NATIVE_POSIX
-static const uint8_t corrupted_cache[] = {
+static const uint8_t corrupted_cache_header_ok_size_nok[] = {
 	0xBF, /* map(*) */
 	0x75, /* text(21) */
 	0x68, 0x74, 0x74, 0x70, 0x3A, 0x2F, 0x2F, 0x64, 0x61, 0x74, 0x61, 0x62,
@@ -24,22 +24,34 @@ static const uint8_t corrupted_cache[] = {
 	0x60,								  /* Empty padding uri */
 	0x4B,								  /* bytes(11) */
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* padding bytes */
-	0x76,								  /* text(22) */
-	0x68, 0x74, 0x74, 0x70, 0x3A, 0x2F, 0x2F, 0x73, 0x74, 0x6F, 0x72, 0x61,
-	0x67, 0x65, 0x68, 0x6F, 0x6C, 0x65, 0x2E, 0x63, 0x6F, 0x6D, /* "http://storagehole.com" */
-	0x5A, 0x00, 0x00, 0x00, 0x18,				    /* bytes(24) */
-	0x05, 0x37, 0x14, 0x51, 0x42, 0x99, 0x99, 0x49, 0x46, 0x54, 0x89, 0x28,
-	0x82, 0x17, 0x68, 0x20, 0x97, 0x60, 0x22, 0x04, 0x51, 0x45, 0x23, 0x04, /* payload(24) */
-	0x60,							    /* Empty padding uri */
-	0x49,							    /* bytes(10) */
-	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* padding bytes */
 	0x69,							    /* text(9) */
 	0x23, 0x66, 0x69, 0x6C, 0x65, 0x2E, 0x62, 0x69, 0x6E,	    /* "#file.bin" */
 	0x5A, 0xFF, 0xFF, 0xFF, 0xFF, /* not updated, corrupted value */
 	0x12, 0x35, 0x89, 0x02, 0x31, 0x70, 0x49, 0x81, 0x20, 0x91, 0x62, 0x38,
 	0x90, 0x47, 0x60, 0x12, 0x37, 0x84, 0x90, 0x70, 0x18, 0x92, 0x36, 0x51,
 	0x92, 0x83, 0x09, 0x86, 0x70, 0x19, 0x23, /* payload(31) */
-	0xFF};					  /* primitive(*) - end marker */
+	0xFF,					  /* primitive(*) - end marker */
+	0xFF};					  /* Alignment to erase block size (16 bytes) */
+
+static const uint8_t corrupted_cache_malformed_zcbor[] = {
+	0xBF, /* map(*) */
+	0x75, /* text(21) */
+	0x68, 0x74, 0x74, 0x70, 0x3A, 0x2F, 0x2F, 0x64, 0x61, 0x74, 0x61, 0x62,
+	0x75, 0x63, 0x6B, 0x65, 0x74, 0x2E, 0x63, 0x6F, 0x6D, /* "http://databucket.com" */
+	0x5A, 0x00, 0x00, 0x00, 0x17,			      /* bytes(23) */
+	0x43, 0x60, 0x02, 0x11, 0x35, 0x85, 0x37, 0x85, 0x76, 0x44, 0x09, 0x44,
+	0x45, 0x42, 0x66, 0x25, 0x12, 0x36, 0x84, 0x00, 0x08, 0x61, 0x17, /* payload(23) */
+	0x60,								  /* Empty padding uri */
+	0x4B,								  /* bytes(11) */
+	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, /* padding bytes */
+	0x69,							    /* text(9) */
+	0x23, 0x66, 0x69, 0x6C, 0x65, 0x2E, 0x62, 0x69, 0x6E,	    /* "#file.bin" */
+	0x5A, 0x00, 0x00, 0x00, 0x1E, /* bytes(30) - mismatched with real size (31) */
+	0x12, 0x35, 0x89, 0x02, 0x31, 0x70, 0x49, 0x81, 0x20, 0x91, 0x62, 0x38,
+	0x90, 0x47, 0x60, 0x12, 0x37, 0x84, 0x90, 0x70, 0x18, 0x92, 0x36, 0x51,
+	0x92, 0x83, 0x09, 0x86, 0x70, 0x19, 0x23, /* payload(31) */
+	0xFF,					  /* primitive(*) - end marker */
+	0xFF};					  /* Alignment to erase block size (16 bytes) */
 #endif
 
 static uint8_t uri[] = "http://databucket.com";
@@ -98,14 +110,14 @@ void setup_dfu_test_cache(void *f)
 }
 
 #ifndef CONFIG_BOARD_NATIVE_POSIX
-void setup_dfu_test_corrupted_cache(void *f)
+void setup_dfu_test_corrupted_cache(const uint8_t* corrupted_cache, size_t corrupted_cache_size)
 {
 	/* Erase the area, to met the preconditions in the next test. */
 	const struct device *fdev = DEVICE_DT_GET(DT_CHOSEN(zephyr_flash_controller));
 	zassert_not_null(fdev, "Unable to find a driver to erase area");
 
 	int rc = flash_write(fdev, FIXED_PARTITION_OFFSET(dfu_cache_partition_1), corrupted_cache,
-			     sizeof(corrupted_cache));
+			     corrupted_cache_size);
 	zassert_equal(rc, 0, "Unable to write corrupted_cache before test execution: %i", rc);
 
 	printk("dfu_cache_partition_1 address: %p\n",
@@ -113,7 +125,7 @@ void setup_dfu_test_corrupted_cache(void *f)
 
 	int res = memcmp(corrupted_cache,
 			 suit_plat_mem_nvm_ptr_get(FIXED_PARTITION_OFFSET(dfu_cache_partition_1)),
-			 sizeof(corrupted_cache));
+			 corrupted_cache_size);
 	zassert_equal(res, 0, "Mem compare after write failed");
 
 	setup_dfu_test_cache(NULL);
@@ -136,6 +148,21 @@ void clear_dfu_test_partitions(void *f)
 	zassert_equal(rc, 0, "Unable to erase dfu_cache_partition_3 before test execution: %i", rc);
 
 	suit_dfu_cache_rw_deinitialize();
+}
+
+bool is_cache_partition_1_empty(void)
+{
+	const uint8_t *partition_address =
+		suit_plat_mem_nvm_ptr_get(FIXED_PARTITION_OFFSET(dfu_cache_partition_1));
+	const size_t partition_size = FIXED_PARTITION_SIZE(dfu_cache_partition_1);
+
+	for (size_t i = 0; i < partition_size; i++) {
+		if (partition_address[i] != 0xFF) {
+			return false;
+		}
+	}
+
+	return true;
 }
 
 ZTEST_SUITE(cache_rw_initialization_tests, NULL, NULL, NULL, clear_dfu_test_partitions, NULL);
@@ -173,12 +200,17 @@ ZTEST(cache_rw_initialization_tests, test_cache_initialization_ok)
 }
 
 #ifndef CONFIG_BOARD_NATIVE_POSIX
-ZTEST_SUITE(cache_sink_recovery_tests, NULL, NULL, setup_dfu_test_corrupted_cache,
+ZTEST_SUITE(cache_sink_recovery_tests, NULL, NULL, NULL,
 	    clear_dfu_test_partitions, NULL);
 
 ZTEST(cache_sink_recovery_tests, test_cache_recovery_header_ok_size_nok)
 {
 	struct stream_sink sink;
+
+	setup_dfu_test_corrupted_cache(corrupted_cache_header_ok_size_nok,
+				       sizeof(corrupted_cache_header_ok_size_nok));
+
+	zassert_true(is_cache_partition_1_empty(), "Corrupted cache partition was not recovered");
 
 	int ret = suit_dfu_cache_sink_get(&sink, 1, uri3, sizeof(uri3), true);
 	zassert_equal(ret, SUIT_PLAT_SUCCESS, "Failed to get sink: %i", ret);
@@ -192,6 +224,15 @@ ZTEST(cache_sink_recovery_tests, test_cache_recovery_header_ok_size_nok)
 	ret = sink.release(sink.ctx);
 	zassert_equal(ret, SUIT_PLAT_SUCCESS, "Failed to release sink: %i", ret);
 }
+
+ZTEST(cache_sink_recovery_tests, test_cache_recovery_malformed_zcbor)
+{
+	setup_dfu_test_corrupted_cache(corrupted_cache_malformed_zcbor,
+				       sizeof(corrupted_cache_malformed_zcbor));
+
+	zassert_true(is_cache_partition_1_empty(), "Corrupted cache partition was not recovered");
+}
+
 #endif
 
 ZTEST_SUITE(cache_sink_tests, NULL, NULL, setup_dfu_test_cache, clear_dfu_test_partitions, NULL);
