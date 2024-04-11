@@ -4,7 +4,6 @@
 # SPDX-License-Identifier: LicenseRef-Nordic-5-Clause
 #
 
-add_subdirectory(sysinit)
 add_subdirectory(mci_test)
 zephyr_include_directories(${CMAKE_CURRENT_LIST_DIR}/include)
 
