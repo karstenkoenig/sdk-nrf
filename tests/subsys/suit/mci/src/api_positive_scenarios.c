@@ -8,6 +8,9 @@
 #ifdef CONFIG_SUIT_STORAGE
 #include <suit_storage.h>
 #endif /* CONFIG_SUIT_STORAGE */
+#ifdef CONFIG_SUIT_EXECUTION_MODE
+#include <suit_execution_mode.h>
+#endif /* CONFIG_SUIT_EXECUTION_MODE */
 
 #define OUTPUT_MAX_SIZE 32
 static const suit_uuid_t *result_uuid[OUTPUT_MAX_SIZE];
@@ -15,12 +18,17 @@ static suit_manifest_class_info_t result_class_info[OUTPUT_MAX_SIZE];
 
 static void *test_suit_setup(void)
 {
-	int ret = 0;
+	suit_plat_err_t ret = 0;
 
 #ifdef CONFIG_SUIT_STORAGE
 	ret = suit_storage_init();
 	zassert_equal(ret, SUIT_PLAT_SUCCESS, "Unable to initialize SUIT storage");
 #endif /* CONFIG_SUIT_STORAGE */
+
+#ifdef CONFIG_SUIT_EXECUTION_MODE
+	ret = suit_execution_mode_set(EXECUTION_MODE_INVOKE);
+	zassert_equal(ret, SUIT_PLAT_SUCCESS, "Unable to set execution mode");
+#endif /* CONFIG_SUIT_EXECUTION_MODE */
 
 	ret = suit_mci_init();
 	zassert_equal(ret, SUIT_PLAT_SUCCESS, "Unable to initialize MCI module");
