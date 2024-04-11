@@ -25,3 +25,4 @@ You can also run them on different hardware like a generic development kit, but 
    ../../applications/thread_border_router/README
    ../../applications/matter_weather_station/README
    ../../applications/zigbee_weather_station/README
+   ../../samples/suit/flash_companion/README
