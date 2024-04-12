@@ -62,10 +62,20 @@ mci_err_t suit_mci_invoke_order_get(const suit_manifest_class_id_t **class_id, s
 			return SUIT_PLAT_ERR_NOT_FOUND;
 		}
 
-		if (suit_storage_mpi_class_get(SUIT_MANIFEST_APP_RECOVERY, &class_id[1]) !=
-		    SUIT_PLAT_SUCCESS) {
+		suit_plat_err_t ret =
+			suit_storage_mpi_class_get(SUIT_MANIFEST_APP_RECOVERY, &class_id[1]);
+
+		/* If recovery class ID is not configured, use application root manifest
+		 * as the recovery manifest.
+		 */
+		if (ret == SUIT_PLAT_ERR_NOT_FOUND) {
+			ret = suit_storage_mpi_class_get(SUIT_MANIFEST_APP_ROOT, &class_id[1]);
+		}
+
+		if (ret != SUIT_PLAT_SUCCESS) {
 			return SUIT_PLAT_ERR_NOT_FOUND;
 		}
+
 		break;
 
 	default:
@@ -591,6 +601,14 @@ suit_mci_manifest_process_dependency_validate(const suit_manifest_class_id_t *pa
 		if ((parent_role == SUIT_MANIFEST_APP_RECOVERY) &&
 		    ((child_role == SUIT_MANIFEST_RAD_RECOVERY) ||
 		     ((child_role >= SUIT_MANIFEST_APP_LOCAL_1) &&
+		      (child_role <= SUIT_MANIFEST_APP_LOCAL_3)) ||
+		     ((child_role >= SUIT_MANIFEST_RAD_LOCAL_1) &&
+		      (child_role <= SUIT_MANIFEST_RAD_LOCAL_2)))) {
+			return SUIT_PLAT_SUCCESS;
+		}
+
+		if ((parent_role == SUIT_MANIFEST_APP_ROOT) &&
+		    (((child_role >= SUIT_MANIFEST_APP_LOCAL_1) &&
 		      (child_role <= SUIT_MANIFEST_APP_LOCAL_3)) ||
 		     ((child_role >= SUIT_MANIFEST_RAD_LOCAL_1) &&
 		      (child_role <= SUIT_MANIFEST_RAD_LOCAL_2)))) {
