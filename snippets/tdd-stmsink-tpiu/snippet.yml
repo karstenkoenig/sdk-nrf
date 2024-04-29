@@ -1,0 +1,3 @@
+name: tdd-stmsink-tpiu
+append:
+  EXTRA_DTC_OVERLAY_FILE: tdd-stmsink-tpiu.overlay
