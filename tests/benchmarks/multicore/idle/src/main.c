@@ -17,7 +17,11 @@ int main(void)
 	LOG_INF("Multicore idle test on %s", CONFIG_BOARD_TARGET);
 	while (1) {
 		LOG_INF("Multicore idle test iteration %u", cnt++);
+#if defined(CONFIG_WAKEUP_NEVER)
+		k_sleep(K_FOREVER);
+#elif defined(CONFIG_WAKEUP_1S)
 		k_msleep(1000);
+#endif
 	}
 
 	return 0;

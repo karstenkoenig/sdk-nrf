@@ -10,3 +10,16 @@ config BOARD_ENABLE_CPUNET
 	bool
 	depends on BOARD_NRF5340DK_NRF5340_CPUAPP || BOARD_NRF5340DK_NRF5340_CPUAPP_NS
 	default y
+
+
+choice WAKEUP_SCHEDULE
+prompt "What's our schedule"
+default WAKEUP_NEVER
+
+config WAKEUP_NEVER
+	bool "Just go to sleep and never wake up"
+
+config WAKEUP_1S
+	bool "Wake up every second"
+
+endchoice
