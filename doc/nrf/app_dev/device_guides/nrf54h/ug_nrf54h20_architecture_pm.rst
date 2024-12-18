@@ -10,6 +10,9 @@ nRF54H20 Power Management
 The nRF54H20 SoC is a distributed system where each domain tries to achieve minimal power consumption for itself.
 When all CPUs are ready to fully minimize power consumption by entering the System Off hardware state, the System Controller prepares the system and triggers the entrance in this state.
 
+It is important to have both radio and application domains populated with firmware to achieve low power consumption numbers, as the local domains are responsible for sending their own power and clock requirements to the system controller.
+Refer to the :file:`nrf/tests/benchmark/power_consumption` samples for reference implementations leveraging an always idle radio core combined with an actual application on the application core.
+
 Power states
 ************
 
