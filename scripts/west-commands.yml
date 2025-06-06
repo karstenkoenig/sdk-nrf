@@ -39,3 +39,9 @@ west-commands:
       - name: ncs-provision
         class: NcsProvision
         help: Provision utility
+  - file: scripts/west_commands/ppr_prl.py
+    commands:
+      - name: ppr-prl
+        class: PPR_PRL
+        help: PPR power request logger utility
+
