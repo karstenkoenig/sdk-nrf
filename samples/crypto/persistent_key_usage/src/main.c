@@ -7,6 +7,8 @@
 #include <zephyr/kernel.h>
 #include <zephyr/sys/printk.h>
 #include <zephyr/logging/log.h>
+#include <zephyr/logging/log_ctrl.h>
+#include <zephyr/sys/reboot.h>
 #include <stdio.h>
 #include <psa/crypto.h>
 #include <psa/crypto_extra.h>
@@ -16,6 +18,7 @@
 #endif
 
 #include "init.h"
+#include "uicr.h"
 
 #define APP_SUCCESS	    (0)
 #define APP_ERROR	    (-1)
@@ -167,11 +170,56 @@ int use_persistent_key(void)
 	return APP_SUCCESS;
 }
 
+NRF_UICRV2_Type *uicr = (NRF_UICRV2_Type *)NRF_APPLICATION_UICR_NS_BASE;
+
+static int uicr_handle_secure_storage(void)
+{
+	/* Enable ITS in UICR if not already enabled. */
+	if (uicr->SECURESTORAGE.ENABLE != UICRV2_SECURESTORAGE_ENABLE_ENABLE_Enabled) {
+		/* Statically configure UICR and reset */
+		LOG_INF("Configuring UICR SECURESTORAGE");
+		uicr->SECURESTORAGE.ENABLE = UICRV2_SECURESTORAGE_ENABLE_ENABLE_Enabled;
+		
+		/* We just use the ppr partition because that is unused. */
+		uicr->SECURESTORAGE.ADDRESS = DT_REG_ADDR(DT_CHOSEN(zephyr_flash)) + DT_REG_ADDR(DT_NODELABEL(cpuppr_code_partition));
+		uicr->SECURESTORAGE.CRYPTO.APPLICATIONSIZE1KB = 8;
+		uicr->SECURESTORAGE.CRYPTO.RADIOCORESIZE1KB = 8;
+		uicr->SECURESTORAGE.ITS.APPLICATIONSIZE1KB = 8;
+		uicr->SECURESTORAGE.ITS.RADIOCORESIZE1KB = 8;
+		
+		/* Write to ENABLE again to commit the earlier writes */
+		uicr->SECURESTORAGE.ENABLE = UICRV2_SECURESTORAGE_ENABLE_ENABLE_Enabled;
+
+		/* Print the values written into the registers */
+		LOG_INF("uicr->SECURESTORAGE.ENABLE: 0x%x", uicr->SECURESTORAGE.ENABLE);
+		LOG_INF("uicr->SECURESTORAGE.ADDRESS: 0x%x", uicr->SECURESTORAGE.ADDRESS);
+		LOG_INF("uicr->SECURESTORAGE.CRYPTO.APPLICATIONSIZE1KB: 0x%x",
+			uicr->SECURESTORAGE.CRYPTO.APPLICATIONSIZE1KB);
+		LOG_INF("uicr->SECURESTORAGE.CRYPTO.RADIOCORESIZE1KB: 0x%x",
+			uicr->SECURESTORAGE.CRYPTO.RADIOCORESIZE1KB);
+		LOG_INF("uicr->SECURESTORAGE.ITS.APPLICATIONSIZE1KB: 0x%x",
+			uicr->SECURESTORAGE.ITS.APPLICATIONSIZE1KB);
+		LOG_INF("uicr->SECURESTORAGE.ITS.RADIOCORESIZE1KB: 0x%x",
+			uicr->SECURESTORAGE.ITS.RADIOCORESIZE1KB);
+
+		LOG_INF("Resetting to load UICR configuration");
+		LOG_PANIC();
+
+		sys_reboot(SYS_REBOOT_COLD);
+	}
+
+
+	return 0;
+}
+
+
 int main(void)
 {
 	int status;
 
 	LOG_INF("Starting persistent key example...");
+
+	uicr_handle_secure_storage();
 
 	status = crypto_init();
 	if (status != APP_SUCCESS) {
